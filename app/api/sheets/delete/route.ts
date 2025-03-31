@@ -2,75 +2,48 @@ import { NextResponse } from "next/server"
 import { google } from "googleapis"
 import { JWT } from "google-auth-library"
 
+// This would normally come from environment variables
+const SHEET_ID = "1uciOxoRw9k5HwNFtvYK1CWqcMDDGz2clqWj3CaHdQ5I"
+
+// Get environment variables
+const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL || ""
+const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || ""
+
+// Create auth client
+const auth = new JWT({
+  email: GOOGLE_CLIENT_EMAIL,
+  key: GOOGLE_PRIVATE_KEY,
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+})
+
+// Create sheets client
+const sheets = google.sheets({ version: "v4", auth })
+
 export async function POST(request: Request) {
   try {
-    const { sheetName, items, clientId } = await request.json()
+    const { sheetName, items } = await request.json()
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "No items to delete" }, { status: 400 })
     }
 
-    // Get client-specific sheet ID if clientId is provided
-    let sheetId = process.env.GOOGLE_SHEET_ID // Default sheet ID
-
-    if (clientId) {
-      // Fetch the client's sheet ID from the Clients sheet
-      const auth = new JWT({
-        email: process.env.GOOGLE_CLIENT_EMAIL || "",
-        key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      })
-
-      const sheets = google.sheets({ version: "v4", auth })
-
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: "Clients!A:F",
-      })
-
-      const rows = response.data.values || []
-
-      if (rows.length > 1) {
-        // Find the client by ID
-        const headers = rows[0]
-        const sheetIdIndex = headers.findIndex((h: string) => h === "Sheet ID")
-        const idIndex = headers.findIndex((h: string) => h === "ID")
-
-        if (idIndex !== -1 && sheetIdIndex !== -1) {
-          for (let i = 1; i < rows.length; i++) {
-            if (rows[i][idIndex] === clientId && rows[i][sheetIdIndex]) {
-              sheetId = rows[i][sheetIdIndex]
-              break
-            }
-          }
-        }
-      }
-    }
-
-    // Create auth client
-    const auth = new JWT({
-      email: process.env.GOOGLE_CLIENT_EMAIL || "",
-      key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    })
-
-    // Create sheets client
-    const sheets = google.sheets({ version: "v4", auth })
-
     // Get the spreadsheet to find all sheet names
     const spreadsheet = await sheets.spreadsheets.get({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
     })
 
     // Get all sheet names from the spreadsheet
     const allSheets = spreadsheet.data.sheets || []
     const sheetTitles = allSheets.map((s) => s.properties?.title || "")
 
+    // IMPORTANT: Instead of trying to find the sheet, let's just use the sheet name directly
+    // This bypasses any issues with case sensitivity or hidden characters
+
     // Get the current data to find the rows to delete
     let response
     try {
       response = await sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
+        spreadsheetId: SHEET_ID,
         range: `${sheetName}!A:Z`, // Get all columns
       })
     } catch (error) {
@@ -79,7 +52,7 @@ export async function POST(request: Request) {
       for (const title of sheetTitles) {
         try {
           response = await sheets.spreadsheets.values.get({
-            spreadsheetId: sheetId,
+            spreadsheetId: SHEET_ID,
             range: `${title}!A:Z`,
           })
           foundSheet = true
@@ -177,7 +150,7 @@ export async function POST(request: Request) {
 
     // Execute the batch update
     await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: sheetId,
+      spreadsheetId: SHEET_ID,
       requestBody: {
         requests: requests,
       },

@@ -69,9 +69,6 @@ export default function LoginPage() {
         // Set the client in context
         setClient(client)
 
-        // Set the client ID in a cookie for API requests
-        document.cookie = `clientId=${client.id}; path=/; max-age=86400`
-
         // Redirect to inventory page
         router.push("/dashboard/inventory")
       } else {

@@ -1,355 +1,407 @@
 import { NextResponse } from "next/server"
 import { google } from "googleapis"
-import { cookies } from "next/headers"
+import { JWT } from "google-auth-library"
+
+// This would normally come from environment variables
+const SHEET_ID = "1uciOxoRw9k5HwNFtvYK1CWqcMDDGz2clqWj3CaHdQ5I"
+
+// Get environment variables
+const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL || ""
+const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || ""
+
+// Create auth client
+const auth = new JWT({
+  email: GOOGLE_CLIENT_EMAIL,
+  key: GOOGLE_PRIVATE_KEY,
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+})
+
+// Create sheets client
+const sheets = google.sheets({ version: "v4", auth })
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const sheet = searchParams.get("sheet") || "Inventory"
+
   try {
-    // Get URL parameters
-    const url = new URL(request.url)
-    const sheetName = url.searchParams.get("sheet")
-    let clientId = url.searchParams.get("clientId")
-
-    // If clientId is not provided in the URL, try to get it from cookies
-    if (!clientId) {
-      const cookieStore = cookies()
-      clientId = cookieStore.get("clientId")?.value
-
-      // Also check the request cookies as a fallback
-      if (!clientId) {
-        const cookieHeader = request.headers.get("cookie")
-        if (cookieHeader) {
-          const clientIdMatch = cookieHeader.match(/clientId=([^;]+)/)
-          clientId = clientIdMatch ? clientIdMatch[1] : null
-        }
-      }
-    }
-
-    // Determine which sheet ID to use
-    let sheetId: string | null = null
-
-    if (clientId) {
-      // If we have a clientId, fetch the client's sheet ID from the master sheet
-      const masterSheetId = process.env.MASTER_SHEET_ID
-
-      if (masterSheetId) {
-        // Initialize Google Sheets API
-        const auth = new google.auth.JWT(
-          process.env.GOOGLE_CLIENT_EMAIL,
-          undefined,
-          process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-          ["https://www.googleapis.com/auth/spreadsheets"],
-        )
-
-        const sheets = google.sheets({ version: "v4", auth })
-
-        // Fetch data from the Clients sheet
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: masterSheetId,
-          range: "Clients!A:F", // Includes ID and Sheet ID columns
-        })
-
-        const rows = response.data.values
-        if (rows && rows.length > 1) {
-          // Find the client with matching ID
-          for (let i = 1; i < rows.length; i++) {
-            const row = rows[i]
-            const id = row[0]
-
-            if (id === clientId) {
-              // Sheet ID is in column F (index 5)
-              sheetId = row[5] || null
-              break
-            }
-          }
-        }
-      }
-    }
-
-    // If we couldn't find a client-specific sheet ID, fall back to the default
-    if (!sheetId) {
-      sheetId = process.env.GOOGLE_SHEET_ID || null
-
-      // Log this fallback for debugging
-      console.log(`No client-specific sheet ID found for clientId: ${clientId}, using default sheet`)
-    }
-
-    if (!sheetId) {
-      return NextResponse.json(
-        { error: "No sheet ID available. Please select a client or check configuration." },
-        { status: 400 },
-      )
-    }
-
-    if (!sheetName) {
-      return NextResponse.json({ error: "Sheet name is required" }, { status: 400 })
-    }
-
-    // Initialize Google Sheets API
-    const auth = new google.auth.JWT(
-      process.env.GOOGLE_CLIENT_EMAIL,
-      undefined,
-      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      ["https://www.googleapis.com/auth/spreadsheets"],
-    )
-
-    const sheets = google.sheets({ version: "v4", auth })
-
-    // Fetch data from the specified sheet
+    // Fetch data from Google Sheets
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A:Z`, // Wide range to capture all columns
+      spreadsheetId: SHEET_ID,
+      range: `${sheet}!A:Z`, // Get all columns
     })
 
-    const rows = response.data.values
+    const rows = response.data.values || []
+    console.log(`Received ${rows.length} rows from Google Sheets (including header)`)
 
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ data: [] })
+    if (rows.length === 0) {
+      console.log("No data found in the sheet")
+      return NextResponse.json({ error: "No data found" }, { status: 404 })
     }
 
-    // Extract headers from the first row
+    // Extract headers and data
     const headers = rows[0]
 
-    // Map the data to objects with proper keys
-    const data = rows.slice(1).map((row) => {
+    const data = rows.slice(1).map((row, rowIndex) => {
       const item: Record<string, any> = {}
+
+      // Add srNo if it doesn't exist in the sheet
+      if (!headers.includes("srNo") && !headers.includes("Sr. no")) {
+        item.srNo = rowIndex + 1
+      }
+
+      // First, log the entire row for debugging
+
       headers.forEach((header: string, index: number) => {
-        // Convert header to camelCase for consistent property naming
-        const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
-        item[key] = row[index] || ""
+        // Make sure we have a value for this cell
+        if (index < row.length) {
+          // Special handling for date fields
+          if (header.toLowerCase().includes("date")) {
+            // Get the raw value
+            const rawValue = row[index]
+
+            // Log the raw date value
+
+            // For Purchase sheet, map "Date of receiving" to "dateOfReceiving"
+            if (sheet === "Purchase" && header === "Date of receiving") {
+              item["dateOfReceiving"] = rawValue
+            } else {
+              // For other date fields, use the original header
+              item[header] = rawValue
+            }
+          } else if (!isNaN(Number(row[index])) && row[index] !== "") {
+            item[header] = Number(row[index])
+          } else {
+            item[header] = row[index] || ""
+          }
+        } else {
+          // If the cell is missing, set a default value based on the header
+          if (
+            [
+              "stock",
+              "Stock",
+              "quantity",
+              "Quantity",
+              "value",
+              "Value",
+              "pricePerUnit",
+              "Price per Unit",
+              "minimumQuantity",
+              "Minimum Quantity",
+              "maximumQuantity",
+              "Maximum Quantity",
+              "reorderQuantity",
+              "Reorder Quantity",
+            ].includes(header)
+          ) {
+            item[header] = 0
+          } else {
+            item[header] = ""
+          }
+        }
       })
+
+      // Calculate value for inventory items if it's missing
+      if (
+        sheet === "Inventory" &&
+        (item.stock !== undefined || item.Stock !== undefined) &&
+        (item.pricePerUnit !== undefined || item["Price per Unit"] !== undefined) &&
+        item.value === undefined &&
+        item.Value === undefined
+      ) {
+        const stock = item.stock !== undefined ? item.stock : item.Stock
+        const pricePerUnit = item.pricePerUnit !== undefined ? item.pricePerUnit : item["Price per Unit"]
+        item.value = stock * pricePerUnit
+        item.Value = stock * pricePerUnit
+      }
+
+      // For Purchase sheet, ensure dateOfReceiving is set
+      if (sheet === "Purchase") {
+        // If dateOfReceiving is not set but "Date of receiving" exists, map it
+        if (!item.dateOfReceiving && item["Date of receiving"]) {
+          item.dateOfReceiving = item["Date of receiving"]
+          console.log(`Mapped "Date of receiving" to dateOfReceiving: "${item.dateOfReceiving}"`)
+        }
+      }
+
+      // Log the processed item
+
       return item
     })
 
+    console.log(`Processed ${data.length} data rows`)
+
+    // Log a sample of the processed data with focus on dates
+
     return NextResponse.json({ data })
   } catch (error) {
-    console.error(`Error fetching sheet data:`, error)
-
-    let errorMessage = "Failed to fetch data"
-    let statusCode = 500
-
-    // Check for specific Google API errors
-    if (error.response?.data?.error) {
-      const googleError = error.response.data.error
-      errorMessage = googleError.message || errorMessage
-
-      // Handle permission errors specifically
-      if (
-        googleError.status === "PERMISSION_DENIED" ||
-        errorMessage.includes("permission") ||
-        errorMessage.includes("access")
-      ) {
-        statusCode = 403
-        errorMessage = `Permission denied: ${errorMessage}. Please ensure the service account has access to this sheet.`
-      }
-    }
-
-    return NextResponse.json({ error: errorMessage }, { status: statusCode })
+    console.error("Error fetching data from Google Sheets:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to fetch data",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
 
-export async function POST(request: Request) {
+// Add a PUT method to update inventory data
+export async function PUT(request: Request) {
   try {
-    const url = new URL(request.url)
-    const sheetName = url.searchParams.get("sheet")
-    let clientId = url.searchParams.get("clientId")
-    const data = await request.json()
+    const { product, newStock, newValue } = await request.json()
+    console.log(`Updating inventory for product: ${product}, new stock: ${newStock}, new value: ${newValue}`)
 
-    // If clientId is not provided in the URL, try to get it from cookies
-    if (!clientId) {
-      const cookieStore = cookies()
-      clientId = cookieStore.get("clientId")?.value
+    // Find the row index for the product in the Inventory sheet
+    const inventoryResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "Inventory!A:Z", // Get all columns to find the headers
+    })
 
-      // Also check the request cookies as a fallback
-      if (!clientId) {
-        const cookieHeader = request.headers.get("cookie")
-        if (cookieHeader) {
-          const clientIdMatch = cookieHeader.match(/clientId=([^;]+)/)
-          clientId = clientIdMatch ? clientIdMatch[1] : null
-        }
-      }
+    const inventoryRows = inventoryResponse.data.values || []
+    if (inventoryRows.length === 0) {
+      console.log("No inventory data found")
+      return NextResponse.json({ error: "No inventory data found" }, { status: 404 })
     }
 
-    // Determine which sheet ID to use
-    let sheetId: string | null = null
+    const headers = inventoryRows[0]
+    console.log(`Inventory headers: ${headers.join(", ")}`)
 
-    if (clientId) {
-      // If we have a clientId, fetch the client's sheet ID from the master sheet
-      const masterSheetId = process.env.MASTER_SHEET_ID
-
-      if (masterSheetId) {
-        // Initialize Google Sheets API
-        const auth = new google.auth.JWT(
-          process.env.GOOGLE_CLIENT_EMAIL,
-          undefined,
-          process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-          ["https://www.googleapis.com/auth/spreadsheets"],
-        )
-
-        const sheets = google.sheets({ version: "v4", auth })
-
-        // Fetch data from the Clients sheet
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: masterSheetId,
-          range: "Clients!A:F", // Includes ID and Sheet ID columns
-        })
-
-        const rows = response.data.values
-        if (rows && rows.length > 1) {
-          // Find the client with matching ID
-          for (let i = 1; i < rows.length; i++) {
-            const row = rows[i]
-            const id = row[0]
-
-            if (id === clientId) {
-              // Sheet ID is in column F (index 5)
-              sheetId = row[5] || null
-              break
-            }
-          }
-        }
-      }
+    // Look for either "product" or "Product" in the headers
+    let productColIndex = headers.indexOf("product")
+    if (productColIndex === -1) {
+      productColIndex = headers.indexOf("Product")
     }
 
-    // If we couldn't find a client-specific sheet ID, fall back to the default
-    if (!sheetId) {
-      sheetId = process.env.GOOGLE_SHEET_ID || null
-
-      // Log this fallback for debugging
-      console.log(`No client-specific sheet ID found for clientId: ${clientId}, using default sheet`)
+    if (productColIndex === -1) {
+      console.log("Product column not found in headers")
+      return NextResponse.json({ error: "Product column not found" }, { status: 404 })
     }
 
-    if (!sheetId) {
-      return NextResponse.json(
-        { error: "No sheet ID available. Please select a client or check configuration." },
-        { status: 400 },
-      )
-    }
-
-    if (!sheetName) {
-      return NextResponse.json({ error: "Sheet name is required" }, { status: 400 })
-    }
-
-    // Initialize Google Sheets API
-    const auth = new google.auth.JWT(
-      process.env.GOOGLE_CLIENT_EMAIL,
-      undefined,
-      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      ["https://www.googleapis.com/auth/spreadsheets"],
-    )
-
-    const sheets = google.sheets({ version: "v4", auth })
-
-    // Check if the specified sheet exists, create it if not
-    const spreadsheet = await sheets.spreadsheets.get({ spreadsheetId: sheetId })
-    let sheetExists = false
-
-    for (const sheet of spreadsheet.data.sheets || []) {
-      if (sheet.properties?.title === sheetName) {
-        sheetExists = true
+    // Find the product row index (add 1 because Google Sheets is 1-indexed and we skip the header row)
+    let rowIndex = -1
+    for (let i = 1; i < inventoryRows.length; i++) {
+      if (inventoryRows[i][productColIndex] === product) {
+        rowIndex = i + 1 // +1 because Google Sheets is 1-indexed
         break
       }
     }
 
-    if (!sheetExists) {
-      // Add the sheet
-      await sheets.spreadsheets.batchUpdate({
-        spreadsheetId: sheetId,
-        requestBody: {
-          requests: [
-            {
-              addSheet: {
-                properties: {
-                  title: sheetName,
-                },
-              },
-            },
-          ],
-        },
-      })
-
-      // Add headers based on the sheet type
-      let headers: string[] = []
-
-      switch (sheetName.toLowerCase()) {
-        case "inventory":
-          headers = ["ID", "Name", "Category", "Quantity", "Unit Price"]
-          break
-        case "purchases":
-          headers = ["ID", "Date", "Supplier", "Product", "Quantity", "Unit Price", "Total"]
-          break
-        case "sales":
-          headers = ["ID", "Date", "Customer", "Product", "Quantity", "Unit Price", "Total"]
-          break
-        case "suppliers":
-          headers = ["ID", "Name", "Contact", "Email", "Address"]
-          break
-        default:
-          // Use the keys from the data as headers
-          headers = Object.keys(data).map((key) =>
-            // Convert camelCase to Title Case
-            key
-              .replace(/([A-Z])/g, " $1")
-              .replace(/^./, (str) => str.toUpperCase()),
-          )
-      }
-
-      // Add the headers to the sheet
-      await sheets.spreadsheets.values.update({
-        spreadsheetId: sheetId,
-        range: `${sheetName}!A1:Z1`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [headers],
-        },
-      })
+    if (rowIndex === -1) {
+      console.log(`Product '${product}' not found in inventory`)
+      return NextResponse.json({ error: "Product not found" }, { status: 404 })
     }
 
-    // Generate a unique ID if not provided
-    if (!data.id) {
-      data.id = `${sheetName.toLowerCase()}_${Date.now()}`
+    console.log(`Found product at row index: ${rowIndex}`)
+
+    // Find the column indices for stock and value
+    let stockColIndex = headers.indexOf("stock") + 1 // +1 for 1-indexed columns
+    if (stockColIndex === 0) {
+      stockColIndex = headers.indexOf("Stock") + 1
     }
 
-    // Prepare the row data
-    let rowData: any[] = []
-
-    // Get the headers to ensure we're adding data in the correct order
-    const headerResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A1:Z1`,
-    })
-
-    const headers = headerResponse.data.values?.[0] || []
-
-    if (headers.length > 0) {
-      // Map data to match the header order
-      rowData = headers.map((header) => {
-        // Convert header to camelCase for matching with data object
-        const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
-        return data[key] || ""
-      })
-    } else {
-      // Fallback if headers can't be retrieved
-      rowData = Object.values(data)
+    let valueColIndex = headers.indexOf("value") + 1 // +1 for 1-indexed columns
+    if (valueColIndex === 0) {
+      valueColIndex = headers.indexOf("Value") + 1
     }
 
-    // Append the new row
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A:Z`,
+    if (stockColIndex === 0) {
+      console.log("Stock column not found in headers")
+      return NextResponse.json({ error: "Stock column not found" }, { status: 404 })
+    }
+
+    if (valueColIndex === 0) {
+      console.log("Value column not found in headers")
+      return NextResponse.json({ error: "Value column not found" }, { status: 404 })
+    }
+
+    // Update the stock in the sheet
+    console.log(`Updating stock at column ${String.fromCharCode(64 + stockColIndex)}, row ${rowIndex}`)
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `Inventory!${String.fromCharCode(64 + stockColIndex)}${rowIndex}`, // Convert column index to letter
       valueInputOption: "RAW",
       requestBody: {
-        values: [rowData],
+        values: [[newStock]],
       },
     })
 
+    // Update the value in the sheet
+    console.log(`Updating value at column ${String.fromCharCode(64 + valueColIndex)}, row ${rowIndex}`)
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: SHEET_ID,
+      range: `Inventory!${String.fromCharCode(64 + valueColIndex)}${rowIndex}`, // Convert column index to letter
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [[newValue]],
+      },
+    })
+
+    console.log("Inventory updated successfully")
+    return NextResponse.json({ success: true, message: "Inventory updated successfully" })
+  } catch (error) {
+    console.error("Error updating data in Google Sheets:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to update data",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
+  }
+}
+
+// Add a POST method to add new entries (purchase or sales)
+export async function POST(request: Request) {
+  try {
+    const { sheetName, entry } = await request.json()
+    console.log(`Adding new entry to ${sheetName}:`, entry)
+
+    // Get the current data to determine the next srNo
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A:A`, // Just need the srNo column
+    })
+
+    const rows = response.data.values || []
+    let nextSrNo = 1
+
+    // If there are rows (beyond the header), find the max srNo and add 1
+    if (rows.length > 1) {
+      // Check if the first column is "srNo" or "Sr. no"
+      const isFirstColumnSrNo = rows[0][0] === "srNo" || rows[0][0] === "Sr. no"
+
+      if (isFirstColumnSrNo) {
+        const srNos = rows
+          .slice(1)
+          .map((row) => (row[0] ? Number(row[0]) : 0))
+          .filter((num) => !isNaN(num))
+
+        if (srNos.length > 0) {
+          nextSrNo = Math.max(...srNos) + 1
+        }
+      }
+    }
+
+    console.log(`Next srNo: ${nextSrNo}`)
+
+    // Always override any provided srNo with our calculated one
+    const entryWithSrNo = { srNo: nextSrNo, ...entry }
+
+    // Get the headers to ensure we add data in the correct order
+    const headersResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!1:1`, // Just the header row
+    })
+
+    const headers = headersResponse.data.values?.[0] || []
+
+    if (headers.length === 0) {
+      console.log(`No headers found in sheet ${sheetName}`)
+      return NextResponse.json({ error: "No headers found in sheet" }, { status: 404 })
+    }
+
+    console.log(`${sheetName} headers: ${headers.join(", ")}`)
+
+    // Create a row with values in the correct order
+    const rowValues = headers.map((header) => {
+      // Map our lowercase field names to the actual header names in the sheet
+      let value = entryWithSrNo[header]
+
+      // If the header is srNo or Sr. no, always use our calculated nextSrNo
+      if (header.toLowerCase() === "srno" || header.toLowerCase() === "sr. no" || header.toLowerCase() === "sr no") {
+        return nextSrNo
+      }
+
+      // Add timestamp for the Timestamp column
+      if (header.toLowerCase() === "timestamp") {
+        return new Date().toISOString()
+      }
+
+      // If the value is undefined, try to find a matching field with different casing
+      if (value === undefined) {
+        // Convert header to lowercase for case-insensitive comparison
+        const headerLower = header.toLowerCase()
+
+        // Check for common field name patterns
+        if (headerLower === "sr. no" || headerLower === "sr.no") {
+          value = entryWithSrNo.srNo
+        } else if (headerLower === "product") {
+          value = entryWithSrNo.product
+        } else if (headerLower === "quantity") {
+          value = entryWithSrNo.quantity
+        } else if (headerLower === "unit") {
+          value = entryWithSrNo.unit
+        } else if (headerLower === "po number") {
+          value = entryWithSrNo.poNumber
+        } else if (headerLower === "supplier") {
+          value = entryWithSrNo.supplier
+        } else if (headerLower === "date of receiving") {
+          // For Purchase sheet, map dateOfReceiving to "Date of receiving"
+          value = entryWithSrNo.dateOfReceiving
+          console.log(`Mapped dateOfReceiving to "${header}": "${value}"`)
+        } else if (headerLower === "date of issue") {
+          // For Sales sheet, map dateOfIssue to "Date of Issue"
+          value = entryWithSrNo.dateOfIssue
+          console.log(`Mapped dateOfIssue to "${header}": "${value}"`)
+        } else if (
+          headerLower === "rack number" ||
+          headerLower === "rack number/location of stock" ||
+          headerLower === "location of stock"
+        ) {
+          value = entryWithSrNo.rackNumber
+        } else if (headerLower === "contact") {
+          value = entryWithSrNo.contact
+        } else if (headerLower === "company name") {
+          value = entryWithSrNo.companyName
+        } else if (headerLower === "category") {
+          value = entryWithSrNo.category
+        } else if (headerLower === "minimum quantity") {
+          value = entryWithSrNo.minimumQuantity
+        } else if (headerLower === "maximum quantity") {
+          value = entryWithSrNo.maximumQuantity
+        } else if (headerLower === "reorder quantity") {
+          value = entryWithSrNo.reorderQuantity
+        } else if (headerLower === "stock") {
+          value = entryWithSrNo.stock
+        } else if (headerLower === "price per unit") {
+          value = entryWithSrNo.pricePerUnit
+        } else if (headerLower === "value") {
+          value = entryWithSrNo.value
+        }
+      }
+
+      // Make sure we return empty string for undefined values
+      return value !== undefined ? value : ""
+    })
+
+    console.log(`Row values to append: ${rowValues.join(", ")}`)
+
+    // Append the new row
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: SHEET_ID,
+      range: `${sheetName}!A:Z`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: [rowValues],
+      },
+    })
+
+    console.log(`New ${sheetName} entry added successfully`)
     return NextResponse.json({
       success: true,
-      message: `${sheetName} data added successfully`,
-      data,
+      message: `New ${sheetName} entry added successfully`,
+      data: entryWithSrNo,
     })
   } catch (error) {
-    console.error(`Error adding data:`, error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add data" }, { status: 500 })
+    console.error(`Error adding entry:`, error)
+    return NextResponse.json(
+      {
+        error: "Failed to add entry",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
 

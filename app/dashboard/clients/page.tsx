@@ -89,10 +89,6 @@ export default function ClientsPage() {
 
   const handleSelectClient = (client: Client) => {
     setClient(client)
-
-    // Store the client ID in a cookie for API requests
-    document.cookie = `clientId=${client.id}; path=/; max-age=86400`
-
     toast.success(`Selected client: ${client.name}`)
   }
 

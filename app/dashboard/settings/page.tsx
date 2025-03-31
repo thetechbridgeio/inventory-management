@@ -12,10 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import type { InventoryItem } from "@/lib/types"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select"
-import { useClientContext } from "@/context/client-context"
 
 export default function SettingsPage() {
-  const { client } = useClientContext()
   const router = useRouter()
   const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +45,7 @@ export default function SettingsPage() {
     try {
       setLoading(true)
       // Fetch inventory data
-      const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`)
+      const inventoryResponse = await fetch("/api/sheets?sheet=Inventory")
       const inventoryResult = await inventoryResponse.json()
 
       if (inventoryResult.data && Array.isArray(inventoryResult.data)) {
@@ -250,7 +248,7 @@ export default function SettingsPage() {
       }
 
       // Make API call to add the product to Google Sheets
-      const response = await fetch(`/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`, {
+      const response = await fetch("/api/sheets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

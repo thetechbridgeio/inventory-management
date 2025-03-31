@@ -29,7 +29,6 @@ import autoTable from "jspdf-autotable"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select"
-import { useClientContext } from "@/context/client-context"
 
 // Define a type for a single sales entry form
 interface SalesEntryForm {
@@ -43,7 +42,6 @@ interface SalesEntryForm {
 }
 
 export default function SalesPage() {
-  const { client } = useClientContext()
   const [data, setData] = useState<SalesItem[]>([])
   const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
   const [supplierData, setSupplierData] = useState<Supplier[]>([])
@@ -94,7 +92,7 @@ export default function SalesPage() {
     const fetchData = async () => {
       try {
         // Fetch sales data
-        const salesResponse = await fetch(`/api/sheets?sheet=Sales${client?.id ? `&clientId=${client.id}` : ""}`)
+        const salesResponse = await fetch("/api/sheets?sheet=Sales")
         const salesResult = await salesResponse.json()
 
         if (salesResult.data) {
@@ -117,7 +115,7 @@ export default function SalesPage() {
         }
 
         // Fetch inventory data for product dropdown
-        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`)
+        const inventoryResponse = await fetch("/api/sheets?sheet=Inventory")
         const inventoryResult = await inventoryResponse.json()
 
         if (inventoryResult.data) {
@@ -156,7 +154,7 @@ export default function SalesPage() {
         }
 
         // Fetch supplier data for company dropdown
-        const supplierResponse = await fetch(`/api/sheets?sheet=Suppliers${client?.id ? `&clientId=${client.id}` : ""}`)
+        const supplierResponse = await fetch("/api/sheets?sheet=Suppliers")
         const supplierResult = await supplierResponse.json()
 
         if (supplierResult.data) {
