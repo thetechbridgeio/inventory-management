@@ -212,7 +212,7 @@ export default function SupportPage() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium leading-none">Email</p>
-                    <p className="text-sm text-muted-foreground">support@inventory.com</p>
+                    <p className="text-sm text-muted-foreground">clienthelp.bgc@gmail.com</p>
                   </div>
                 </div>
               </div>

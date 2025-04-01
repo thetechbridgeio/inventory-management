@@ -12,6 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import type { InventoryItem } from "@/lib/types"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select"
+import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -38,6 +41,17 @@ export default function SettingsPage() {
     pricePerUnit: "",
     initialStock: "", // Add this new field
   })
+
+  const [categories, setCategories] = useState<string[]>([])
+  const [units, setUnits] = useState<string[]>([])
+  const [openCategory, setOpenCategory] = useState(false)
+  const [openUnit, setOpenUnit] = useState(false)
+  const [newCategory, setNewCategory] = useState("")
+  const [newUnit, setNewUnit] = useState("")
+  const [isAddingNewCategory, setIsAddingNewCategory] = useState(false)
+  const [isAddingNewUnit, setIsAddingNewUnit] = useState(false)
+  const [categorySearchQuery, setCategorySearchQuery] = useState("")
+  const [unitSearchQuery, setUnitSearchQuery] = useState("")
 
   // Move the fetchData function outside of useEffect so we can call it after adding a product
 
@@ -80,6 +94,27 @@ export default function SettingsPage() {
 
         console.log("Product options:", options)
         setProductOptions(options)
+
+        if (processedData.length > 0) {
+          // Extract unique categories
+          const uniqueCategories = Array.from(
+            new Set(
+              processedData
+                .filter((item) => item.category && typeof item.category === "string")
+                .map((item) => item.category),
+            ),
+          ).sort()
+
+          // Extract unique units
+          const uniqueUnits = Array.from(
+            new Set(
+              processedData.filter((item) => item.unit && typeof item.unit === "string").map((item) => item.unit),
+            ),
+          ).sort()
+
+          setCategories(uniqueCategories)
+          setUnits(uniqueUnits)
+        }
       } else {
         console.error("Invalid data format received:", inventoryResult)
         toast.error("Failed to load inventory data: Invalid format")
@@ -132,7 +167,124 @@ export default function SettingsPage() {
     }))
   }
 
+  const toggleAddNewCategory = () => {
+    setIsAddingNewCategory(!isAddingNewCategory)
+    if (!isAddingNewCategory) {
+      // Switching to add new category mode - clear category
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, category: "" }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, category: "" }))
+      }
+      setNewCategory("")
+    } else {
+      // Switching back to select category mode - clear new category
+      setNewCategory("")
+    }
+  }
+
+  const toggleAddNewUnit = () => {
+    setIsAddingNewUnit(!isAddingNewUnit)
+    if (!isAddingNewUnit) {
+      // Switching to add new unit mode - clear unit
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, unit: "" }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, unit: "" }))
+      }
+      setNewUnit("")
+    } else {
+      // Switching back to select unit mode - clear new unit
+      setNewUnit("")
+    }
+  }
+
+  // Update the handleAddNewCategory function to properly save the new category
+  const handleAddNewCategory = () => {
+    if (newCategory && !categories.includes(newCategory)) {
+      setCategories((prev) => [...prev, newCategory].sort())
+
+      // Update the form with the new category
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, category: newCategory }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, category: newCategory }))
+      }
+
+      // Important: Add this to save the category to the form state immediately
+      if (!selectedProduct) {
+        console.log("Setting new category:", newCategory)
+      }
+
+      setIsAddingNewCategory(false)
+      setNewCategory("")
+    } else if (newCategory) {
+      // If the category already exists, just use it
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, category: newCategory }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, category: newCategory }))
+      }
+      setIsAddingNewCategory(false)
+      setNewCategory("")
+    }
+  }
+
+  // Update the handleAddNewUnit function to properly save the new unit
+  const handleAddNewUnit = () => {
+    if (newUnit && !units.includes(newUnit)) {
+      setUnits((prev) => [...prev, newUnit].sort())
+
+      // Update the form with the new unit
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, unit: newUnit }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, unit: newUnit }))
+      }
+
+      // Important: Add this to save the unit to the form state immediately
+      if (!selectedProduct) {
+        console.log("Setting new unit:", newUnit)
+      }
+
+      setIsAddingNewUnit(false)
+      setNewUnit("")
+    } else if (newUnit) {
+      // If the unit already exists, just use it
+      if (selectedProduct) {
+        setProductForm((prev) => ({ ...prev, unit: newUnit }))
+      } else {
+        setNewProductForm((prev) => ({ ...prev, unit: newUnit }))
+      }
+      setIsAddingNewUnit(false)
+      setNewUnit("")
+    }
+  }
+
+  // Add a key press handler for the new category input
+  const handleNewCategoryKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      handleAddNewCategory()
+    }
+  }
+
+  // Add a key press handler for the new unit input
+  const handleNewUnitKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      handleAddNewUnit()
+    }
+  }
+
+  const filteredCategories = categories.filter((category) =>
+    category.toLowerCase().includes(categorySearchQuery.toLowerCase()),
+  )
+
+  const filteredUnits = units.filter((unit) => unit.toLowerCase().includes(unitSearchQuery.toLowerCase()))
+
   const handleUpdateProduct = async (e: React.FormEvent) => {
+    console.log("Step 1")
     e.preventDefault()
 
     // Validate form data
@@ -173,6 +325,10 @@ export default function SettingsPage() {
         value: originalProduct.stock * Number(productForm.pricePerUnit), // Recalculate value
       }
 
+      console.log("Updated product:", updatedProduct)
+
+      const clientId = sessionStorage.getItem("clientId") || "default"
+
       // Make API call to update the product in Google Sheets
       const response = await fetch("/api/sheets/update-product", {
         method: "PUT",
@@ -182,12 +338,14 @@ export default function SettingsPage() {
         body: JSON.stringify({
           originalProduct: selectedProduct,
           updatedProduct,
+          clientId,
         }),
       })
 
+      const responseData = await response.json()
+
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to update product")
+        throw new Error(responseData.error || "Failed to update product")
       }
 
       toast.dismiss()
@@ -202,8 +360,21 @@ export default function SettingsPage() {
     }
   }
 
+  // Update the handleAddProduct function to add more debugging
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Log the form state for debugging
+    console.log("Form state before validation:", {
+      product: newProductForm.product,
+      category: newProductForm.category,
+      unit: newProductForm.unit,
+      minimumQuantity: newProductForm.minimumQuantity,
+      maximumQuantity: newProductForm.maximumQuantity,
+      reorderQuantity: newProductForm.reorderQuantity,
+      pricePerUnit: newProductForm.pricePerUnit,
+      initialStock: newProductForm.initialStock,
+    })
 
     // Validate form data
     if (
@@ -215,7 +386,18 @@ export default function SettingsPage() {
       !newProductForm.reorderQuantity ||
       !newProductForm.pricePerUnit
     ) {
-      toast.error("Please fill in all required fields")
+      // Log which fields are missing
+      const missingFields = []
+      if (!newProductForm.product) missingFields.push("Product Name")
+      if (!newProductForm.category) missingFields.push("Category")
+      if (!newProductForm.unit) missingFields.push("Unit")
+      if (!newProductForm.minimumQuantity) missingFields.push("Minimum Quantity")
+      if (!newProductForm.maximumQuantity) missingFields.push("Maximum Quantity")
+      if (!newProductForm.reorderQuantity) missingFields.push("Reorder Quantity")
+      if (!newProductForm.pricePerUnit) missingFields.push("Price Per Unit")
+
+      console.log("Missing fields:", missingFields)
+      toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
       return
     }
 
@@ -339,25 +521,201 @@ export default function SettingsPage() {
                         <Label htmlFor="category" className="text-right">
                           Category
                         </Label>
-                        <Input
-                          id="category"
-                          name="category"
-                          value={productForm.category}
-                          onChange={handleProductFormChange}
-                          className="col-span-3"
-                        />
+                        <div className="col-span-3 space-y-2">
+                          {isAddingNewCategory ? (
+                            <div className="flex gap-2">
+                              <Input
+                                id="newCategory"
+                                placeholder="Enter new category name"
+                                value={newCategory}
+                                onChange={(e) => setNewCategory(e.target.value)}
+                                onKeyPress={handleNewCategoryKeyPress}
+                                className="flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleAddNewCategory}
+                                className="h-10 w-10"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button type="button" onClick={handleAddNewCategory} className="h-10">
+                                Add
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openCategory}
+                                    className="w-full justify-between"
+                                  >
+                                    {productForm.category || "Select category..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center border-b p-2">
+                                      <Input
+                                        placeholder="Search category..."
+                                        value={categorySearchQuery}
+                                        onChange={(e) => setCategorySearchQuery(e.target.value)}
+                                        className="flex h-8 w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                      />
+                                    </div>
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                      {filteredCategories.length > 0 ? (
+                                        <div className="flex flex-col py-1">
+                                          {filteredCategories.map((category) => (
+                                            <div
+                                              key={category}
+                                              className={cn(
+                                                "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                                                productForm.category === category && "bg-accent text-accent-foreground",
+                                              )}
+                                              onClick={() => {
+                                                setProductForm((prev) => ({ ...prev, category }))
+                                                setOpenCategory(false)
+                                                setCategorySearchQuery("")
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  productForm.category === category ? "opacity-100" : "opacity-0",
+                                                )}
+                                              />
+                                              {category}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="py-6 text-center text-sm text-muted-foreground">
+                                          No categories found.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-xs flex items-center"
+                                onClick={toggleAddNewCategory}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add New Category
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="unit" className="text-right">
                           Unit
                         </Label>
-                        <Input
-                          id="unit"
-                          name="unit"
-                          value={productForm.unit}
-                          onChange={handleProductFormChange}
-                          className="col-span-3"
-                        />
+                        <div className="col-span-3 space-y-2">
+                          {isAddingNewUnit ? (
+                            <div className="flex gap-2">
+                              <Input
+                                id="newUnit"
+                                placeholder="Enter new unit name"
+                                value={newUnit}
+                                onChange={(e) => setNewUnit(e.target.value)}
+                                onKeyPress={handleNewUnitKeyPress}
+                                className="flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleAddNewUnit}
+                                className="h-10 w-10"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                              <Button type="button" onClick={handleAddNewUnit} className="h-10">
+                                Add
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Popover open={openUnit} onOpenChange={setOpenUnit}>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    aria-expanded={openUnit}
+                                    className="w-full justify-between"
+                                  >
+                                    {productForm.unit || "Select unit..."}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0">
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center border-b p-2">
+                                      <Input
+                                        placeholder="Search unit..."
+                                        value={unitSearchQuery}
+                                        onChange={(e) => setUnitSearchQuery(e.target.value)}
+                                        className="flex h-8 w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                      />
+                                    </div>
+                                    <div className="max-h-[300px] overflow-y-auto">
+                                      {filteredUnits.length > 0 ? (
+                                        <div className="flex flex-col py-1">
+                                          {filteredUnits.map((unit) => (
+                                            <div
+                                              key={unit}
+                                              className={cn(
+                                                "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                                                productForm.unit === unit && "bg-accent text-accent-foreground",
+                                              )}
+                                              onClick={() => {
+                                                setProductForm((prev) => ({ ...prev, unit }))
+                                                setOpenUnit(false)
+                                                setUnitSearchQuery("")
+                                              }}
+                                            >
+                                              <Check
+                                                className={cn(
+                                                  "mr-2 h-4 w-4",
+                                                  productForm.unit === unit ? "opacity-100" : "opacity-0",
+                                                )}
+                                              />
+                                              {unit}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : (
+                                        <div className="py-6 text-center text-sm text-muted-foreground">
+                                          No units found.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                              <Button
+                                type="button"
+                                variant="link"
+                                className="h-auto p-0 text-xs flex items-center"
+                                onClick={toggleAddNewUnit}
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add New Unit
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="minimumQuantity" className="text-right">
@@ -450,25 +808,201 @@ export default function SettingsPage() {
                     <Label htmlFor="newCategory" className="text-right">
                       Category
                     </Label>
-                    <Input
-                      id="newCategory"
-                      name="category"
-                      value={newProductForm.category}
-                      onChange={handleNewProductFormChange}
-                      className="col-span-3"
-                    />
+                    <div className="col-span-3 space-y-2">
+                      {isAddingNewCategory ? (
+                        <div className="flex gap-2">
+                          <Input
+                            id="newCategory"
+                            placeholder="Enter new category name"
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value)}
+                            onKeyPress={handleNewCategoryKeyPress}
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleAddNewCategory}
+                            className="h-10 w-10"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" onClick={handleAddNewCategory} className="h-10">
+                            Add
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Popover open={openCategory} onOpenChange={setOpenCategory}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openCategory}
+                                className="w-full justify-between"
+                              >
+                                {newProductForm.category || "Select category..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <div className="flex flex-col">
+                                <div className="flex items-center border-b p-2">
+                                  <Input
+                                    placeholder="Search category..."
+                                    value={categorySearchQuery}
+                                    onChange={(e) => setCategorySearchQuery(e.target.value)}
+                                    className="flex h-8 w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  />
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {filteredCategories.length > 0 ? (
+                                    <div className="flex flex-col py-1">
+                                      {filteredCategories.map((category) => (
+                                        <div
+                                          key={category}
+                                          className={cn(
+                                            "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                                            newProductForm.category === category && "bg-accent text-accent-foreground",
+                                          )}
+                                          onClick={() => {
+                                            setNewProductForm((prev) => ({ ...prev, category }))
+                                            setOpenCategory(false)
+                                            setCategorySearchQuery("")
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              newProductForm.category === category ? "opacity-100" : "opacity-0",
+                                            )}
+                                          />
+                                          {category}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="py-6 text-center text-sm text-muted-foreground">
+                                      No categories found.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto p-0 text-xs flex items-center"
+                            onClick={toggleAddNewCategory}
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add New Category
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="newUnit" className="text-right">
                       Unit
                     </Label>
-                    <Input
-                      id="newUnit"
-                      name="unit"
-                      value={newProductForm.unit}
-                      onChange={handleNewProductFormChange}
-                      className="col-span-3"
-                    />
+                    <div className="col-span-3 space-y-2">
+                      {isAddingNewUnit ? (
+                        <div className="flex gap-2">
+                          <Input
+                            id="newUnit"
+                            placeholder="Enter new unit name"
+                            value={newUnit}
+                            onChange={(e) => setNewUnit(e.target.value)}
+                            onKeyPress={handleNewUnitKeyPress}
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={toggleAddNewUnit}
+                            className="h-10 w-10"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                          <Button type="button" onClick={handleAddNewUnit} className="h-10">
+                            Add
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Popover open={openUnit} onOpenChange={setOpenUnit}>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={openUnit}
+                                className="w-full justify-between"
+                              >
+                                {newProductForm.unit || "Select unit..."}
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-full p-0">
+                              <div className="flex flex-col">
+                                <div className="flex items-center border-b p-2">
+                                  <Input
+                                    placeholder="Search unit..."
+                                    value={unitSearchQuery}
+                                    onChange={(e) => setUnitSearchQuery(e.target.value)}
+                                    className="flex h-8 w-full border-0 bg-transparent p-0 text-sm outline-none placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                                  />
+                                </div>
+                                <div className="max-h-[300px] overflow-y-auto">
+                                  {filteredUnits.length > 0 ? (
+                                    <div className="flex flex-col py-1">
+                                      {filteredUnits.map((unit) => (
+                                        <div
+                                          key={unit}
+                                          className={cn(
+                                            "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                                            newProductForm.unit === unit && "bg-accent text-accent-foreground",
+                                          )}
+                                          onClick={() => {
+                                            setNewProductForm((prev) => ({ ...prev, unit }))
+                                            setOpenUnit(false)
+                                            setUnitSearchQuery("")
+                                          }}
+                                        >
+                                          <Check
+                                            className={cn(
+                                              "mr-2 h-4 w-4",
+                                              newProductForm.unit === unit ? "opacity-100" : "opacity-0",
+                                            )}
+                                          />
+                                          {unit}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <div className="py-6 text-center text-sm text-muted-foreground">
+                                      No units found.
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="h-auto p-0 text-xs flex items-center"
+                            onClick={toggleAddNewUnit}
+                          >
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add New Unit
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="newMinimumQuantity" className="text-right">
