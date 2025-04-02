@@ -129,6 +129,7 @@ export default function InventoryPage() {
     setSelectedRows(rows)
   }
 
+  // Update the handleDeleteSelected function to pass clientId
   const handleDeleteSelected = async () => {
     if (selectedRows.length === 0) return
 
@@ -144,7 +145,10 @@ export default function InventoryPage() {
         body: JSON.stringify({
           // Use the exact sheet name as it appears in the Google Sheet
           sheetName: "Inventory",
-          items: selectedRows,
+          items: selectedRows.map((row) => ({
+            // Remove srNo entirely from the payload
+            product: row.product,
+          })),
           clientId: client?.id,
         }),
       })
@@ -341,7 +345,9 @@ export default function InventoryPage() {
     // Filter by search term
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
-      return item.product.toLowerCase().includes(searchTerm) || item.category.toLowerCase().includes(searchTerm)
+      const productStr = String(item.product || "")
+      const categoryStr = String(item.category || "")
+      return productStr.toLowerCase().includes(searchTerm) || categoryStr.toLowerCase().includes(searchTerm)
     }
 
     return true

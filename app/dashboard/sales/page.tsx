@@ -31,6 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select"
 import { useClientContext } from "@/context/client-context"
 
+// Import the client terminology utilities
+import { getSalesTerm } from "@/lib/client-terminology"
+
 // Define a type for a single sales entry form
 interface SalesEntryForm {
   product: string
@@ -43,7 +46,6 @@ interface SalesEntryForm {
 }
 
 export default function SalesPage() {
-  const { client } = useClientContext()
   const [data, setData] = useState<SalesItem[]>([])
   const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
   const [supplierData, setSupplierData] = useState<Supplier[]>([])
@@ -65,6 +67,7 @@ export default function SalesPage() {
   })
   const [productFilters, setProductFilters] = useState<Record<string, boolean>>({})
   const [companyFilters, setCompanyFilters] = useState<Record<string, boolean>>({})
+  const { client } = useClientContext()
 
   // Replace single formData with an array of entries
   const [formEntries, setFormEntries] = useState<SalesEntryForm[]>([
@@ -90,6 +93,7 @@ export default function SalesPage() {
     })
   }
 
+  // Update the useEffect to pass clientId in the fetch requests
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -117,7 +121,9 @@ export default function SalesPage() {
         }
 
         // Fetch inventory data for product dropdown
-        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`)
+        const inventoryResponse = await fetch(
+          `/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`,
+        )
         const inventoryResult = await inventoryResponse.json()
 
         if (inventoryResult.data) {
@@ -197,7 +203,7 @@ export default function SalesPage() {
     }
 
     fetchData()
-  }, [])
+  }, [client?.id])
 
   useEffect(() => {
     // Update filters.product when productFilters change
@@ -221,6 +227,7 @@ export default function SalesPage() {
     setSelectedRows(rows)
   }
 
+  // Update the handleDeleteSelected function to pass clientId
   const handleDeleteSelected = async () => {
     if (selectedRows.length === 0) return
 
@@ -237,6 +244,7 @@ export default function SalesPage() {
           // Use the exact sheet name as it appears in the Google Sheet
           sheetName: "Sales",
           items: selectedRows,
+          clientId: client?.id,
         }),
       })
 
@@ -289,8 +297,51 @@ export default function SalesPage() {
     // Define the columns for the table
     const tableColumn = ["Sr. No", "Product", "Quantity", "Unit", "Contact", "Company", "Date"]
 
-    // Define the rows for the table - use filteredData instead of data
-    const tableRows = filteredData.map((item, index) => [
+    // Define the rows for the table - use filtered data
+    const filteredItems = data.filter((item) => {
+      // Filter by product
+      if (filters.product.length > 0 && !filters.product.includes(item.product)) {
+        return false
+      }
+
+      // Filter by company
+      if (filters.company.length > 0 && !filters.company.includes(item.companyName)) {
+        return false
+      }
+
+      // Filter by date range
+      if (filters.dateRange.from || filters.dateRange.to) {
+        const itemDate = new Date(item.dateOfIssue)
+
+        if (filters.dateRange.from && itemDate < filters.dateRange.from) {
+          return false
+        }
+
+        if (filters.dateRange.to) {
+          // Add one day to include the end date
+          const endDate = new Date(filters.dateRange.to)
+          endDate.setDate(endDate.getDate() + 1)
+
+          if (itemDate > endDate) {
+            return false
+          }
+        }
+      }
+
+      // Filter by search term
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase()
+        return (
+          (typeof item.product === "string" && item.product.toLowerCase().includes(searchTerm)) ||
+          (typeof item.contact === "string" && item.contact.toLowerCase().includes(searchTerm)) ||
+          (typeof item.companyName === "string" && item.companyName.toLowerCase().includes(searchTerm))
+        )
+      }
+
+      return true
+    })
+
+    const tableRows = filteredItems.map((item, index) => [
       index + 1, // Use sequential numbering from the filtered table
       item.product,
       item.quantity,
@@ -420,6 +471,7 @@ export default function SalesPage() {
     setFormEntries((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Update the handleSubmit function to pass clientId
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -487,6 +539,7 @@ export default function SalesPage() {
           body: JSON.stringify({
             sheetName: "Sales",
             entry: newEntry,
+            clientId: client?.id,
           }),
         })
 
@@ -516,6 +569,7 @@ export default function SalesPage() {
               product: entry.product,
               newStock,
               newValue,
+              clientId: client?.id,
             }),
           })
 
@@ -545,6 +599,7 @@ export default function SalesPage() {
                   supplier: "", // Leave supplier empty
                   companyName: entry.newCompany,
                 },
+                clientId: client?.id,
               }),
             })
 
@@ -736,7 +791,8 @@ export default function SalesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Sales Management</h1>
+        {/* Update the page title */}
+        <h1 className="text-2xl font-bold">{getSalesTerm(client?.name)} Management</h1>
         <div className="flex flex-wrap gap-2">
           <Dialog
             open={isDialogOpen}
@@ -760,15 +816,19 @@ export default function SalesPage() {
             }}
           >
             <DialogTrigger asChild>
+              {/* Update the "Add Sale" button text */}
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Sale
+                Add {getSalesTerm(client?.name)}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Sale</DialogTitle>
-                <DialogDescription>Enter the details of the new sales entries.</DialogDescription>
+                {/* Update the dialog title and description */}
+                <DialogTitle>Add New {getSalesTerm(client?.name)}</DialogTitle>
+                <DialogDescription>
+                  Enter the details of the new {getSalesTerm(client?.name).toLowerCase()} entries.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 {formEntries.map((entry, index) => (
@@ -987,6 +1047,7 @@ export default function SalesPage() {
                 </div>
 
                 <DialogFooter>
+                  {/* Update the submit button text */}
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                       <>
@@ -994,7 +1055,7 @@ export default function SalesPage() {
                         Adding...
                       </>
                     ) : (
-                      `Add ${formEntries.length} Sales ${formEntries.length > 1 ? "Entries" : "Entry"}`
+                      `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
                     )}
                   </Button>
                 </DialogFooter>
@@ -1165,11 +1226,13 @@ export default function SalesPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Sales Items</CardTitle>
+            {/* Update the card title */}
+            <CardTitle>{getSalesTerm(client?.name)} Items</CardTitle>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              {/* Update the search placeholder */}
               <Input
-                placeholder="Search sales..."
+                placeholder={`Search ${getSalesTerm(client?.name).toLowerCase()}s...`}
                 className="pl-8 h-8 w-[200px] lg:w-[300px]"
                 value={filters.search}
                 onChange={handleSearchChange}

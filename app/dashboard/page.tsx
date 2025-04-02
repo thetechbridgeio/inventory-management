@@ -9,6 +9,11 @@ import type { InventoryItem, PurchaseItem, SalesItem } from "@/lib/types"
 import { getStockStatus } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { format, subDays } from "date-fns"
+import { useClientContext } from "@/context/client-context"
+import { toast } from "sonner"
+
+// Import the client terminology utilities
+import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
 
 // Define a type for our time-based metrics
 interface TimeMetrics {
@@ -60,21 +65,45 @@ export default function DashboardPage() {
   // Add a new state variable to track negative stock items
   const [negativeStockItems, setNegativeStockItems] = useState<InventoryItem[]>([])
 
+  const { client } = useClientContext()
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log("Fetching dashboard data with clientId:", client?.id)
+        setLoading(true)
+
         // Fetch inventory data
-        const inventoryResponse = await fetch("/api/sheets?sheet=Inventory")
+        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}`)
+        if (!inventoryResponse.ok) {
+          const errorData = await inventoryResponse.json()
+          console.error("Inventory API error:", errorData)
+          throw new Error(`Inventory API error: ${errorData.error || "Unknown error"}`)
+        }
         const inventoryResult = await inventoryResponse.json()
+        console.log("Inventory data fetched:", inventoryResult)
 
         // Fetch purchase data
-        const purchaseResponse = await fetch("/api/sheets?sheet=Purchase")
+        const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}`)
+        if (!purchaseResponse.ok) {
+          const errorData = await purchaseResponse.json()
+          console.error("Purchase API error:", errorData)
+          throw new Error(`Purchase API error: ${errorData.error || "Unknown error"}`)
+        }
         const purchaseResult = await purchaseResponse.json()
+        console.log("Purchase data fetched:", purchaseResult)
 
         // Fetch sales data
-        const salesResponse = await fetch("/api/sheets?sheet=Sales")
+        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}`)
+        if (!salesResponse.ok) {
+          const errorData = await salesResponse.json()
+          console.error("Sales API error:", errorData)
+          throw new Error(`Sales API error: ${errorData.error || "Unknown error"}`)
+        }
         const salesResult = await salesResponse.json()
+        console.log("Sales data fetched:", salesResult)
 
+        // Process the data as before...
         if (inventoryResult.data) {
           // Map the field names from Google Sheets to our expected field names
           const processedData = inventoryResult.data.map((item: any, index: number) => {
@@ -118,6 +147,8 @@ export default function DashboardPage() {
           // Add this code to identify negative stock items
           const itemsWithNegativeStock = data.filter((item: InventoryItem) => item.stock < 0)
           setNegativeStockItems(itemsWithNegativeStock)
+        } else {
+          console.warn("No inventory data found in the response")
         }
 
         if (purchaseResult.data) {
@@ -136,6 +167,8 @@ export default function DashboardPage() {
             return processed
           })
           setPurchaseData(processedPurchaseData)
+        } else {
+          console.warn("No purchase data found in the response")
         }
 
         if (salesResult.data) {
@@ -153,21 +186,33 @@ export default function DashboardPage() {
             return processed
           })
           setSalesData(processedSalesData)
+        } else {
+          console.warn("No sales data found in the response")
         }
 
         // Process time metrics after all data is fetched
         if (purchaseResult.data && salesResult.data && inventoryResult.data) {
           calculateTimeMetrics(inventoryResult.data, purchaseResult.data, salesResult.data)
+        } else {
+          // Use empty arrays as fallback if any data is missing
+          calculateTimeMetrics(inventoryResult.data || [], purchaseResult.data || [], salesResult.data || [])
         }
       } catch (error) {
-        console.error("Error fetching data:", error)
+        console.error("Error fetching dashboard data:", error)
+        toast.error("Failed to load dashboard data. Please try again later.")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
-  }, [])
+    if (client?.id) {
+      console.log("Dashboard: Client ID is available, fetching data...", client?.id)
+      fetchData()
+    } else {
+      console.warn("Dashboard: No client ID available")
+      setLoading(false) // Stop loading if no client ID
+    }
+  }, [client?.id])
 
   const calculateTimeMetrics = (inventoryItems: any[], purchaseItems: any[], salesItems: any[]) => {
     const today = new Date()
@@ -366,7 +411,7 @@ export default function DashboardPage() {
       today: { purchases: todayPurchases, sales: todaySales },
       yesterday: { purchases: yesterdayPurchases, sales: yesterdaySales },
       thisWeek: { purchases: thisWeekPurchases, sales: thisWeekSales },
-      lastWeek: { purchases: lastWeekPurchases, sales: lastWeekSales },
+      lastWeek: { lastWeekPurchases, sales: lastWeekSales },
       avgPerDay: { purchases: avgPurchasesPerDay, sales: avgSalesPerDay },
       newProductsThisWeek,
     })
@@ -384,6 +429,19 @@ export default function DashboardPage() {
 
   const purchaseChange = calculateChange(timeMetrics.thisWeek.purchases, timeMetrics.lastWeek.purchases)
   const salesChange = calculateChange(timeMetrics.thisWeek.sales, timeMetrics.lastWeek.sales)
+
+  if (!client) {
+    return (
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">No client selected. Please select a client to view dashboard data.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -472,11 +530,11 @@ export default function DashboardPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">Purchases</p>
+                <p className="text-xs text-muted-foreground">{getPurchaseTerm(client?.name)}s</p>
                 <div className="text-2xl font-bold">{timeMetrics.today.purchases}</div>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Sales</p>
+                <p className="text-xs text-muted-foreground">{getSalesTerm(client?.name)}s</p>
                 <div className="text-2xl font-bold">{timeMetrics.today.sales}</div>
               </div>
             </div>
@@ -497,7 +555,7 @@ export default function DashboardPage() {
 
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Purchases</CardTitle>
+            <CardTitle className="text-sm font-medium">Weekly {getPurchaseTerm(client?.name)}</CardTitle>
             <div className={`flex items-center ${purchaseChange >= 0 ? "text-green-600" : "text-red-600"}`}>
               {purchaseChange >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             </div>
@@ -518,7 +576,7 @@ export default function DashboardPage() {
 
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Weekly Sales</CardTitle>
+            <CardTitle className="text-sm font-medium">Weekly {getSalesTerm(client?.name)}</CardTitle>
             <div className={`flex items-center ${salesChange >= 0 ? "text-green-600" : "text-red-600"}`}>
               {salesChange >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             </div>
@@ -555,14 +613,14 @@ export default function DashboardPage() {
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {[
                   ...purchaseData.map((item) => ({
-                    type: "Purchase",
+                    type: getPurchaseTerm(client?.name),
                     product: item.product,
                     quantity: item.quantity,
                     timestamp: item.timestamp,
                     date: item.dateOfReceiving,
                   })),
                   ...salesData.map((item) => ({
-                    type: "Sale",
+                    type: getSalesTerm(client?.name),
                     product: item.product,
                     quantity: item.quantity,
                     timestamp: item.timestamp,
@@ -589,7 +647,9 @@ export default function DashboardPage() {
                       <div className="text-sm">
                         <span
                           className={`inline-flex items-center justify-center px-2 py-1 rounded-full text-xs font-medium ${
-                            item.type === "Purchase" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                            item.type === getPurchaseTerm(client?.name)
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-green-100 text-green-800"
                           }`}
                         >
                           {item.type}
@@ -632,7 +692,7 @@ export default function DashboardPage() {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => handleNavigate("/dashboard/inventory?stockStatus=negative")}
+                  onClick={() => handleNavigate(`/dashboard/inventory?stockStatus=negative&clientId=${client?.id}`)}
                 >
                   View All Negative Stock Items
                 </Button>
@@ -655,7 +715,7 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 className="w-full"
-                onClick={() => handleNavigate("/dashboard/inventory")}
+                onClick={() => handleNavigate(`/dashboard/inventory?clientId=${client?.id}`)}
               >
                 View All Low Stock Items
               </Button>

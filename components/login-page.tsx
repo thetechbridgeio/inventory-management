@@ -10,8 +10,17 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Lock, UserIcon } from "lucide-react"
+import { AlertCircle, Lock, UserIcon, CheckCircle } from "lucide-react"
 import { useClientContext } from "@/context/client-context"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -20,6 +29,72 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { setClient } = useClientContext()
+  const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false)
+
+  // Password reset form state
+  const [resetForm, setResetForm] = useState({
+    name: "",
+    contactNumber: "",
+    companyName: "",
+  })
+  const [isSubmittingReset, setIsSubmittingReset] = useState(false)
+  const [resetSuccess, setResetSuccess] = useState(false)
+
+  const handleResetFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setResetForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleResetFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validate form
+    if (!resetForm.name || !resetForm.contactNumber || !resetForm.companyName) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
+    setIsSubmittingReset(true)
+
+    try {
+      const response = await fetch("/api/email/password-reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(resetForm),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to send password reset request")
+      }
+
+      setResetSuccess(true)
+
+      // Reset form
+      setResetForm({
+        name: "",
+        contactNumber: "",
+        companyName: "",
+      })
+    } catch (error) {
+      console.error("Password reset request error:", error)
+      toast.error("Failed to send password reset request. Please try again.")
+    } finally {
+      setIsSubmittingReset(false)
+    }
+  }
+
+  const handleCloseResetDialog = () => {
+    setShowForgotPasswordDialog(false)
+    // Reset the success state after dialog is closed
+    setTimeout(() => {
+      setResetSuccess(false)
+    }, 300)
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,9 +143,6 @@ export default function LoginPage() {
 
         // Set the client in context
         setClient(client)
-
-        // Set the client ID in a cookie for API requests
-        document.cookie = `clientId=${client.id}; path=/; max-age=86400`
 
         // Redirect to inventory page
         router.push("/dashboard/inventory")
@@ -132,7 +204,14 @@ export default function LoginPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <Button variant="link" className="h-auto p-0 text-xs">
+                    <Button
+                      variant="link"
+                      className="h-auto p-0 text-xs"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        setShowForgotPasswordDialog(true)
+                      }}
+                    >
                       Forgot password?
                     </Button>
                   </div>
@@ -160,10 +239,83 @@ export default function LoginPage() {
                   )}
                 </Button>
               </div>
+              <Dialog open={showForgotPasswordDialog} onOpenChange={handleCloseResetDialog}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Reset Password</DialogTitle>
+                    <DialogDescription>
+                      {resetSuccess
+                        ? "Your password reset request has been sent."
+                        : "Fill in the form below to request a password reset."}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {resetSuccess ? (
+                    <div className="py-6 flex flex-col items-center justify-center text-center space-y-2">
+                      <CheckCircle className="h-12 w-12 text-green-500" />
+                      <p className="text-lg font-medium">Request Sent Successfully</p>
+                      <p className="text-sm text-muted-foreground">
+                        We will contact you shortly to help reset your password.
+                      </p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleResetFormSubmit} className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-name">Name</Label>
+                        <Input
+                          id="reset-name"
+                          name="name"
+                          placeholder="Enter your name"
+                          value={resetForm.name}
+                          onChange={handleResetFormChange}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-contact">Contact Number</Label>
+                        <Input
+                          id="reset-contact"
+                          name="contactNumber"
+                          placeholder="Enter your contact number"
+                          value={resetForm.contactNumber}
+                          onChange={handleResetFormChange}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="reset-company">Company Name</Label>
+                        <Input
+                          id="reset-company"
+                          name="companyName"
+                          placeholder="Enter your company name"
+                          value={resetForm.companyName}
+                          onChange={handleResetFormChange}
+                          required
+                        />
+                      </div>
+                      <DialogFooter className="sm:justify-between mt-6 gap-2">
+                        <Button type="button" variant="outline" onClick={handleCloseResetDialog}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmittingReset}>
+                          {isSubmittingReset ? (
+                            <>
+                              <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                              Sending...
+                            </>
+                          ) : (
+                            "Send Reset Request"
+                          )}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  )}
+                </DialogContent>
+              </Dialog>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <div className="text-center text-sm text-muted-foreground">
+            {/* <div className="text-center text-sm text-muted-foreground">
               <p>Demo credentials:</p>
               <p>
                 Admin: <span className="font-mono">Admin</span> | Password: <span className="font-mono">admin@123</span>
@@ -172,7 +324,7 @@ export default function LoginPage() {
                 Client: <span className="font-mono">ClientOne</span> | Password:{" "}
                 <span className="font-mono">client1@123</span>
               </p>
-            </div>
+            </div> */}
           </CardFooter>
         </Card>
 

@@ -14,7 +14,7 @@ export async function GET() {
     const sheets = google.sheets({ version: "v4", auth })
 
     // Get the spreadsheet ID from environment variables
-    const spreadsheetId = process.env.MASTER_SHEET_ID || null
+    const spreadsheetId = process.env.MASTER_SHEET_ID || process.env.GOOGLE_SHEET_ID
 
     if (!spreadsheetId) {
       throw new Error("Master Sheet ID not found in environment variables")
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
     const sheets = google.sheets({ version: "v4", auth })
 
     // Get the spreadsheet ID from environment variables
-    const spreadsheetId = process.env.MASTER_SHEET_ID || null
+    const spreadsheetId = process.env.MASTER_SHEET_ID || process.env.GOOGLE_SHEET_ID
 
     if (!spreadsheetId) {
       throw new Error("Master Sheet ID not found in environment variables")

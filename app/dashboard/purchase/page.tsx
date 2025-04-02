@@ -31,6 +31,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/searchable-select"
 import { useClientContext } from "@/context/client-context"
 
+// Import the client terminology utilities
+import { getPurchaseTerm } from "@/lib/client-terminology"
+
 // Define a type for a single purchase entry form
 interface PurchaseEntryForm {
   product: string
@@ -44,7 +47,6 @@ interface PurchaseEntryForm {
 }
 
 export default function PurchasePage() {
-  const { client } = useClientContext()
   const [data, setData] = useState<PurchaseItem[]>([])
   const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
   const [supplierData, setSupplierData] = useState<Supplier[]>([])
@@ -82,6 +84,7 @@ export default function PurchasePage() {
   ])
 
   const [isLoading, setIsLoading] = useState(false)
+  const { client } = useClientContext()
 
   // Function to sort data by date (newest first)
   const sortByDateDesc = (items: PurchaseItem[]) => {
@@ -104,6 +107,7 @@ export default function PurchasePage() {
     })
   }
 
+  // Update the fetchData function to pass clientId
   const fetchData = async () => {
     try {
       // Fetch purchase data
@@ -219,9 +223,10 @@ export default function PurchasePage() {
     }
   }
 
+  // Update the useEffect to include client?.id in the dependency array
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [client?.id])
 
   useEffect(() => {
     // Update filters.product when productFilters change
@@ -245,6 +250,7 @@ export default function PurchasePage() {
     setSelectedRows(rows)
   }
 
+  // Update the handleDeleteSelected function to pass clientId
   const handleDeleteSelected = async () => {
     if (selectedRows.length === 0) return
 
@@ -264,6 +270,7 @@ export default function PurchasePage() {
           // Use the exact sheet name as it appears in the Google Sheet
           sheetName: "Purchase",
           items: selectedRows,
+          clientId: client?.id,
         }),
       })
 
@@ -465,6 +472,7 @@ export default function PurchasePage() {
     setFormEntries((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // Update the handleSubmit function to pass clientId
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -538,6 +546,7 @@ export default function PurchasePage() {
           body: JSON.stringify({
             sheetName: "Purchase",
             entry: newEntry,
+            clientId: client?.id,
           }),
         })
 
@@ -569,6 +578,7 @@ export default function PurchasePage() {
               product: entry.product,
               newStock,
               newValue,
+              clientId: client?.id,
             }),
           })
 
@@ -599,6 +609,7 @@ export default function PurchasePage() {
                   // Leave companyName empty
                   companyName: "",
                 },
+                clientId: client?.id,
               }),
             })
 
@@ -737,7 +748,7 @@ export default function PurchasePage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Purchase Management</h1>
+        <h1 className="text-2xl font-bold">{getPurchaseTerm(client?.name)} Management</h1>
         <div className="flex flex-wrap gap-2">
           <Dialog
             open={isDialogOpen}
@@ -764,13 +775,15 @@ export default function PurchasePage() {
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Purchase
+                Add {getPurchaseTerm(client?.name)}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Purchase</DialogTitle>
-                <DialogDescription>Enter the details of the new purchase entries.</DialogDescription>
+                <DialogTitle>Add New {getPurchaseTerm(client?.name)}</DialogTitle>
+                <DialogDescription>
+                  Enter the details of the new {getPurchaseTerm(client?.name).toLowerCase()} entries.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
                 {formEntries.map((entry, index) => (
@@ -1021,7 +1034,7 @@ export default function PurchasePage() {
                         Adding...
                       </>
                     ) : (
-                      `Add ${formEntries.length} Purchase ${formEntries.length > 1 ? "Entries" : "Entry"}`
+                      `Add ${formEntries.length} ${getPurchaseTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
                     )}
                   </Button>
                 </DialogFooter>
@@ -1192,11 +1205,11 @@ export default function PurchasePage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Purchase Items</CardTitle>
+            <CardTitle>{getPurchaseTerm(client?.name)} Items</CardTitle>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search purchases..."
+                placeholder={`Search ${getPurchaseTerm(client?.name).toLowerCase()}s...`}
                 className="pl-8 h-8 w-[200px] lg:w-[300px]"
                 value={filters.search}
                 onChange={handleSearchChange}

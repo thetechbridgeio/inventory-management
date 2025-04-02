@@ -38,8 +38,8 @@ export function SearchableSelect({
 
   const filteredOptions = React.useMemo(() => {
     const filtered = options.filter((option) => {
-      // Add null check before calling toLowerCase
-      const label = option.label || ""
+      // Ensure label is a string before calling toLowerCase
+      const label = typeof option.label === "string" ? option.label : String(option.label || "")
       const query = searchQuery.toLowerCase()
       return label.toLowerCase().includes(query)
     })
