@@ -105,7 +105,7 @@ export default function LoginPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Check for admin credentials
-    if (username === "Lexwell" && password === "lexwell@123") {
+    if (username === "Admin" && password === "admin@123") {
       // Store admin login state
       sessionStorage.setItem("isLoggedIn", "true")
       sessionStorage.setItem("userRole", "admin")

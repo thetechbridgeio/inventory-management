@@ -98,69 +98,69 @@ function generateLowStockEmailHtml(items: InventoryItem[], clientName?: string):
   const tableRows = items
     .map(
       (item) => `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.srNo}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.product}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.category}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.stock} ${item.unit}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.minimumQuantity} ${item.unit}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.reorderQuantity} ${item.unit}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">₹${item.pricePerUnit.toLocaleString("en-IN")}</td>
-      </tr>
-    `,
+     <tr>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.srNo}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.product}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.category}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.stock} ${item.unit}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.minimumQuantity} ${item.unit}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">${item.reorderQuantity} ${item.unit}</td>
+       <td style="padding: 8px; border: 1px solid #ddd;">₹${item.pricePerUnit.toLocaleString("en-IN")}</td>
+     </tr>
+   `,
     )
     .join("")
 
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th { background-color: #f2f2f2; text-align: left; padding: 12px 8px; border: 1px solid #ddd; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .header { background-color: #4f46e5; color: white; padding: 10px 20px; border-radius: 5px; }
-        .footer { margin-top: 30px; font-size: 12px; color: #666; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h2>Low Stock Alert${clientName ? ` - ${clientName}` : ""}</h2>
-        </div>
-        
-        <p>Dear ${clientName || "Client"},</p>
-        
-        <p>The following items in your inventory are currently low in stock and need to be reordered:</p>
-        
-        <table>
-          <thead>
-            <tr>
-              <th>Sr. No</th>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Current Stock</th>
-              <th>Minimum Quantity</th>
-              <th>Reorder Quantity</th>
-              <th>Price Per Unit</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
-        </table>
-        
-        <p>Please take action to restock these items as soon as possible.</p>
-        
-        <div class="footer">
-          <p>This is an automated message from your Inventory Management System.</p>
-          <p>Generated on: ${new Date().toLocaleString()}</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
+   <!DOCTYPE html>
+   <html>
+   <head>
+     <style>
+       body { font-family: Arial, sans-serif; line-height: 1.6; }
+       .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+       table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+       th { background-color: #f2f2f2; text-align: left; padding: 12px 8px; border: 1px solid #ddd; }
+       tr:nth-child(even) { background-color: #f9f9f9; }
+       .header { background-color: #4f46e5; color: white; padding: 10px 20px; border-radius: 5px; }
+       .footer { margin-top: 30px; font-size: 12px; color: #666; }
+     </style>
+   </head>
+   <body>
+     <div class="container">
+       <div class="header">
+         <h2>Low Stock Alert${clientName ? ` - ${clientName}` : ""}</h2>
+       </div>
+       
+       <p>Dear ${clientName || "Client"},</p>
+       
+       <p>The following items in your inventory are currently low in stock and need to be reordered:</p>
+       
+       <table>
+         <thead>
+           <tr>
+             <th>Sr. No</th>
+             <th>Product</th>
+             <th>Category</th>
+             <th>Current Stock</th>
+             <th>Minimum Quantity</th>
+             <th>Reorder Quantity</th>
+             <th>Price Per Unit</th>
+           </tr>
+         </thead>
+         <tbody>
+           ${tableRows}
+         </tbody>
+       </table>
+       
+       <p>Please take action to restock these items as soon as possible.</p>
+       
+       <div class="footer">
+         <p>This is an automated message from your Inventory Management System.</p>
+         <p>Generated on: ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
+       </div>
+     </div>
+   </body>
+   </html>
+ `
 }
 

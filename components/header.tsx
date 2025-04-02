@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -17,35 +17,13 @@ import {
 import { SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { useClientContext } from "@/context/client-context"
 
 export default function Header() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [clientLogo, setClientLogo] = useState("/images/default-logo.png")
-
-  useEffect(() => {
-    // Fetch client-specific logo based on logged-in user
-    const fetchClientLogo = async () => {
-      try {
-        // Get client ID from session storage (you might store this during login)
-        const clientId = sessionStorage.getItem("clientId") || "default"
-
-        const response = await fetch(`/api/client?id=${clientId}`)
-        const data = await response.json()
-
-        if (data.data && data.data.logo) {
-          setClientLogo(data.data.logo)
-        }
-      } catch (error) {
-        console.error("Error fetching client logo:", error)
-        // Fallback to default logo if there's an error
-        setClientLogo("/images/default-logo.png")
-      }
-    }
-
-    fetchClientLogo()
-  }, [])
+  const { client } = useClientContext()
 
   const handleLogout = () => {
     sessionStorage.removeItem("isLoggedIn")
@@ -70,7 +48,7 @@ export default function Header() {
           </Button>
 
           <Image
-            src={clientLogo || "/images/default-logo.png"}
+            src={client?.logoUrl || "/images/default-logo.png"}
             alt="Client Logo"
             width={40}
             height={40}
@@ -83,7 +61,7 @@ export default function Header() {
             <SheetContent side="left" className="pr-0" onClose={() => setIsMobileMenuOpen(false)}>
               <div className="px-7">
                 <Image
-                  src="/images/default-logo.png"
+                  src={client?.logoUrl || "/images/default-logo.png"}
                   alt="Client Logo"
                   width={40}
                   height={40}
@@ -134,17 +112,16 @@ export default function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">2</Badge>
                 <span className="sr-only">Notifications</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[300px]">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuLabel>Information</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {[
-                { title: "Low stock alert", desc: "5 items are below minimum stock level", time: "2 hours ago" },
-                { title: "New purchase order", desc: "PO-2023-005 has been created", time: "Yesterday" },
-                { title: "System update", desc: "New features available", time: "3 days ago" },
+                { title: "Low stock alert", desc: "Automatically send everyday", time: "6 pm" },
+                { title: "Daily Updates", desc: "Automatically send everyday", time: "6 pm" },
               ].map((notification, i) => (
                 <DropdownMenuItem key={i} className="cursor-pointer">
                   <div className="flex flex-col space-y-1">

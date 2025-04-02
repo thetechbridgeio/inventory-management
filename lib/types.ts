@@ -68,3 +68,14 @@ export interface SalesFilterState {
   search: string
 }
 
+export interface Client {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  logoUrl?: string
+  sheetId?: string
+  username?: string
+  password?: string
+}
+

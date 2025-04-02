@@ -15,6 +15,7 @@ import { SearchableSelect, type SearchableSelectOption } from "@/components/ui/s
 import { Check, ChevronsUpDown, Plus, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useClientContext } from "@/context/client-context"
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -53,17 +54,22 @@ export default function SettingsPage() {
   const [categorySearchQuery, setCategorySearchQuery] = useState("")
   const [unitSearchQuery, setUnitSearchQuery] = useState("")
 
-  // Move the fetchData function outside of useEffect so we can call it after adding a product
+  const { client } = useClientContext()
 
+  // Move the fetchData function outside of useEffect so we can call it after adding a product
   const fetchData = async () => {
     try {
       setLoading(true)
       // Fetch inventory data
-      const inventoryResponse = await fetch("/api/sheets?sheet=Inventory")
+      const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}`)
+      if (!inventoryResponse.ok) {
+        const errorData = await inventoryResponse.json()
+        console.error("Inventory API error:", errorData)
+        throw new Error(`Inventory API error: ${errorData.error || "Unknown error"}`)
+      }
       const inventoryResult = await inventoryResponse.json()
 
       if (inventoryResult.data && Array.isArray(inventoryResult.data)) {
-        console.log("Raw inventory data:", inventoryResult.data)
 
         // Map the field names from Google Sheets to our expected field names
         const processedData = inventoryResult.data.map((item: any, index: number) => {
@@ -81,7 +87,6 @@ export default function SettingsPage() {
           }
         })
 
-        console.log("Processed inventory data:", processedData)
         setInventoryData(processedData)
 
         // Create options for searchable select
@@ -92,7 +97,6 @@ export default function SettingsPage() {
             label: item.product,
           }))
 
-        console.log("Product options:", options)
         setProductOptions(options)
 
         if (processedData.length > 0) {
@@ -120,16 +124,21 @@ export default function SettingsPage() {
         toast.error("Failed to load inventory data: Invalid format")
       }
     } catch (error) {
-      console.error("Error fetching data:", error)
-      toast.error("Failed to fetch data")
+      console.error("Error fetching settings data:", error)
+      toast.error("Failed to fetch settings data. Please try again later.")
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchData()
-  }, [])
+    if (client?.id) {
+      fetchData()
+    } else {
+      console.warn("Settings: No client ID available")
+      setLoading(false) // Stop loading if no client ID
+    }
+  }, [client?.id])
 
   const handleProductSelect = (value: string) => {
     console.log("Selected product:", value)
@@ -284,7 +293,6 @@ export default function SettingsPage() {
   const filteredUnits = units.filter((unit) => unit.toLowerCase().includes(unitSearchQuery.toLowerCase()))
 
   const handleUpdateProduct = async (e: React.FormEvent) => {
-    console.log("Step 1")
     e.preventDefault()
 
     // Validate form data
@@ -327,8 +335,6 @@ export default function SettingsPage() {
 
       console.log("Updated product:", updatedProduct)
 
-      const clientId = sessionStorage.getItem("clientId") || "default"
-
       // Make API call to update the product in Google Sheets
       const response = await fetch("/api/sheets/update-product", {
         method: "PUT",
@@ -338,7 +344,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           originalProduct: selectedProduct,
           updatedProduct,
-          clientId,
+          clientId: client?.id,
         }),
       })
 
@@ -438,6 +444,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           sheetName: "Inventory",
           entry: newProduct,
+          clientId: client?.id,
         }),
       })
 
@@ -463,6 +470,15 @@ export default function SettingsPage() {
 
   if (loading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>
+  }
+
+  if (!client) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">No client selected. Please select a client to view settings.</p>
+      </div>
+    )
   }
 
   return (
@@ -1005,11 +1021,24 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newMinimumQuantity" className="text-right">
+                    <Label htmlFor="initialStock" className="text-right">
+                      Initial Stock
+                    </Label>
+                    <Input
+                      id="initialStock"
+                      name="initialStock"
+                      type="number"
+                      value={newProductForm.initialStock}
+                      onChange={handleNewProductFormChange}
+                      className="col-span-3"
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="minimumQuantity" className="text-right">
                       Minimum Quantity
                     </Label>
                     <Input
-                      id="newMinimumQuantity"
+                      id="minimumQuantity"
                       name="minimumQuantity"
                       type="number"
                       value={newProductForm.minimumQuantity}
@@ -1018,11 +1047,11 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newMaximumQuantity" className="text-right">
+                    <Label htmlFor="maximumQuantity" className="text-right">
                       Maximum Quantity
                     </Label>
                     <Input
-                      id="newMaximumQuantity"
+                      id="maximumQuantity"
                       name="maximumQuantity"
                       type="number"
                       value={newProductForm.maximumQuantity}
@@ -1031,11 +1060,11 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newReorderQuantity" className="text-right">
+                    <Label htmlFor="reorderQuantity" className="text-right">
                       Reorder Quantity
                     </Label>
                     <Input
-                      id="newReorderQuantity"
+                      id="reorderQuantity"
                       name="reorderQuantity"
                       type="number"
                       value={newProductForm.reorderQuantity}
@@ -1044,27 +1073,14 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newPricePerUnit" className="text-right">
+                    <Label htmlFor="pricePerUnit" className="text-right">
                       Price Per Unit
                     </Label>
                     <Input
-                      id="newPricePerUnit"
+                      id="pricePerUnit"
                       name="pricePerUnit"
                       type="number"
                       value={newProductForm.pricePerUnit}
-                      onChange={handleNewProductFormChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="newInitialStock" className="text-right">
-                      Initial Stock
-                    </Label>
-                    <Input
-                      id="newInitialStock"
-                      name="initialStock"
-                      type="number"
-                      value={newProductForm.initialStock}
                       onChange={handleNewProductFormChange}
                       className="col-span-3"
                     />

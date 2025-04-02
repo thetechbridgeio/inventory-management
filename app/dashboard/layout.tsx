@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils"
 import { Package, ShoppingCart, TrendingUp, Settings, HelpCircle, LayoutDashboard, Users } from "lucide-react"
 import Link from "next/link"
 
+// Import the client terminology utilities
+import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
+
 export default function DashboardLayout({
   children,
 }: {
@@ -19,26 +22,47 @@ export default function DashboardLayout({
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [clientName, setClientName] = useState<string>("Default Client")
 
+  // Force a re-render when the component mounts to ensure we have the latest client name
   useEffect(() => {
     setMounted(true)
+
     // Check if user is logged in
     const isLoggedIn = sessionStorage.getItem("isLoggedIn")
     if (!isLoggedIn) {
       router.push("/")
+      return
     }
 
     // Check if user is admin
     const userRole = sessionStorage.getItem("userRole")
     setIsAdmin(userRole === "admin")
+
+    // Get client name from session storage
+    const storedClientName = sessionStorage.getItem("clientName")
+
+    if (storedClientName) {
+      setClientName(storedClientName)
+    }
   }, [router])
+
+  // For debugging
+  useEffect(() => {
+    if (mounted) {
+    }
+  }, [clientName, mounted])
 
   if (!mounted) return null
 
+  // Get the custom terminology based on client name
+  const purchaseTerm = getPurchaseTerm(clientName)
+  const salesTerm = getSalesTerm(clientName)
+
   const navigation = [
     { name: "Inventory", href: "/dashboard/inventory", icon: Package },
-    { name: "Purchase", href: "/dashboard/purchase", icon: ShoppingCart },
-    { name: "Sales", href: "/dashboard/sales", icon: TrendingUp },
+    { name: purchaseTerm, href: "/dashboard/purchase", icon: ShoppingCart },
+    { name: salesTerm, href: "/dashboard/sales", icon: TrendingUp },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
     { name: "Support", href: "/dashboard/support", icon: HelpCircle },
@@ -48,7 +72,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-      <Header />
+      <Header clientName={clientName} />
       <div className="sticky top-16 z-30 bg-blue-50/80 backdrop-blur supports-[backdrop-filter]:bg-blue-50/60">
         <div className="container mx-auto">
           <nav className="flex justify-center md:justify-start">
@@ -58,7 +82,7 @@ export default function DashboardLayout({
                 (item.href !== "/dashboard" && pathname.startsWith(item.href))
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   className={cn(
                     "flex items-center py-4 px-6 relative transition-colors",

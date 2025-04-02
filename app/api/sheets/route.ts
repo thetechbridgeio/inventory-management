@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { google } from "googleapis"
 import { JWT } from "google-auth-library"
+import type { NextRequest } from "next/server"
 
 // This would normally come from environment variables
 const SHEET_ID = "1uciOxoRw9k5HwNFtvYK1CWqcMDDGz2clqWj3CaHdQ5I"
@@ -19,11 +20,45 @@ const auth = new JWT({
 // Create sheets client
 const sheets = google.sheets({ version: "v4", auth })
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const sheet = searchParams.get("sheet") || "Inventory"
+// Update the GET function to use client-specific sheet ID
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const sheet = searchParams.get("sheet")
+  const clientId = searchParams.get("clientId")
+
+  console.log(`API /sheets: Received request for sheet=${sheet}, clientId=${clientId}`)
+
+  if (!sheet) {
+    console.error("API /sheets: Missing sheet parameter")
+    return NextResponse.json({ error: "Sheet parameter is required" }, { status: 400 })
+  }
 
   try {
+    // Determine which sheet ID to use
+    let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
+
+    // If clientId is provided, try to get the client-specific sheet ID
+    if (clientId) {
+      try {
+        // Fetch client data from master sheet
+        const clientData = await fetchClientData(clientId)
+        if (clientData?.sheetId) {
+          SHEET_ID = clientData.sheetId
+          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
+        }
+      } catch (error) {
+        console.error("Error fetching client sheet ID:", error)
+        // Continue with default sheet ID if there's an error
+      }
+    }
+
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
+    }
+
+    // Add logging for the spreadsheet ID being used
+    console.log(`API /sheets: Using spreadsheetId=${SHEET_ID} for clientId=${clientId}`)
+
     // Fetch data from Google Sheets
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
@@ -130,11 +165,14 @@ export async function GET(request: Request) {
 
     console.log(`Processed ${data.length} data rows`)
 
+    // After fetching data, log the result size
+    console.log(`API /sheets: Fetched ${rows.length} rows from ${sheet} sheet`)
+
     // Log a sample of the processed data with focus on dates
 
     return NextResponse.json({ data })
   } catch (error) {
-    console.error("Error fetching data from Google Sheets:", error)
+    console.error(`API /sheets: Error fetching ${sheet} data:`, error)
     return NextResponse.json(
       {
         error: "Failed to fetch data",
@@ -145,11 +183,33 @@ export async function GET(request: Request) {
   }
 }
 
-// Add a PUT method to update inventory data
+// Update the PUT method to use client-specific sheet ID
 export async function PUT(request: Request) {
   try {
-    const { product, newStock, newValue } = await request.json()
+    const { product, newStock, newValue, clientId } = await request.json()
     console.log(`Updating inventory for product: ${product}, new stock: ${newStock}, new value: ${newValue}`)
+
+    // Determine which sheet ID to use
+    let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
+
+    // If clientId is provided, try to get the client-specific sheet ID
+    if (clientId) {
+      try {
+        // Fetch client data from master sheet
+        const clientData = await fetchClientData(clientId)
+        if (clientData?.sheetId) {
+          SHEET_ID = clientData.sheetId
+          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
+        }
+      } catch (error) {
+        console.error("Error fetching client sheet ID:", error)
+        // Continue with default sheet ID if there's an error
+      }
+    }
+
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
+    }
 
     // Find the row index for the product in the Inventory sheet
     const inventoryResponse = await sheets.spreadsheets.values.get({
@@ -250,11 +310,33 @@ export async function PUT(request: Request) {
   }
 }
 
-// Add a POST method to add new entries (purchase or sales)
+// Update the POST method to use client-specific sheet ID
 export async function POST(request: Request) {
   try {
-    const { sheetName, entry } = await request.json()
+    const { sheetName, entry, clientId } = await request.json()
     console.log(`Adding new entry to ${sheetName}:`, entry)
+
+    // Determine which sheet ID to use
+    let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
+
+    // If clientId is provided, try to get the client-specific sheet ID
+    if (clientId) {
+      try {
+        // Fetch client data from master sheet
+        const clientData = await fetchClientData(clientId)
+        if (clientData?.sheetId) {
+          SHEET_ID = clientData.sheetId
+          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
+        }
+      } catch (error) {
+        console.error("Error fetching client sheet ID:", error)
+        // Continue with default sheet ID if there's an error
+      }
+    }
+
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
+    }
 
     // Get the current data to determine the next srNo
     const response = await sheets.spreadsheets.values.get({
@@ -402,6 +484,51 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     )
+  }
+}
+
+// Add the fetchClientData function at the end of the file
+async function fetchClientData(clientId: string) {
+  try {
+    const masterSheetId = process.env.MASTER_SHEET_ID
+    if (!masterSheetId) {
+      throw new Error("Master Sheet ID not found in environment variables")
+    }
+
+    // Fetch data from the Clients sheet
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: masterSheetId,
+      range: "Clients!A:F", // Includes ID and Sheet ID columns
+    })
+
+    const rows = response.data.values
+    if (!rows || rows.length <= 1) {
+      return null
+    }
+
+    // Extract headers from the first row
+    const headers = rows[0]
+
+    // Find the client with matching ID
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i]
+      const id = row[0]
+
+      if (id === clientId) {
+        const client: Record<string, any> = {}
+        headers.forEach((header: string, index: number) => {
+          // Convert header to camelCase for consistent property naming
+          const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
+          client[key] = row[index] || ""
+        })
+        return client
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error("Error fetching client data:", error)
+    return null
   }
 }
 
