@@ -58,8 +58,8 @@ export async function GET(request: Request) {
     let statusCode = 500
 
     // Check for specific Google API errors
-    if (error instanceof Error && "response" in error && (error as any).response?.data?.error) {
-      const googleError = (error as any).response.data.error
+    if (error.response?.data?.error) {
+      const googleError = error.response.data.error
       errorMessage = googleError.message || errorMessage
 
       // Handle permission errors specifically
