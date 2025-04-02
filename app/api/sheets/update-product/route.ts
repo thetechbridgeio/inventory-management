@@ -1,397 +1,232 @@
-import { NextResponse } from "next/server"
 import { google } from "googleapis"
+import { NextResponse } from "next/server"
 import { JWT } from "google-auth-library"
-
-// Get environment variables
-const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL || ""
-const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || ""
-
-// Create auth client
-const auth = new JWT({
-  email: GOOGLE_CLIENT_EMAIL,
-  key: GOOGLE_PRIVATE_KEY,
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-})
-
-// Create sheets client
-const sheets = google.sheets({ version: "v4", auth })
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const sheetName = searchParams.get("sheet") || "Inventory"
-    const clientId = searchParams.get("clientId")
-
-    if (!sheetName) {
-      return NextResponse.json({ error: "Sheet name is required" }, { status: 400 })
-    }
-
-    // Get client-specific sheet ID if clientId is provided
-    let sheetId = process.env.GOOGLE_SHEET_ID // Default sheet ID
-
-    if (clientId) {
-      // Fetch the client's sheet ID from the Clients sheet
-      const auth = new JWT({
-        email: process.env.GOOGLE_CLIENT_EMAIL || "",
-        key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      })
-
-      const sheets = google.sheets({ version: "v4", auth })
-
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.MASTER_SHEET_ID || process.env.GOOGLE_SHEET_ID,
-        range: "Clients!A:F",
-      })
-
-      const rows = response.data.values || []
-
-      if (rows.length > 1) {
-        // Find the client by ID
-        const headers = rows[0]
-        const sheetIdIndex = headers.findIndex((h: string) => h === "Sheet ID")
-        const idIndex = headers.findIndex((h: string) => h === "ID")
-
-        if (idIndex !== -1 && sheetIdIndex !== -1) {
-          for (let i = 1; i < rows.length; i++) {
-            if (rows[i][idIndex] === clientId && rows[i][sheetIdIndex]) {
-              sheetId = rows[i][sheetIdIndex]
-              break
-            }
-          }
-        }
-      }
-    }
-
-    // Create auth client
-    const auth = new JWT({
-      email: process.env.GOOGLE_CLIENT_EMAIL || "",
-      key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    })
-
-    // Create sheets client
-    const sheets = google.sheets({ version: "v4", auth })
-
-    // Get the data from the specified sheet
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A:Z`,
-    })
-
-    const rows = response.data.values
-
-    if (!rows || rows.length === 0) {
-      return NextResponse.json({ data: [] })
-    }
-
-    // Extract headers from the first row
-    const headers = rows[0]
-
-    // Map the data to objects with proper keys
-    const data = rows.slice(1).map((row) => {
-      const item: Record<string, any> = {}
-      headers.forEach((header: string, index: number) => {
-        if (index < row.length) {
-          item[header] = row[index]
-        } else {
-          item[header] = ""
-        }
-      })
-      return item
-    })
-
-    return NextResponse.json({ data })
-  } catch (error) {
-    console.error("Error fetching data:", error)
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to fetch data" },
-      { status: 500 },
-    )
-  }
-}
-
-export async function POST(request: Request) {
-  try {
-    const { sheetName, entry, clientId } = await request.json()
-
-    if (!sheetName || !entry) {
-      return NextResponse.json({ error: "Sheet name and entry are required" }, { status: 400 })
-    }
-
-    // Get client-specific sheet ID if clientId is provided
-    let sheetId = process.env.GOOGLE_SHEET_ID // Default sheet ID
-
-    if (clientId) {
-      // Fetch the client's sheet ID from the Clients sheet
-      const auth = new JWT({
-        email: process.env.GOOGLE_CLIENT_EMAIL || "",
-        key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-        scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-      })
-
-      const sheets = google.sheets({ version: "v4", auth })
-
-      const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.GOOGLE_SHEET_ID,
-        range: "Clients!A:F",
-      })
-
-      const rows = response.data.values || []
-
-      if (rows.length > 1) {
-        // Find the client by ID
-        const headers = rows[0]
-        const sheetIdIndex = headers.findIndex((h: string) => h === "Sheet ID")
-        const idIndex = headers.findIndex((h: string) => h === "ID")
-
-        if (idIndex !== -1 && sheetIdIndex !== -1) {
-          for (let i = 1; i < rows.length; i++) {
-            if (rows[i][idIndex] === clientId && rows[i][sheetIdIndex]) {
-              sheetId = rows[i][sheetIdIndex]
-              break
-            }
-          }
-        }
-      }
-    }
-
-    // Create auth client
-    const auth = new JWT({
-      email: process.env.GOOGLE_CLIENT_EMAIL || "",
-      key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    })
-
-    // Create sheets client
-    const sheets = google.sheets({ version: "v4", auth })
-
-    // Get the current data to determine the next Sr. No
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A:A`,
-    })
-
-    const rows = response.data.values || []
-    let nextSrNo = 1
-
-    if (rows.length > 1) {
-      // Find the highest Sr. No and increment it
-      const srNoHeader = rows[0][0]
-      if (srNoHeader === "Sr. no" || srNoHeader === "srNo") {
-        const srNos = rows.slice(1).map((row) => Number.parseInt(row[0]) || 0)
-        nextSrNo = Math.max(...srNos, 0) + 1
-      }
-    }
-
-    // Get the headers from the sheet
-    const headersResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!1:1`,
-    })
-
-    const headers = headersResponse.data.values?.[0] || []
-
-    // Prepare the row data based on the headers
-    const rowData: any[] = []
-    headers.forEach((header: string) => {
-      if (header === "Sr. no" || header === "srNo") {
-        rowData.push(nextSrNo.toString())
-      } else {
-        // Convert header to camelCase for matching with entry properties
-        const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
-        rowData.push(entry[key] !== undefined ? entry[key].toString() : "")
-      }
-    })
-
-    // Append the new row
-    await sheets.spreadsheets.values.append({
-      spreadsheetId: sheetId,
-      range: `${sheetName}!A:Z`,
-      valueInputOption: "USER_ENTERED",
-      requestBody: {
-        values: [rowData],
-      },
-    })
-
-    // Return the created entry with the assigned Sr. No
-    const createdEntry = { ...entry, srNo: nextSrNo }
-
-    return NextResponse.json({ success: true, data: createdEntry })
-  } catch (error) {
-    console.error("Error adding entry:", error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add entry" }, { status: 500 })
-  }
-}
 
 export async function PUT(request: Request) {
   try {
-    const { product, updatedData, clientId } = await request.json()
+    const body = await request.json()
+    const { originalProduct, updatedProduct, clientId } = body
 
-    if (!product || !updatedData) {
-      return NextResponse.json(
-        { error: "Invalid request. Product name and updated data are required." },
-        { status: 400 },
-      )
-    }
-
-    // Determine which sheet ID to use
-    let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
-
-    // If clientId is provided, try to get the client-specific sheet ID
-    if (clientId) {
-      try {
-        // Fetch client data from master sheet
-        const clientData = await fetchClientData(clientId)
-        if (clientData?.sheetId) {
-          SHEET_ID = clientData.sheetId
-          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
-        }
-      } catch (error) {
-        console.error("Error fetching client sheet ID:", error)
-        // Continue with default sheet ID if there's an error
-      }
-    }
-
-    if (!SHEET_ID) {
-      return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
-    }
-
-    // Find the row index for the product in the Inventory sheet
-    const inventoryResponse = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
-      range: "Inventory!A:Z", // Get all columns to find the headers
+    console.log("Update product request:", {
+      originalProduct,
+      updatedProduct: updatedProduct ? { ...updatedProduct } : null,
+      clientId,
     })
 
-    const inventoryRows = inventoryResponse.data.values || []
-    if (inventoryRows.length === 0) {
-      return NextResponse.json({ error: "No inventory data found" }, { status: 404 })
+    // Validate request with more detailed checks
+    if (!originalProduct) {
+      console.error("Missing originalProduct in request")
+      return NextResponse.json({ error: "Product name is required." }, { status: 400 })
     }
 
-    const headers = inventoryRows[0]
-
-    // Look for either "product" or "Product" in the headers
-    let productColIndex = headers.indexOf("product")
-    if (productColIndex === -1) {
-      productColIndex = headers.indexOf("Product")
+    if (!updatedProduct) {
+      console.error("Missing updatedProduct in request")
+      return NextResponse.json({ error: "Updated product data is required." }, { status: 400 })
     }
 
-    if (productColIndex === -1) {
-      return NextResponse.json({ error: "Product column not found" }, { status: 404 })
+    // Direct Google Sheets authentication
+    const auth = new JWT({
+      email: process.env.GOOGLE_CLIENT_EMAIL,
+      key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    })
+
+    const sheets = google.sheets({ version: "v4", auth })
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID
+
+    if (!spreadsheetId) {
+      console.error("Google Sheet ID not found")
+      return NextResponse.json({ error: "Google Sheet ID not found" }, { status: 500 })
     }
 
-    // Find the product row index (add 1 because Google Sheets is 1-indexed and we skip the header row)
-    let rowIndex = -1
-    for (let i = 1; i < inventoryRows.length; i++) {
-      if (inventoryRows[i][productColIndex] === product) {
-        rowIndex = i + 1 // +1 because Google Sheets is 1-indexed
-        break
+    try {
+      // Skip the sheet detection and directly get the inventory data
+      console.log("Attempting to directly access the sheet data")
+
+      // Try to get all values from the spreadsheet first to see what's available
+      const allSheetsResponse = await sheets.spreadsheets.get({
+        spreadsheetId,
+      })
+
+      console.log(
+        "All sheets in spreadsheet:",
+        allSheetsResponse.data.sheets?.map((s) => s.properties?.title),
+      )
+
+      // Try to access the Inventory sheet directly
+      const response = await sheets.spreadsheets.values
+        .get({
+          spreadsheetId,
+          range: "Inventory!A:Z", // Try a wider range
+        })
+        .catch(async (err) => {
+          console.error("Error accessing Inventory sheet:", err.message)
+
+          // If that fails, try to get the first sheet
+          const firstSheetName = allSheetsResponse.data.sheets?.[0]?.properties?.title
+          console.log("Falling back to first sheet:", firstSheetName)
+
+          if (firstSheetName) {
+            return await sheets.spreadsheets.values.get({
+              spreadsheetId,
+              range: `${firstSheetName}!A:Z`,
+            })
+          }
+          throw new Error("Could not access any sheet in the spreadsheet")
+        })
+
+      const rows = response.data.values || []
+      if (rows.length === 0) {
+        console.error("No data found in sheet")
+        return NextResponse.json({ error: "No data found in sheet" }, { status: 404 })
       }
-    }
 
-    if (rowIndex === -1) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
-    }
+      // Find the header row to map column names
+      const headers = rows[0]
+      console.log("Headers found:", headers)
 
-    // Update each field in the updatedData object
-    const updatePromises = Object.entries(updatedData).map(async ([field, value]) => {
-      // Find the column index for this field
-      let colIndex = headers.indexOf(field)
+      const productColumnIndex = headers.findIndex(
+        (header: string) =>
+          header &&
+          typeof header === "string" &&
+          (header.toLowerCase().includes("product") ||
+            header.toLowerCase().includes("item") ||
+            header.toLowerCase().includes("name")),
+      )
 
-      // Try alternative field names if not found
-      if (colIndex === -1) {
-        // Convert camelCase to Title Case with spaces
-        const titleCaseField = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
-        colIndex = headers.indexOf(titleCaseField)
+      if (productColumnIndex === -1) {
+        console.error("Product column not found in headers:", headers)
+        return NextResponse.json({ error: "Product column not found" }, { status: 404 })
+      }
 
-        // If still not found, try other common variations
-        if (colIndex === -1) {
-          if (field === "minimumQuantity") colIndex = headers.indexOf("Minimum Quantity")
-          else if (field === "maximumQuantity") colIndex = headers.indexOf("Maximum Quantity")
-          else if (field === "reorderQuantity") colIndex = headers.indexOf("Reorder Quantity")
-          else if (field === "pricePerUnit") colIndex = headers.indexOf("Price per Unit")
+      console.log("Looking for product:", originalProduct, "in column index:", productColumnIndex)
+
+      // Get all products for debugging
+      const allProducts = rows
+        .slice(1)
+        .map((row) => row && row[productColumnIndex])
+        .filter(Boolean)
+
+      console.log("All products in sheet:", allProducts)
+
+      // Find the row with the original product name - with more flexible matching
+      let rowIndex = -1
+      const originalProductStr = String(originalProduct).trim()
+
+      // First try exact match
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i]
+        if (row && row[productColumnIndex] === originalProductStr) {
+          rowIndex = i
+          console.log("Found exact product match at row:", rowIndex + 1)
+          break
         }
       }
 
-      if (colIndex === -1) {
-        console.warn(`Column for field "${field}" not found in headers`)
-        return
+      // If no exact match, try case-insensitive match
+      if (rowIndex === -1) {
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i]
+          if (
+            row &&
+            row[productColumnIndex] &&
+            String(row[productColumnIndex]).trim().toLowerCase() === originalProductStr.toLowerCase()
+          ) {
+            rowIndex = i
+            console.log("Found case-insensitive product match at row:", rowIndex + 1)
+            break
+          }
+        }
       }
 
-      // Convert column index to letter (A, B, C, etc.)
-      const colLetter = String.fromCharCode(65 + colIndex)
+      // If still no match, try partial match
+      if (rowIndex === -1) {
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i]
+          if (
+            row &&
+            row[productColumnIndex] &&
+            String(row[productColumnIndex]).trim().toLowerCase().includes(originalProductStr.toLowerCase())
+          ) {
+            rowIndex = i
+            console.log("Found partial product match at row:", rowIndex + 1)
+            break
+          }
+        }
+      }
 
-      // Update the cell
-      return sheets.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
-        range: `Inventory!${colLetter}${rowIndex}`,
-        valueInputOption: "RAW",
+      if (rowIndex === -1) {
+        console.error(`Product "${originalProduct}" not found in inventory.`)
+        console.log("Available products:", allProducts)
+        return NextResponse.json({ error: `Product "${originalProduct}" not found in inventory` }, { status: 404 })
+      }
+
+      // Create updated row values
+      const updatedRow: any[] = Array(headers.length).fill("")
+
+      // First, copy the existing row data as a base
+      const existingRow = rows[rowIndex]
+      for (let i = 0; i < existingRow.length; i++) {
+        updatedRow[i] = existingRow[i]
+      }
+
+      // Then, map the updated product fields to the correct columns
+      Object.keys(updatedProduct).forEach((key) => {
+        const columnIndex = headers.findIndex(
+          (header: string) =>
+            header &&
+            typeof header === "string" &&
+            (header.toLowerCase() === key.toLowerCase() ||
+              header.toLowerCase().includes(key.toLowerCase()) ||
+              header.toLowerCase().includes(key.replace(/([A-Z])/g, " $1").toLowerCase())),
+        )
+
+        if (columnIndex !== -1) {
+          updatedRow[columnIndex] = updatedProduct[key as keyof typeof updatedProduct]
+          console.log(
+            `Updating column "${headers[columnIndex]}" (index ${columnIndex}) with value:`,
+            updatedRow[columnIndex],
+          )
+        } else {
+          console.log(`Could not find column for field "${key}"`)
+        }
+      })
+
+      console.log("Original row:", existingRow)
+      console.log("Updated row:", updatedRow)
+
+      // Get the sheet name that we're actually using
+      const sheetName = response.config?.params?.range?.split("!")[0] || "Inventory"
+      console.log("Using sheet name for update:", sheetName)
+
+      // Update the row in the sheet
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetName}!A${rowIndex + 1}:${String.fromCharCode(65 + headers.length - 1)}${rowIndex + 1}`,
+        valueInputOption: "USER_ENTERED",
         requestBody: {
-          values: [[value]],
+          values: [updatedRow],
         },
       })
-    })
 
-    // Wait for all updates to complete
-    await Promise.all(updatePromises)
-
-    return NextResponse.json({
-      success: true,
-      message: "Product updated successfully",
-    })
+      return NextResponse.json({ success: true, message: "Product updated successfully" })
+    } catch (sheetError) {
+      console.error("Error accessing or updating sheet:", sheetError)
+      return NextResponse.json(
+        {
+          error: `Error accessing or updating sheet: ${sheetError.message}`,
+        },
+        { status: 500 },
+      )
+    }
   } catch (error) {
     console.error("Error updating product:", error)
     return NextResponse.json(
       {
-        error: "Failed to update product",
-        details: error instanceof Error ? error.message : String(error),
+        error: `Failed to update product: ${error instanceof Error ? error.message : "Unknown error"}`,
       },
       { status: 500 },
     )
-  }
-}
-
-async function fetchClientData(clientId: string) {
-  try {
-    const masterSheetId = process.env.MASTER_SHEET_ID
-    if (!masterSheetId) {
-      throw new Error("Master Sheet ID not found in environment variables")
-    }
-
-    // Fetch data from the Clients sheet
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: masterSheetId,
-      range: "Clients!A:F", // Includes ID and Sheet ID columns
-    })
-
-    const rows = response.data.values
-    if (!rows || rows.length <= 1) {
-      return null
-    }
-
-    // Extract headers from the first row
-    const headers = rows[0]
-
-    // Find the client with matching ID
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i]
-      const id = row[0]
-
-      if (id === clientId) {
-        const client: Record<string, any> = {}
-        headers.forEach((header: string, index: number) => {
-          // Convert header to camelCase for consistent property naming
-          const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
-          client[key] = row[index] || ""
-        })
-        return client
-      }
-    }
-
-    return null
-  } catch (error) {
-    console.error("Error fetching client data:", error)
-    return null
   }
 }
 
