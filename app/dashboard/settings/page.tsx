@@ -59,7 +59,7 @@ export default function SettingsPage() {
   // Move the fetchData function outside of useEffect so we can call it after adding a product
   const fetchData = async () => {
     try {
-      setLoading(true)
+            setLoading(true)
       // Fetch inventory data
       const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}`)
       if (!inventoryResponse.ok) {
@@ -409,7 +409,10 @@ export default function SettingsPage() {
 
     // Check if product already exists
     const productExists = inventoryData.some(
-      (item) => item.product.toLowerCase() === newProductForm.product.toLowerCase(),
+      (item) =>
+        typeof item.product === "string" &&
+        typeof newProductForm.product === "string" &&
+        item.product.toLowerCase() === newProductForm.product.toLowerCase(),
     )
 
     if (productExists) {
