@@ -9,6 +9,7 @@ import { Toaster } from "sonner"
 import { cn } from "@/lib/utils"
 import { Package, ShoppingCart, TrendingUp, Settings, HelpCircle, LayoutDashboard, Users } from "lucide-react"
 import Link from "next/link"
+import { useClientContext } from "@/context/client-context"
 
 // Import the client terminology utilities
 import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
@@ -23,6 +24,7 @@ export default function DashboardLayout({
   const [mounted, setMounted] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [clientName, setClientName] = useState<string>("Default Client")
+  const { client } = useClientContext()
 
   // Force a re-render when the component mounts to ensure we have the latest client name
   useEffect(() => {
@@ -55,14 +57,10 @@ export default function DashboardLayout({
 
   if (!mounted) return null
 
-  // Get the custom terminology based on client name
-  const purchaseTerm = getPurchaseTerm(clientName)
-  const salesTerm = getSalesTerm(clientName)
-
   const navigation = [
     { name: "Inventory", href: "/dashboard/inventory", icon: Package },
-    { name: purchaseTerm, href: "/dashboard/purchase", icon: ShoppingCart },
-    { name: salesTerm, href: "/dashboard/sales", icon: TrendingUp },
+    { name: getPurchaseTerm(client?.name), href: "/dashboard/purchase", icon: ShoppingCart },
+    { name: getSalesTerm(client?.name), href: "/dashboard/sales", icon: TrendingUp },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Settings", href: "/dashboard/settings", icon: Settings },
     { name: "Support", href: "/dashboard/support", icon: HelpCircle },

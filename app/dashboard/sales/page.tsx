@@ -98,7 +98,6 @@ export default function SalesPage() {
     const fetchData = async () => {
       try {
         // Fetch sales data
-        console.log("Fetching sales data with clientId:", client?.id)
         const salesResponse = await fetch(`/api/sheets?sheet=Sales${client?.id ? `&clientId=${client.id}` : ""}`)
 
         if (!salesResponse.ok) {
@@ -108,7 +107,6 @@ export default function SalesPage() {
         }
 
         const salesResult = await salesResponse.json()
-        console.log("Raw sales data received:", salesResult)
 
         if (salesResult.data) {
           // Map the field names from Google Sheets to our expected field names
@@ -132,11 +130,8 @@ export default function SalesPage() {
             }
           })
 
-          console.log("Processed sales data:", processedData)
-
           // Sort data by date (newest first)
           const sortedData = sortByDateDesc(processedData)
-          console.log("Sorted sales data:", sortedData)
           setData(sortedData)
         }
 

@@ -113,7 +113,6 @@ export default function PurchasePage() {
   const fetchData = async () => {
     try {
       // Fetch purchase data
-      console.log("Fetching purchase data with clientId:", client?.id)
       const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase${client?.id ? `&clientId=${client.id}` : ""}`)
 
       if (!purchaseResponse.ok) {
@@ -123,7 +122,6 @@ export default function PurchasePage() {
       }
 
       const purchaseResult = await purchaseResponse.json()
-      console.log("Raw purchase data received:", purchaseResult)
 
       if (purchaseResult.data) {
         // Map the field names from Google Sheets to our expected field names
@@ -157,11 +155,8 @@ export default function PurchasePage() {
           return processedItem
         })
 
-        console.log("Processed purchase data:", processedData)
-
         // Sort data by date (newest first)
         const sortedData = sortByDateDesc(processedData)
-        console.log("Sorted purchase data:", sortedData)
         setData(sortedData)
       }
 
