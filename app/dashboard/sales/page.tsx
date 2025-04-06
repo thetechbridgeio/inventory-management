@@ -98,13 +98,30 @@ export default function SalesPage() {
     const fetchData = async () => {
       try {
         // Fetch sales data
+        console.log("Fetching sales data with clientId:", client?.id)
         const salesResponse = await fetch(`/api/sheets?sheet=Sales${client?.id ? `&clientId=${client.id}` : ""}`)
+
+        if (!salesResponse.ok) {
+          const errorData = await salesResponse.json()
+          console.error("Sales API error:", errorData)
+          throw new Error(`Sales API error: ${errorData.error || "Unknown error"}`)
+        }
+
         const salesResult = await salesResponse.json()
+        console.log("Raw sales data received:", salesResult)
 
         if (salesResult.data) {
           // Map the field names from Google Sheets to our expected field names
           const processedData = salesResult.data.map((item: any, index: number) => {
+            // Create a unique identifier for each row if it doesn't have one
+            const uniqueId =
+              item._uniqueId ||
+              item.id ||
+              item.ID ||
+              `sales_${index}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
             return {
+              _uniqueId: uniqueId, // Add a unique identifier
               srNo: item.srNo || item["Sr. no"] || index + 1,
               product: item.product || item["Product"] || "Unknown Product",
               quantity: Number(item.quantity || item["Quantity"] || 0),
@@ -115,8 +132,11 @@ export default function SalesPage() {
             }
           })
 
+          console.log("Processed sales data:", processedData)
+
           // Sort data by date (newest first)
           const sortedData = sortByDateDesc(processedData)
+          console.log("Sorted sales data:", sortedData)
           setData(sortedData)
         }
 

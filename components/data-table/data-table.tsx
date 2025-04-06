@@ -26,8 +26,8 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
 
   // Handle row selection
   const toggleRowSelection = (row: any) => {
-    // Use a unique identifier for the row - fallback to index if no id/srNo
-    const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+    // Use a unique identifier for the row - fallback to index if no id/srNo/_uniqueId
+    const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
 
     const newSelectedRows = { ...selectedRows }
     newSelectedRows[rowId] = !newSelectedRows[rowId]
@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
     // Notify parent component of selection change
     if (onRowSelectionChange) {
       const selectedItems = data.filter((item: any) => {
-        const itemId = item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
+        const itemId = item._uniqueId || item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
         return newSelectedRows[itemId]
       })
       onRowSelectionChange(selectedItems)

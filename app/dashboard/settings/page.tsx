@@ -59,7 +59,7 @@ export default function SettingsPage() {
   // Move the fetchData function outside of useEffect so we can call it after adding a product
   const fetchData = async () => {
     try {
-            setLoading(true)
+      setLoading(true)
       // Fetch inventory data
       const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}`)
       if (!inventoryResponse.ok) {
@@ -70,7 +70,6 @@ export default function SettingsPage() {
       const inventoryResult = await inventoryResponse.json()
 
       if (inventoryResult.data && Array.isArray(inventoryResult.data)) {
-
         // Map the field names from Google Sheets to our expected field names
         const processedData = inventoryResult.data.map((item: any, index: number) => {
           return {
@@ -334,6 +333,11 @@ export default function SettingsPage() {
       }
 
       console.log("Updated product:", updatedProduct)
+      console.log("API request payload:", {
+        product: selectedProduct, // This is the original product name
+        updatedData: updatedProduct, // This is the updated product data
+        clientId: client?.id,
+      })
 
       // Make API call to update the product in Google Sheets
       const response = await fetch("/api/sheets/update-product", {
@@ -342,13 +346,25 @@ export default function SettingsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          originalProduct: selectedProduct,
-          updatedProduct,
+          product: selectedProduct,
+          updatedData: updatedProduct,
           clientId: client?.id,
         }),
       })
 
-      const responseData = await response.json()
+      // Log the raw response
+      const responseText = await response.text()
+      console.log("Raw API response:", responseText)
+
+      // Parse the response
+      let responseData
+      try {
+        responseData = JSON.parse(responseText)
+        console.log("Parsed API response:", responseData)
+      } catch (error) {
+        console.error("Failed to parse response as JSON:", error)
+        throw new Error("Invalid response format")
+      }
 
       if (!response.ok) {
         throw new Error(responseData.error || "Failed to update product")

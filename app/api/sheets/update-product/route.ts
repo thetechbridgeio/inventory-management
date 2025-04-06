@@ -226,9 +226,33 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { product, updatedData, clientId } = await request.json()
+    // Log the raw request
+    const requestText = await request.text()
+    console.log("Raw request body:", requestText)
+
+    // Parse the request body
+    let requestData
+    try {
+      requestData = JSON.parse(requestText)
+      console.log("Parsed request body:", requestData)
+    } catch (error) {
+      console.error("Failed to parse request body:", error)
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
+    }
+
+    const { product, updatedData, clientId } = requestData
+
+    console.log("Extracted values:", {
+      product: product,
+      updatedData: updatedData,
+      clientId: clientId,
+    })
 
     if (!product || !updatedData) {
+      console.log("Validation failed:", {
+        hasProduct: !!product,
+        hasUpdatedData: !!updatedData,
+      })
       return NextResponse.json(
         { error: "Invalid request. Product name and updated data are required." },
         { status: 400 },

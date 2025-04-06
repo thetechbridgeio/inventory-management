@@ -76,25 +76,25 @@ export async function GET(request: NextRequest) {
     // Extract headers and data
     const headers = rows[0]
 
-    const data = rows.slice(1).map((row, rowIndex) => {
+    const data = rows.slice(1).map((row, index) => {
       const item: Record<string, any> = {}
 
       // Add srNo if it doesn't exist in the sheet
       if (!headers.includes("srNo") && !headers.includes("Sr. no")) {
-        item.srNo = rowIndex + 1
+        item.srNo = index + 1
       }
 
       // First, log the entire row for debugging
+      console.log(`Processing row ${index + 1}:`, row)
 
-      headers.forEach((header: string, index: number) => {
+      headers.forEach((header: string, i: number) => {
         // Make sure we have a value for this cell
-        if (index < row.length) {
+        if (i < row.length) {
           // Special handling for date fields
           if (header.toLowerCase().includes("date")) {
             // Get the raw value
-            const rawValue = row[index]
-
-            // Log the raw date value
+            const rawValue = row[i]
+            console.log(`Date field ${header} raw value:`, rawValue)
 
             // For Purchase sheet, map "Date of receiving" to "dateOfReceiving"
             if (sheet === "Purchase" && header === "Date of receiving") {
@@ -103,10 +103,10 @@ export async function GET(request: NextRequest) {
               // For other date fields, use the original header
               item[header] = rawValue
             }
-          } else if (!isNaN(Number(row[index])) && row[index] !== "") {
-            item[header] = Number(row[index])
+          } else if (!isNaN(Number(row[i])) && row[i] !== "") {
+            item[header] = Number(row[i])
           } else {
-            item[header] = row[index] || ""
+            item[header] = row[i] || ""
           }
         } else {
           // If the cell is missing, set a default value based on the header
@@ -135,34 +135,15 @@ export async function GET(request: NextRequest) {
         }
       })
 
-      // Calculate value for inventory items if it's missing
-      if (
-        sheet === "Inventory" &&
-        (item.stock !== undefined || item.Stock !== undefined) &&
-        (item.pricePerUnit !== undefined || item["Price per Unit"] !== undefined) &&
-        item.value === undefined &&
-        item.Value === undefined
-      ) {
-        const stock = item.stock !== undefined ? item.stock : item.Stock
-        const pricePerUnit = item.pricePerUnit !== undefined ? item.pricePerUnit : item["Price per Unit"]
-        item.value = stock * pricePerUnit
-        item.Value = stock * pricePerUnit
+      // Add a unique identifier if needed
+      if (!item.id && !item.ID) {
+        item._uniqueId = `row_${index}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       }
-
-      // For Purchase sheet, ensure dateOfReceiving is set
-      if (sheet === "Purchase") {
-        // If dateOfReceiving is not set but "Date of receiving" exists, map it
-        if (!item.dateOfReceiving && item["Date of receiving"]) {
-          item.dateOfReceiving = item["Date of receiving"]
-          console.log(`Mapped "Date of receiving" to dateOfReceiving: "${item.dateOfReceiving}"`)
-        }
-      }
-
-      // Log the processed item
 
       return item
     })
 
+    // Log the processed data for debugging
     console.log(`Processed ${data.length} data rows`)
 
     // After fetching data, log the result size
@@ -217,19 +198,46 @@ export async function PUT(request: Request) {
       range: "Inventory!A:Z", // Get all columns to find the headers
     })
 
+    // Check the GET function for any deduplication logic
+    // Look for the part where we process the data from the sheets:
+
+    // Process inventory data
+    const inventoryItems = inventoryResponse.data.values || []
+    if (inventoryItems.length === 0) {
+      return NextResponse.json({ data: [] })
+    }
+
+    // Extract headers from the first row
+    const headers = inventoryItems[0]
+
+    // Map the data to objects with proper keys
+    const data = inventoryItems.slice(1).map((row: any, index: number) => {
+      const item: Record<string, any> = {}
+      headers.forEach((header: string, i: number) => {
+        if (i < row.length) {
+          item[header] = row[i]
+        } else {
+          item[header] = ""
+        }
+      })
+      return item
+    })
+
+    // Make sure there's no filtering or deduplication here
+
     const inventoryRows = inventoryResponse.data.values || []
     if (inventoryRows.length === 0) {
       console.log("No inventory data found")
       return NextResponse.json({ error: "No inventory data found" }, { status: 404 })
     }
 
-    const headers = inventoryRows[0]
-    console.log(`Inventory headers: ${headers.join(", ")}`)
+    const inventoryHeaders = inventoryRows[0]
+    console.log(`Inventory headers: ${inventoryHeaders.join(", ")}`)
 
     // Look for either "product" or "Product" in the headers
-    let productColIndex = headers.indexOf("product")
+    let productColIndex = inventoryHeaders.indexOf("product")
     if (productColIndex === -1) {
-      productColIndex = headers.indexOf("Product")
+      productColIndex = inventoryHeaders.indexOf("Product")
     }
 
     if (productColIndex === -1) {
@@ -254,14 +262,14 @@ export async function PUT(request: Request) {
     console.log(`Found product at row index: ${rowIndex}`)
 
     // Find the column indices for stock and value
-    let stockColIndex = headers.indexOf("stock") + 1 // +1 for 1-indexed columns
+    let stockColIndex = inventoryHeaders.indexOf("stock") + 1 // +1 for 1-indexed columns
     if (stockColIndex === 0) {
-      stockColIndex = headers.indexOf("Stock") + 1
+      stockColIndex = inventoryHeaders.indexOf("Stock") + 1
     }
 
-    let valueColIndex = headers.indexOf("value") + 1 // +1 for 1-indexed columns
+    let valueColIndex = inventoryHeaders.indexOf("value") + 1 // +1 for 1-indexed columns
     if (valueColIndex === 0) {
-      valueColIndex = headers.indexOf("Value") + 1
+      valueColIndex = inventoryHeaders.indexOf("Value") + 1
     }
 
     if (stockColIndex === 0) {
@@ -375,17 +383,17 @@ export async function POST(request: Request) {
       range: `${sheetName}!1:1`, // Just the header row
     })
 
-    const headers = headersResponse.data.values?.[0] || []
+    const postHeaders = headersResponse.data.values?.[0] || []
 
-    if (headers.length === 0) {
+    if (postHeaders.length === 0) {
       console.log(`No headers found in sheet ${sheetName}`)
       return NextResponse.json({ error: "No headers found in sheet" }, { status: 404 })
     }
 
-    console.log(`${sheetName} headers: ${headers.join(", ")}`)
+    console.log(`${sheetName} headers: ${postHeaders.join(", ")}`)
 
     // Create a row with values in the correct order
-    const rowValues = headers.map((header) => {
+    const rowValues = postHeaders.map((header) => {
       // Map our lowercase field names to the actual header names in the sheet
       let value = entryWithSrNo[header]
 

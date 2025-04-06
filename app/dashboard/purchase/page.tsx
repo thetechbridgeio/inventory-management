@@ -107,18 +107,37 @@ export default function PurchasePage() {
     })
   }
 
-  // Update the fetchData function to pass clientId
+  // Update the fetchData function to ensure we're preserving all rows
+  // Add a console.log to see what data we're getting from the API
+
   const fetchData = async () => {
     try {
       // Fetch purchase data
+      console.log("Fetching purchase data with clientId:", client?.id)
       const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase${client?.id ? `&clientId=${client.id}` : ""}`)
+
+      if (!purchaseResponse.ok) {
+        const errorData = await purchaseResponse.json()
+        console.error("Purchase API error:", errorData)
+        throw new Error(`Purchase API error: ${errorData.error || "Unknown error"}`)
+      }
+
       const purchaseResult = await purchaseResponse.json()
+      console.log("Raw purchase data received:", purchaseResult)
 
       if (purchaseResult.data) {
         // Map the field names from Google Sheets to our expected field names
         const processedData = purchaseResult.data.map((item: any, index: number) => {
+          // Create a unique identifier for each row if it doesn't have one
+          const uniqueId =
+            item._uniqueId ||
+            item.id ||
+            item.ID ||
+            `purchase_${index}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
           // Create the processed item
           const processedItem = {
+            _uniqueId: uniqueId, // Add a unique identifier
             srNo: item.srNo || item["Sr. no"] || index + 1,
             product: item.product || item["Product"] || "Unknown Product",
             quantity: Number(item.quantity || item["Quantity"] || 0),
@@ -138,8 +157,11 @@ export default function PurchasePage() {
           return processedItem
         })
 
+        console.log("Processed purchase data:", processedData)
+
         // Sort data by date (newest first)
         const sortedData = sortByDateDesc(processedData)
+        console.log("Sorted purchase data:", sortedData)
         setData(sortedData)
       }
 
