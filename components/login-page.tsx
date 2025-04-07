@@ -21,6 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { setCookie, deleteCookie } from "cookies-next"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -105,13 +106,16 @@ export default function LoginPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Check for admin credentials
-    if (username === "Admin" && password === "admin@123") {
+    if (username === "Lexwell" && password === "lexwell@123") {
       // Store admin login state
       sessionStorage.setItem("isLoggedIn", "true")
       sessionStorage.setItem("userRole", "admin")
 
       // Clear any selected client for admin
       setClient(null)
+
+      // Clear clientId cookie
+      deleteCookie("clientId")
 
       // Redirect to inventory page
       router.push("/dashboard/inventory")
@@ -143,6 +147,9 @@ export default function LoginPage() {
 
         // Set the client in context
         setClient(client)
+
+        // Set clientId cookie
+        setCookie("clientId", client.id)
 
         // Redirect to inventory page
         router.push("/dashboard/inventory")
@@ -316,15 +323,15 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             {/* <div className="text-center text-sm text-muted-foreground">
-              <p>Demo credentials:</p>
-              <p>
-                Admin: <span className="font-mono">Admin</span> | Password: <span className="font-mono">admin@123</span>
-              </p>
-              <p>
-                Client: <span className="font-mono">ClientOne</span> | Password:{" "}
-                <span className="font-mono">client1@123</span>
-              </p>
-            </div> */}
+             <p>Demo credentials:</p>
+             <p>
+               Admin: <span className="font-mono">Admin</span> | Password: <span className="font-mono">admin@123</span>
+             </p>
+             <p>
+               Client: <span className="font-mono">ClientOne</span> | Password:{" "}
+               <span className="font-mono">client1@123</span>
+             </p>
+           </div> */}
           </CardFooter>
         </Card>
 

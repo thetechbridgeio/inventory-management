@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { google } from "googleapis"
 import { getSheetId } from "@/utils/get-sheet-id"
 
+export const fetchCache = "force-no-store"
+
 export async function GET(request: Request) {
   try {
     // Get the appropriate sheet ID for the current client

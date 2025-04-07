@@ -16,6 +16,8 @@ const auth = new JWT({
 // Create sheets client
 const sheets = google.sheets({ version: "v4", auth })
 
+export const fetchCache = "force-no-store"
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -40,7 +42,7 @@ export async function GET(request: Request) {
       const sheets = google.sheets({ version: "v4", auth })
 
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: process.env.MASTER_SHEET_ID || process.env.GOOGLE_SHEET_ID,
+        spreadsheetId: process.env.GOOGLE_SHEET_ID,
         range: "Clients!A:F",
       })
 
@@ -329,12 +331,10 @@ export async function PUT(request: Request) {
         colIndex = headers.indexOf(titleCaseField)
 
         // If still not found, try other common variations
-        if (colIndex === -1) {
-          if (field === "minimumQuantity") colIndex = headers.indexOf("Minimum Quantity")
-          else if (field === "maximumQuantity") colIndex = headers.indexOf("Maximum Quantity")
-          else if (field === "reorderQuantity") colIndex = headers.indexOf("Reorder Quantity")
-          else if (field === "pricePerUnit") colIndex = headers.indexOf("Price per Unit")
-        }
+        if (field === "minimumQuantity") colIndex = headers.indexOf("Minimum Quantity")
+        else if (field === "maximumQuantity") colIndex = headers.indexOf("Maximum Quantity")
+        else if (field === "reorderQuantity") colIndex = headers.indexOf("Reorder Quantity")
+        else if (field === "pricePerUnit") colIndex = headers.indexOf("Price per Unit")
       }
 
       if (colIndex === -1) {
