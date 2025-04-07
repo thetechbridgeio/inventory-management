@@ -424,7 +424,7 @@ function generateDashboardSummaryEmailHtml(metrics: any, clientName?: string): s
         <div class="grid">
           <div>
             <div class="stat">${metrics.today.purchases}</div>
-            <div class="stat-desc">${getPurchaseTerm(clientName)}s</div>
+            <div class="stat-desc">${getPurchaseTerm(clientName)}</div>
           </div>
           <div>
             <div class="stat">${metrics.today.sales}</div>

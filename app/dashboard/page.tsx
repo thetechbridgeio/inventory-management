@@ -528,7 +528,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs text-muted-foreground">{getPurchaseTerm(client?.name)}s</p>
+                <p className="text-xs text-muted-foreground">{getPurchaseTerm(client?.name)}</p>
                 <div className="text-2xl font-bold">{timeMetrics.today.purchases}</div>
               </div>
               <div>
