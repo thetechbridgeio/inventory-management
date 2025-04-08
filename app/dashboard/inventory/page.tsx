@@ -37,7 +37,7 @@ export default function InventoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({})
 
-  // Update the fetchData function to add a timestamp parameter to prevent caching
+  // Update the fetchData function to ensure client ID is properly passed
   const fetchData = async () => {
     try {
       setLoading(true)
@@ -47,9 +47,11 @@ export default function InventoryPage() {
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime()
 
-      const response = await fetch(
-        `/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}&t=${timestamp}`,
-      )
+      // Ensure client ID is properly passed in the URL
+      const clientParam = client?.id ? `&clientId=${encodeURIComponent(client.id)}` : ""
+      console.log(`Inventory: Using client parameter: ${clientParam}`)
+
+      const response = await fetch(`/api/sheets?sheet=Inventory${clientParam}&t=${timestamp}`)
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -58,6 +60,7 @@ export default function InventoryPage() {
       }
 
       const result = await response.json()
+      console.log("Inventory data fetched:", result)
 
       if (result.data && Array.isArray(result.data)) {
         // Map the field names from Google Sheets to our expected field names

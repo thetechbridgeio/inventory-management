@@ -105,8 +105,12 @@ export default function SalesPage() {
         // Add timestamp to prevent caching
         const timestamp = new Date().getTime()
 
+        // Ensure client ID is properly passed in the URL
+        const clientParam = client?.id ? `&clientId=${encodeURIComponent(client.id)}` : ""
+        console.log(`Sales: Using client parameter: ${clientParam}`)
+
         // Fetch sales data
-        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}&t=${timestamp}`)
+        const salesResponse = await fetch(`/api/sheets?sheet=Sales${clientParam}&t=${timestamp}`)
 
         if (!salesResponse.ok) {
           const errorData = await salesResponse.json()
@@ -115,6 +119,7 @@ export default function SalesPage() {
         }
 
         const salesResult = await salesResponse.json()
+        console.log("Sales data fetched:", salesResult)
 
         if (salesResult.data) {
           // Map the field names from Google Sheets to our expected field names

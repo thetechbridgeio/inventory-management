@@ -41,11 +41,19 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       // Also store the client ID in sessionStorage for consistency
       sessionStorage.setItem("clientId", client.id)
       sessionStorage.setItem("clientName", client.name || "")
+
+      // Set the client ID in a cookie for server-side access
+      document.cookie = `clientId=${client.id}; path=/; max-age=86400` // 24 hours
+      console.log(`ClientContext: Set clientId cookie to ${client.id}`)
     } else {
       localStorage.removeItem("client")
       // Also clear the client ID from sessionStorage
       sessionStorage.removeItem("clientId")
       sessionStorage.removeItem("clientName")
+
+      // Clear the client ID cookie
+      document.cookie = "clientId=; path=/; max-age=0"
+      console.log("ClientContext: Cleared clientId cookie")
     }
   }, [client])
 

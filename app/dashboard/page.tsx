@@ -15,6 +15,9 @@ import { toast } from "sonner"
 // Import the client terminology utilities
 import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
 
+// Add import for the debug utility
+import { debugClientData } from "@/utils/debug-client"
+
 // Define a type for our time-based metrics
 interface TimeMetrics {
   today: {
@@ -76,8 +79,12 @@ export default function DashboardPage() {
         // Add timestamp to prevent caching
         const timestamp = new Date().getTime()
 
+        // Ensure client ID is properly passed in the URL
+        const clientParam = client?.id ? `&clientId=${encodeURIComponent(client.id)}` : ""
+        console.log(`Dashboard: Using client parameter: ${clientParam}`)
+
         // Fetch inventory data
-        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}&t=${timestamp}`)
+        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory${clientParam}&t=${timestamp}`)
         if (!inventoryResponse.ok) {
           const errorData = await inventoryResponse.json()
           console.error("Inventory API error:", errorData)
@@ -89,7 +96,7 @@ export default function DashboardPage() {
         console.log("Inventory API result:", inventoryResult)
 
         // Fetch purchase data
-        const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}&t=${timestamp}`)
+        const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase${clientParam}&t=${timestamp}`)
         if (!purchaseResponse.ok) {
           const errorData = await purchaseResponse.json()
           console.error("Purchase API error:", errorData)
@@ -101,7 +108,7 @@ export default function DashboardPage() {
         console.log("Purchase API result:", purchaseResult)
 
         // Fetch sales data
-        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}&t=${timestamp}`)
+        const salesResponse = await fetch(`/api/sheets?sheet=Sales${clientParam}&t=${timestamp}`)
         if (!salesResponse.ok) {
           const errorData = await salesResponse.json()
           console.error("Sales API error:", errorData)
@@ -420,7 +427,7 @@ export default function DashboardPage() {
     setTimeMetrics({
       today: { purchases: todayPurchases, sales: todaySales },
       yesterday: { purchases: yesterdayPurchases, sales: yesterdaySales },
-      thisWeek: { purchases: thisWeekPurchases, sales: thisWeekSales },
+      thisWeek: { thisWeekPurchases, sales: thisWeekSales },
       lastWeek: { lastWeekPurchases, sales: lastWeekSales },
       avgPerDay: { purchases: avgPurchasesPerDay, sales: avgSalesPerDay },
       newProductsThisWeek,
@@ -471,8 +478,20 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Overview of your inventory management system</p>
         </div>
+        {/* Add a debug button to the dashboard (add this inside the return statement, near the other buttons) */}
         <div className="mt-4 md:mt-0 flex gap-2">
           <Button onClick={() => handleNavigate("/dashboard/inventory")}>View Inventory</Button>
+          {process.env.NODE_ENV !== "production" && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                const debug = debugClientData()
+                console.log("Debug client data:", debug)
+              }}
+            >
+              Debug Client
+            </Button>
+          )}
         </div>
       </div>
 

@@ -9,36 +9,50 @@ import { JWT } from "google-auth-library"
  */
 export async function getSheetId(request?: Request): Promise<string> {
   // For server components and API routes
-  if (request) {
-    // Try to get client ID from cookies in the request
-    const cookieHeader = request.headers.get("cookie")
-    if (cookieHeader) {
-      const clientIdMatch = cookieHeader.match(/clientId=([^;]+)/)
-      const clientId = clientIdMatch ? clientIdMatch[1] : null
+  let clientId = null
 
-      if (clientId) {
-        console.log(`getSheetId: Found clientId=${clientId} in request cookies`)
-        // Fetch the client's sheet ID from the master sheet
-        const clientData = await fetchClientData(clientId)
-        if (clientData?.sheetId) {
-          console.log(`getSheetId: Using sheet ID ${clientData.sheetId} for client ${clientId}`)
-          return clientData.sheetId
+  if (request) {
+    // Try to get client ID from query parameters first
+    const url = new URL(request.url)
+    clientId = url.searchParams.get("clientId")
+
+    if (clientId) {
+      console.log(`getSheetId: Found clientId=${clientId} in request query params`)
+    } else {
+      // Try to get client ID from cookies in the request
+      const cookieHeader = request.headers.get("cookie")
+      if (cookieHeader) {
+        const clientIdMatch = cookieHeader.match(/clientId=([^;]+)/)
+        clientId = clientIdMatch ? clientIdMatch[1] : null
+
+        if (clientId) {
+          console.log(`getSheetId: Found clientId=${clientId} in request cookies`)
         } else {
-          console.log(`getSheetId: No sheet ID found for client ${clientId}`)
+          console.log(`getSheetId: No clientId found in request cookies`)
         }
       } else {
-        console.log(`getSheetId: No clientId found in request cookies`)
+        console.log(`getSheetId: No cookie header found in request`)
       }
-    } else {
-      console.log(`getSheetId: No cookie header found in request`)
     }
   } else {
     // For server components that can use the cookies() API directly
-    const cookieStore = cookies()
-    const clientId = cookieStore.get("clientId")?.value
+    try {
+      const cookieStore = cookies()
+      clientId = cookieStore.get("clientId")?.value
 
-    if (clientId) {
-      console.log(`getSheetId: Found clientId=${clientId} in cookie store`)
+      if (clientId) {
+        console.log(`getSheetId: Found clientId=${clientId} in cookie store`)
+      } else {
+        console.log(`getSheetId: No clientId found in cookie store`)
+      }
+    } catch (error) {
+      console.error("Error accessing cookies:", error)
+    }
+  }
+
+  // If we have a client ID, try to get the sheet ID
+  if (clientId) {
+    try {
       // Fetch the client's sheet ID from the master sheet
       const clientData = await fetchClientData(clientId)
       if (clientData?.sheetId) {
@@ -47,14 +61,15 @@ export async function getSheetId(request?: Request): Promise<string> {
       } else {
         console.log(`getSheetId: No sheet ID found for client ${clientId}`)
       }
-    } else {
-      console.log(`getSheetId: No clientId found in cookie store`)
+    } catch (error) {
+      console.error(`getSheetId: Error fetching client data for ${clientId}:`, error)
     }
   }
 
   // Fallback to default sheet ID
-  console.log(`getSheetId: Using default sheet ID`)
-  return process.env.GOOGLE_SHEET_ID || ""
+  const defaultSheetId = process.env.GOOGLE_SHEET_ID || ""
+  console.log(`getSheetId: Using default sheet ID: ${defaultSheetId.substring(0, 5)}...`)
+  return defaultSheetId
 }
 
 /**

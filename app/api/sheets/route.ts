@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Determine which sheet ID to use
-    let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
+    let sheetId
 
     // If clientId is provided, try to get the client-specific sheet ID
     if (clientId) {
@@ -43,30 +43,37 @@ export async function GET(request: NextRequest) {
         // Fetch client data from master sheet
         const clientData = await fetchClientData(clientId)
         if (clientData?.sheetId) {
-          SHEET_ID = clientData.sheetId
-          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
+          sheetId = clientData.sheetId
+          console.log(`API /sheets: Using client-specific sheet ID for client ${clientId}: ${sheetId}`)
+        } else {
+          console.log(`API /sheets: No sheet ID found for client ${clientId}, using default`)
+          sheetId = process.env.GOOGLE_SHEET_ID || ""
         }
       } catch (error) {
-        console.error("Error fetching client sheet ID:", error)
+        console.error("API /sheets: Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
+        sheetId = process.env.GOOGLE_SHEET_ID || ""
       }
+    } else {
+      sheetId = process.env.GOOGLE_SHEET_ID || ""
+      console.log(`API /sheets: No clientId provided, using default sheet ID`)
     }
 
-    if (!SHEET_ID) {
+    if (!sheetId) {
       return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
     }
 
     // Add logging for the spreadsheet ID being used
-    console.log(`API /sheets: Using spreadsheetId=${SHEET_ID} for clientId=${clientId}`)
+    console.log(`API /sheets: Using spreadsheetId=${sheetId} for clientId=${clientId || "none"}`)
 
     // Fetch data from Google Sheets
     const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range: `${sheet}!A:Z`, // Get all columns
     })
 
     const rows = response.data.values || []
-    console.log(`Received ${rows.length} rows from Google Sheets (including header)`)
+    console.log(`API /sheets: Received ${rows.length} rows from Google Sheets (including header)`)
 
     if (rows.length === 0) {
       console.log("No data found in the sheet")

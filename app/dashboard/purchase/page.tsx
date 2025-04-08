@@ -115,8 +115,12 @@ export default function PurchasePage() {
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime()
 
+      // Ensure client ID is properly passed in the URL
+      const clientParam = client?.id ? `&clientId=${encodeURIComponent(client.id)}` : ""
+      console.log(`Purchase: Using client parameter: ${clientParam}`)
+
       // Fetch purchase data
-      const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}&t=${timestamp}`)
+      const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase${clientParam}&t=${timestamp}`)
 
       if (!purchaseResponse.ok) {
         const errorData = await purchaseResponse.json()
@@ -125,6 +129,7 @@ export default function PurchasePage() {
       }
 
       const purchaseResult = await purchaseResponse.json()
+      console.log("Purchase data fetched:", purchaseResult)
 
       if (purchaseResult.data) {
         // Map the field names from Google Sheets to our expected field names
@@ -651,7 +656,8 @@ export default function PurchasePage() {
               }))
             }
           } catch (error) {
-            // Continue with the purchase even if adding the supplier fails
+            console.error("Error adding company to Suppliers sheet:", error)
+            // Continue with the sale even if adding the company fails
           }
         }
       }
@@ -720,18 +726,7 @@ export default function PurchasePage() {
 
     // Filter by date range
     if (filters.dateRange.from || filters.dateRange.to) {
-      // Ensure we have a valid date object
-      let itemDate
-      try {
-        itemDate = new Date(item.dateOfReceiving)
-
-        // Check if it's a valid date
-        if (isNaN(itemDate.getTime())) {
-          return false
-        }
-      } catch (error) {
-        return false
-      }
+      const itemDate = new Date(item.dateOfReceiving)
 
       if (filters.dateRange.from && itemDate < filters.dateRange.from) {
         return false
@@ -1054,7 +1049,9 @@ export default function PurchasePage() {
                         Adding...
                       </>
                     ) : (
-                      `Add ${formEntries.length} ${getPurchaseTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
+                      `Add ${formEntries.length} ${getPurchaseTerm(client?.name)} ${
+                        formEntries.length > 1 ? "Entries" : "Entry"
+                      }`
                     )}
                   </Button>
                 </DialogFooter>
