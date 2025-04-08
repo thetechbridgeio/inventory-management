@@ -22,13 +22,6 @@ const Checkbox = React.forwardRef<
     }
   }, [indeterminate])
 
-  // Add a useEffect to sync the checked state with the DOM element
-  React.useEffect(() => {
-    if (innerRef.current && checked !== undefined) {
-      innerRef.current.checked = checked
-    }
-  }, [checked])
-
   return (
     <div className="flex items-center">
       <div
@@ -63,3 +56,4 @@ const Checkbox = React.forwardRef<
 Checkbox.displayName = "Checkbox"
 
 export { Checkbox }
+

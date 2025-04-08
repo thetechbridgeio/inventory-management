@@ -54,12 +54,12 @@ export function DataTable<TData, TValue>({
   const toggleSelectAll = () => {
     const newSelectedRows = { ...selectedRows }
     const allSelected = currentPageData.every((row: any) => {
-      const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
       return selectedRows[rowId]
     })
 
     currentPageData.forEach((row: any) => {
-      const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
       newSelectedRows[rowId] = !allSelected
     })
 
@@ -68,7 +68,7 @@ export function DataTable<TData, TValue>({
     // Notify parent component of selection change
     if (onRowSelectionChange) {
       const selectedItems = data.filter((item: any) => {
-        const itemId = item._uniqueId || item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
+        const itemId = item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
         return newSelectedRows[itemId]
       })
       onRowSelectionChange(selectedItems)
@@ -79,14 +79,14 @@ export function DataTable<TData, TValue>({
   const allRowsSelected =
     currentPageData.length > 0 &&
     currentPageData.every((row: any) => {
-      const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
       return selectedRows[rowId]
     })
 
   // Check if some rows on current page are selected
   const someRowsSelected =
     currentPageData.some((row: any) => {
-      const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
       return selectedRows[rowId]
     }) && !allRowsSelected
 
@@ -130,76 +130,76 @@ export function DataTable<TData, TValue>({
           </TableHeader>
           <TableBody>
             {currentPageData.length > 0 ? (
-              currentPageData.map((row, rowIndex) => {
-                // Get the row ID for selection tracking
-                const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-                const isSelected = !!selectedRows[rowId]
-
-                return (
-                  <TableRow
-                    key={rowIndex}
-                    className={`cursor-pointer hover:bg-muted/50 h-10 ${isSelected ? "bg-muted" : ""}`}
-                    data-state={isSelected ? "selected" : undefined}
-                  >
-                    {columns.map((column, colIndex) => {
-                      // Special handling for the select column
-                      if (column.id === "select") {
-                        return (
-                          <TableCell key="select" onClick={(e) => e.stopPropagation()} className="py-1">
-                            <div className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={isSelected}
-                                onChange={() => toggleRowSelection(row)}
-                                className="h-4 w-4 rounded border-gray-300"
-                              />
-                            </div>
-                          </TableCell>
-                        )
-                      }
-
-                      // Special handling for the srNo column - display sequential number
-                      if (column.accessorKey === "srNo") {
-                        return (
-                          <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
-                            <div className="text-center font-medium">{startIndex + rowIndex + 1}</div>
-                          </TableCell>
-                        )
-                      }
-
-                      // Special handling for the actions column
-                      if (column.id === "actions" && typeof column.cell === "function") {
-                        return (
-                          <TableCell key={colIndex} onClick={(e) => e.stopPropagation()} className="py-1">
-                            {column.cell({ row: { original: row } })}
-                          </TableCell>
-                        )
-                      }
-
-                      // Regular cell with accessor
-                      if ("accessorKey" in column) {
-                        const accessorKey = column.accessorKey as keyof typeof row
-                        const value = row[accessorKey]
-
-                        return (
-                          <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
-                            {typeof column.cell === "function"
-                              ? column.cell({ row: { getValue: () => value, original: row } })
-                              : String(value !== undefined ? value : "")}
-                          </TableCell>
-                        )
-                      }
-
-                      // Fallback for other column types
+              currentPageData.map((row, rowIndex) => (
+                <TableRow
+                  key={rowIndex}
+                  className="cursor-pointer hover:bg-muted/50 h-10"
+                  data-state={
+                    selectedRows[row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)]
+                      ? "selected"
+                      : undefined
+                  }
+                >
+                  {columns.map((column, colIndex) => {
+                    // Special handling for the select column
+                    if (column.id === "select") {
                       return (
-                        <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
-                          {typeof column.cell === "function" ? column.cell({ row: { original: row } }) : null}
+                        <TableCell key="select" onClick={(e) => e.stopPropagation()} className="py-1">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={
+                                !!selectedRows[row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)]
+                              }
+                              onChange={() => toggleRowSelection(row)}
+                              className="h-4 w-4 rounded border-gray-300"
+                            />
+                          </div>
                         </TableCell>
                       )
-                    })}
-                  </TableRow>
-                )
-              })
+                    }
+
+                    // Special handling for the srNo column - display sequential number
+                    if (column.accessorKey === "srNo") {
+                      return (
+                        <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
+                          <div className="text-center font-medium">{startIndex + rowIndex + 1}</div>
+                        </TableCell>
+                      )
+                    }
+
+                    // Special handling for the actions column
+                    if (column.id === "actions" && typeof column.cell === "function") {
+                      return (
+                        <TableCell key={colIndex} onClick={(e) => e.stopPropagation()} className="py-1">
+                          {column.cell({ row: { original: row } })}
+                        </TableCell>
+                      )
+                    }
+
+                    // Regular cell with accessor
+                    if ("accessorKey" in column) {
+                      const accessorKey = column.accessorKey as keyof typeof row
+                      const value = row[accessorKey]
+
+                      return (
+                        <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
+                          {typeof column.cell === "function"
+                            ? column.cell({ row: { getValue: () => value, original: row } })
+                            : String(value !== undefined ? value : "")}
+                        </TableCell>
+                      )
+                    }
+
+                    // Fallback for other column types
+                    return (
+                      <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
+                        {typeof column.cell === "function" ? column.cell({ row: { original: row } }) : null}
+                      </TableCell>
+                    )
+                  })}
+                </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
