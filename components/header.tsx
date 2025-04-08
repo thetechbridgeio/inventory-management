@@ -23,11 +23,22 @@ export default function Header() {
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const { client } = useClientContext()
+  const { client, setClient } = useClientContext()
 
   const handleLogout = () => {
+    // Clear all session storage
     sessionStorage.removeItem("isLoggedIn")
+    sessionStorage.removeItem("userRole")
     sessionStorage.removeItem("clientId")
+    sessionStorage.removeItem("clientName")
+
+    // Clear local storage client data
+    localStorage.removeItem("client")
+
+    // Reset client context
+    setClient(null)
+
+    // Redirect to login page
     router.push("/")
   }
 
@@ -112,16 +123,17 @@ export default function Header() {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">2</Badge>
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
                 <span className="sr-only">Notifications</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[300px]">
-              <DropdownMenuLabel>Information</DropdownMenuLabel>
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {[
-                { title: "Low stock alert", desc: "Automatically send everyday", time: "6 pm" },
-                { title: "Daily Updates", desc: "Automatically send everyday", time: "6 pm" },
+                { title: "Low stock alert", desc: "5 items are below minimum stock level", time: "2 hours ago" },
+                { title: "New purchase order", desc: "PO-2023-005 has been created", time: "Yesterday" },
+                { title: "System update", desc: "New features available", time: "3 days ago" },
               ].map((notification, i) => (
                 <DropdownMenuItem key={i} className="cursor-pointer">
                   <div className="flex flex-col space-y-1">
@@ -159,4 +171,3 @@ export default function Header() {
     </header>
   )
 }
-

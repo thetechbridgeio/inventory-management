@@ -73,8 +73,11 @@ export default function DashboardPage() {
         console.log("Fetching dashboard data with clientId:", client?.id)
         setLoading(true)
 
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime()
+
         // Fetch inventory data
-        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}`)
+        const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory&clientId=${client?.id}&t=${timestamp}`)
         if (!inventoryResponse.ok) {
           const errorData = await inventoryResponse.json()
           console.error("Inventory API error:", errorData)
@@ -83,7 +86,7 @@ export default function DashboardPage() {
         const inventoryResult = await inventoryResponse.json()
 
         // Fetch purchase data
-        const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}`)
+        const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}&t=${timestamp}`)
         if (!purchaseResponse.ok) {
           const errorData = await purchaseResponse.json()
           console.error("Purchase API error:", errorData)
@@ -92,7 +95,7 @@ export default function DashboardPage() {
         const purchaseResult = await purchaseResponse.json()
 
         // Fetch sales data
-        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}`)
+        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}&t=${timestamp}`)
         if (!salesResponse.ok) {
           const errorData = await salesResponse.json()
           console.error("Sales API error:", errorData)
@@ -724,4 +727,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-

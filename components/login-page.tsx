@@ -164,6 +164,24 @@ export default function LoginPage() {
     }
   }
 
+  // Find the handleLogout function and update it to clear all client-related data
+  const handleLogout = () => {
+    // Clear all session storage
+    sessionStorage.removeItem("isLoggedIn")
+    sessionStorage.removeItem("userRole")
+    sessionStorage.removeItem("clientId")
+    sessionStorage.removeItem("clientName")
+
+    // Clear local storage client data
+    localStorage.removeItem("client")
+
+    // Reset client context
+    setClient(null)
+
+    // Redirect to login page
+    router.push("/")
+  }
+
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 px-4 py-12">
       <div className="w-full max-w-md">
@@ -342,4 +360,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

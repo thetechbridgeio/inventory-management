@@ -38,6 +38,8 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (client) {
       localStorage.setItem("client", JSON.stringify(client))
+    } else {
+      localStorage.removeItem("client")
     }
   }, [client])
 
@@ -73,4 +75,3 @@ export function useClientContext() {
   }
   return context
 }
-

@@ -37,12 +37,19 @@ export default function InventoryPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({})
 
+  // Update the fetchData function to add a timestamp parameter to prevent caching
   const fetchData = async () => {
     try {
+      setLoading(true)
       setIsRefreshing(true)
       setError(null)
 
-      const response = await fetch(`/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}`)
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime()
+
+      const response = await fetch(
+        `/api/sheets?sheet=Inventory${client?.id ? `&clientId=${client.id}` : ""}&t=${timestamp}`,
+      )
 
       if (!response.ok) {
         const errorData = await response.json()
@@ -557,4 +564,3 @@ export default function InventoryPage() {
     </div>
   )
 }
-

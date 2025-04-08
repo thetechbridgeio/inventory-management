@@ -112,8 +112,11 @@ export default function PurchasePage() {
 
   const fetchData = async () => {
     try {
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime()
+
       // Fetch purchase data
-      const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase${client?.id ? `&clientId=${client.id}` : ""}`)
+      const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}&t=${timestamp}`)
 
       if (!purchaseResponse.ok) {
         const errorData = await purchaseResponse.json()
@@ -126,7 +129,7 @@ export default function PurchasePage() {
       if (purchaseResult.data) {
         // Map the field names from Google Sheets to our expected field names
         const processedData = purchaseResult.data.map((item: any, index: number) => {
-          // Create a unique identifier for each row if it doesn't have one
+          // Create a unique identifier for each row if it doesn’t have one
           const uniqueId =
             item._uniqueId ||
             item.id ||
@@ -1241,4 +1244,3 @@ export default function PurchasePage() {
     </div>
   )
 }
-

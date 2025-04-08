@@ -102,8 +102,11 @@ export default function SalesPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime()
+
         // Fetch sales data
-        const salesResponse = await fetch(`/api/sheets?sheet=Sales${client?.id ? `&clientId=${client.id}` : ""}`)
+        const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}&t=${timestamp}`)
 
         if (!salesResponse.ok) {
           const errorData = await salesResponse.json()

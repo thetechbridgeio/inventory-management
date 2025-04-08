@@ -97,4 +97,3 @@ async function fetchClientData(clientId: string) {
     return null
   }
 }
-
