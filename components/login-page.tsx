@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { setCookie, deleteCookie } from "cookies-next"
+// Import the clearClientData function
+import { clearClientData } from "@/lib/clear-client-data"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -166,14 +168,8 @@ export default function LoginPage() {
 
   // Find the handleLogout function and update it to clear all client-related data
   const handleLogout = () => {
-    // Clear all session storage
-    sessionStorage.removeItem("isLoggedIn")
-    sessionStorage.removeItem("userRole")
-    sessionStorage.removeItem("clientId")
-    sessionStorage.removeItem("clientName")
-
-    // Clear local storage client data
-    localStorage.removeItem("client")
+    // Clear all client data
+    clearClientData()
 
     // Reset client context
     setClient(null)

@@ -18,6 +18,8 @@ import { SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useClientContext } from "@/context/client-context"
+// Import the clearClientData function
+import { clearClientData } from "@/lib/clear-client-data"
 
 export default function Header() {
   const router = useRouter()
@@ -25,15 +27,10 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("")
   const { client, setClient } = useClientContext()
 
+  // Update the handleLogout function to use clearClientData
   const handleLogout = () => {
-    // Clear all session storage
-    sessionStorage.removeItem("isLoggedIn")
-    sessionStorage.removeItem("userRole")
-    sessionStorage.removeItem("clientId")
-    sessionStorage.removeItem("clientName")
-
-    // Clear local storage client data
-    localStorage.removeItem("client")
+    // Clear all client data
+    clearClientData()
 
     // Reset client context
     setClient(null)

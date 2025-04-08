@@ -129,3 +129,6 @@ export function validateAndFormatDate(dateString: string, fallbackToToday = fals
   }
 }
 
+export function deleteCookie(name: string, options: any = {}) {
+  document.cookie = name + "=; Max-Age=0; Path=/;"
+}

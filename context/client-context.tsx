@@ -38,8 +38,14 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (client) {
       localStorage.setItem("client", JSON.stringify(client))
+      // Also store the client ID in sessionStorage for consistency
+      sessionStorage.setItem("clientId", client.id)
+      sessionStorage.setItem("clientName", client.name || "")
     } else {
       localStorage.removeItem("client")
+      // Also clear the client ID from sessionStorage
+      sessionStorage.removeItem("clientId")
+      sessionStorage.removeItem("clientName")
     }
   }, [client])
 

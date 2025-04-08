@@ -167,8 +167,38 @@ export async function GET(request: NextRequest) {
 // Update the PUT method to use client-specific sheet ID
 export async function PUT(request: Request) {
   try {
-    const { product, newStock, newValue, clientId } = await request.json()
-    console.log(`Updating inventory for product: ${product}, new stock: ${newStock}, new value: ${newValue}`)
+    // Log the raw request
+    const requestText = await request.text()
+    console.log("Raw request body:", requestText)
+
+    // Parse the request body
+    let requestData
+    try {
+      requestData = JSON.parse(requestText)
+      console.log("Parsed request body:", requestData)
+    } catch (error) {
+      console.error("Failed to parse request body:", error)
+      return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
+    }
+
+    const { product, updatedData, clientId } = requestData
+
+    console.log("Extracted values:", {
+      product: product,
+      updatedData: updatedData,
+      clientId: clientId,
+    })
+
+    if (!product || !updatedData) {
+      console.log("Validation failed:", {
+        hasProduct: !!product,
+        hasUpdatedData: !!updatedData,
+      })
+      return NextResponse.json(
+        { error: "Invalid request. Product name and updated data are required." },
+        { status: 400 },
+      )
+    }
 
     // Determine which sheet ID to use
     let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
@@ -289,7 +319,7 @@ export async function PUT(request: Request) {
       range: `Inventory!${String.fromCharCode(64 + stockColIndex)}${rowIndex}`, // Convert column index to letter
       valueInputOption: "RAW",
       requestBody: {
-        values: [[newStock]],
+        values: [[updatedData.newStock]],
       },
     })
 
@@ -300,7 +330,7 @@ export async function PUT(request: Request) {
       range: `Inventory!${String.fromCharCode(64 + valueColIndex)}${rowIndex}`, // Convert column index to letter
       valueInputOption: "RAW",
       requestBody: {
-        values: [[newValue]],
+        values: [[updatedData.newValue]],
       },
     })
 
@@ -541,4 +571,3 @@ async function fetchClientData(clientId: string) {
     return null
   }
 }
-

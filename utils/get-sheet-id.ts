@@ -17,12 +17,20 @@ export async function getSheetId(request?: Request): Promise<string> {
       const clientId = clientIdMatch ? clientIdMatch[1] : null
 
       if (clientId) {
+        console.log(`getSheetId: Found clientId=${clientId} in request cookies`)
         // Fetch the client's sheet ID from the master sheet
         const clientData = await fetchClientData(clientId)
         if (clientData?.sheetId) {
+          console.log(`getSheetId: Using sheet ID ${clientData.sheetId} for client ${clientId}`)
           return clientData.sheetId
+        } else {
+          console.log(`getSheetId: No sheet ID found for client ${clientId}`)
         }
+      } else {
+        console.log(`getSheetId: No clientId found in request cookies`)
       }
+    } else {
+      console.log(`getSheetId: No cookie header found in request`)
     }
   } else {
     // For server components that can use the cookies() API directly
@@ -30,16 +38,23 @@ export async function getSheetId(request?: Request): Promise<string> {
     const clientId = cookieStore.get("clientId")?.value
 
     if (clientId) {
+      console.log(`getSheetId: Found clientId=${clientId} in cookie store`)
       // Fetch the client's sheet ID from the master sheet
       const clientData = await fetchClientData(clientId)
       if (clientData?.sheetId) {
+        console.log(`getSheetId: Using sheet ID ${clientData.sheetId} for client ${clientId}`)
         return clientData.sheetId
+      } else {
+        console.log(`getSheetId: No sheet ID found for client ${clientId}`)
       }
+    } else {
+      console.log(`getSheetId: No clientId found in cookie store`)
     }
   }
 
   // Fallback to default sheet ID
-  return ""
+  console.log(`getSheetId: Using default sheet ID`)
+  return process.env.GOOGLE_SHEET_ID || ""
 }
 
 /**

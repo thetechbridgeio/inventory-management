@@ -85,6 +85,9 @@ export default function DashboardPage() {
         }
         const inventoryResult = await inventoryResponse.json()
 
+        // Log the inventory result
+        console.log("Inventory API result:", inventoryResult)
+
         // Fetch purchase data
         const purchaseResponse = await fetch(`/api/sheets?sheet=Purchase&clientId=${client?.id}&t=${timestamp}`)
         if (!purchaseResponse.ok) {
@@ -93,6 +96,9 @@ export default function DashboardPage() {
           throw new Error(`Purchase API error: ${errorData.error || "Unknown error"}`)
         }
         const purchaseResult = await purchaseResponse.json()
+
+        // Log the purchase result
+        console.log("Purchase API result:", purchaseResult)
 
         // Fetch sales data
         const salesResponse = await fetch(`/api/sheets?sheet=Sales&clientId=${client?.id}&t=${timestamp}`)
@@ -103,6 +109,9 @@ export default function DashboardPage() {
         }
         const salesResult = await salesResponse.json()
         console.log("Sales data fetched:", salesResult)
+
+        // Log the sales result
+        console.log("Sales API result:", salesResult)
 
         // Process the data as before...
         if (inventoryResult.data) {

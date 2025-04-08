@@ -41,13 +41,20 @@ export default function DashboardLayout({
     const userRole = sessionStorage.getItem("userRole")
     setIsAdmin(userRole === "admin")
 
-    // Get client name from session storage
-    const storedClientName = sessionStorage.getItem("clientName")
+    // Get client name from context or session storage
+    const storedClientName = client?.name || sessionStorage.getItem("clientName")
 
     if (storedClientName) {
       setClientName(storedClientName)
     }
-  }, [router])
+  }, [router, client])
+
+  // Add a useEffect to log client changes
+  useEffect(() => {
+    if (mounted && client) {
+      console.log("Dashboard layout: Client changed to", client.name, client.id)
+    }
+  }, [client, mounted])
 
   // For debugging
   useEffect(() => {
@@ -109,4 +116,3 @@ export default function DashboardLayout({
     </div>
   )
 }
-

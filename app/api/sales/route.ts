@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const auth = new google.auth.JWT(
       process.env.GOOGLE_CLIENT_EMAIL,
       undefined,
-      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\\n"),
       ["https://www.googleapis.com/auth/spreadsheets"],
     )
 
@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     const auth = new google.auth.JWT(
       process.env.GOOGLE_CLIENT_EMAIL,
       undefined,
-      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\\n"),
       ["https://www.googleapis.com/auth/spreadsheets"],
     )
 
@@ -183,4 +183,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add sale" }, { status: 500 })
   }
 }
-
