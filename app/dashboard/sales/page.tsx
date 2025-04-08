@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { CalendarIcon, Download, Filter, Plus, Search, Trash2, X, MinusCircle } from "lucide-react"
 import { DataTable } from "@/components/data-table/data-table"
-import { salesColumns } from "@/components/data-table/columns/sales-columns"
+import { getSalesColumns } from "@/components/data-table/columns/sales-columns"
 import type { SalesItem, InventoryItem, Supplier, SalesFilterState } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { jsPDF } from "jspdf"
@@ -34,7 +34,7 @@ import { useClientContext } from "@/context/client-context"
 // Import the client terminology utilities
 import { getSalesTerm } from "@/lib/client-terminology"
 
-// Define a type for a single sales entry form
+// Update the SalesEntryForm interface to include indentNumber
 interface SalesEntryForm {
   product: string
   quantity: string
@@ -43,9 +43,11 @@ interface SalesEntryForm {
   companyName: string
   newCompany: string
   dateOfIssue: Date
+  indentNumber?: string // Add this new field
 }
 
 export default function SalesPage() {
+  const { client } = useClientContext()
   const [data, setData] = useState<SalesItem[]>([])
   const [inventoryData, setInventoryData] = useState<InventoryItem[]>([])
   const [supplierData, setSupplierData] = useState<Supplier[]>([])
@@ -67,9 +69,11 @@ export default function SalesPage() {
   })
   const [productFilters, setProductFilters] = useState<Record<string, boolean>>({})
   const [companyFilters, setCompanyFilters] = useState<Record<string, boolean>>({})
-  const { client } = useClientContext()
 
-  // Replace single formData with an array of entries
+  // Create columns based on client name
+  const columns = getSalesColumns(client?.name)
+
+  // Update the initial form state in the useState hook to include indentNumber
   const [formEntries, setFormEntries] = useState<SalesEntryForm[]>([
     {
       product: "",
@@ -79,6 +83,7 @@ export default function SalesPage() {
       companyName: "",
       newCompany: "",
       dateOfIssue: new Date(),
+      indentNumber: "", // Add this new field
     },
   ])
 
@@ -127,6 +132,7 @@ export default function SalesPage() {
               contact: item.contact || item["Contact"] || "",
               companyName: item.companyName || item["Company Name"] || "",
               dateOfIssue: item.dateOfIssue || item["Date of Issue"] || new Date().toISOString().split("T")[0],
+              indentNumber: item.indentNumber || item["Indent Number"] || "",
             }
           })
 
@@ -312,6 +318,11 @@ export default function SalesPage() {
     // Define the columns for the table
     const tableColumn = ["Sr. No", "Product", "Quantity", "Unit", "Contact", "Company", "Date"]
 
+    // Add Indent Number column for Cranoist
+    if (client?.name?.toLowerCase() === "cranoist") {
+      tableColumn.push("Indent Number")
+    }
+
     // Define the rows for the table - use filtered data
     const filteredItems = data.filter((item) => {
       // Filter by product
@@ -356,15 +367,24 @@ export default function SalesPage() {
       return true
     })
 
-    const tableRows = filteredItems.map((item, index) => [
-      index + 1, // Use sequential numbering from the filtered table
-      item.product,
-      item.quantity,
-      item.unit,
-      item.contact,
-      item.companyName,
-      format(new Date(item.dateOfIssue), "MMM d, yyyy"),
-    ])
+    const tableRows = filteredItems.map((item, index) => {
+      const row = [
+        index + 1, // Use sequential numbering from the filtered table
+        item.product,
+        item.quantity,
+        item.unit,
+        item.contact,
+        item.companyName,
+        format(new Date(item.dateOfIssue), "MMM d, yyyy"),
+      ]
+
+      // Add Indent Number for Cranoist
+      if (client?.name?.toLowerCase() === "cranoist") {
+        row.push(item.indentNumber || "")
+      }
+
+      return row
+    })
 
     // Generate the table with improved styling
     autoTable(doc, {
@@ -466,6 +486,7 @@ export default function SalesPage() {
     })
   }
 
+  // Update the addEntry function to include indentNumber
   const addEntry = () => {
     setFormEntries((prev) => [
       ...prev,
@@ -477,6 +498,7 @@ export default function SalesPage() {
         companyName: isAddingNewCompany ? "" : prev[0].companyName, // Copy company if using existing
         newCompany: isAddingNewCompany ? prev[0].newCompany : "", // Copy new company if adding new
         dateOfIssue: prev[0].dateOfIssue, // Copy date from first entry
+        indentNumber: prev[0].indentNumber, // Copy indent number from first entry
       },
     ])
   }
@@ -518,7 +540,8 @@ export default function SalesPage() {
         // Determine the company name to use
         const companyName = isAddingNewCompany ? entry.newCompany : entry.companyName
 
-        // Create new sales entry
+        // Find the handleSubmit function and update the newEntry object creation to include indentNumber
+        // Inside the handleSubmit function, update the newEntry object:
         const newEntry = {
           // Don't include srNo here, it will be assigned by the server
           product: entry.product,
@@ -527,6 +550,7 @@ export default function SalesPage() {
           contact: entry.contact,
           companyName: companyName,
           dateOfIssue: format(entry.dateOfIssue, "yyyy-MM-dd"),
+          indentNumber: entry.indentNumber, // Ensure this line is present
         }
 
         // Check if there's enough stock (for warning purposes only)
@@ -718,6 +742,7 @@ export default function SalesPage() {
           companyName: "",
           newCompany: "",
           dateOfIssue: new Date(),
+          indentNumber: "",
         },
       ])
       setIsAddingNewCompany(false)
@@ -824,6 +849,7 @@ export default function SalesPage() {
                     companyName: "",
                     newCompany: "",
                     dateOfIssue: new Date(),
+                    indentNumber: "",
                   },
                 ])
                 setIsAddingNewCompany(false)
@@ -1048,6 +1074,32 @@ export default function SalesPage() {
                               </Popover>
                             </div>
                           </div>
+
+                          {/* Find the form in the JSX and add the Indent Number field after the Date field for Cranoist */}
+                          {/* Look for the section with dateOfIssue and add this after it: */}
+                          {client?.name?.toLowerCase() === "cranoist" && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="indentNumber" className="text-right">
+                                Indent Number
+                              </Label>
+                              <Input
+                                id="indentNumber"
+                                name="indentNumber"
+                                value={entry.indentNumber || ""}
+                                onChange={(e) => {
+                                  // Update indent number for all entries
+                                  const value = e.target.value
+                                  setFormEntries((prev) =>
+                                    prev.map((entry) => ({
+                                      ...entry,
+                                      indentNumber: value,
+                                    })),
+                                  )
+                                }}
+                                className="col-span-3"
+                              />
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -1070,7 +1122,9 @@ export default function SalesPage() {
                         Adding...
                       </>
                     ) : (
-                      `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
+                      `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${
+                        formEntries.length > 1 ? "Entries" : "Entry"
+                      }`
                     )}
                   </Button>
                 </DialogFooter>
@@ -1256,10 +1310,10 @@ export default function SalesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <DataTable columns={salesColumns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
+          {/* Update the DataTable component call to use the columns variable */}
+          <DataTable columns={columns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
         </CardContent>
       </Card>
     </div>
   )
 }
-

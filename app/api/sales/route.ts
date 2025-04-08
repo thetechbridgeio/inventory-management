@@ -134,10 +134,10 @@ export async function POST(request: Request) {
       // Add headers
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: "Sales!A1:G1",
+        range: `Sales!A1:H1`,
         valueInputOption: "RAW",
         requestBody: {
-          values: [["ID", "Date", "Customer", "Product", "Quantity", "Unit Price", "Total"]],
+          values: [["ID", "Date", "Customer", "Product", "Quantity", "Unit Price", "Total", "Indent Number"]],
         },
       })
     }
@@ -155,7 +155,7 @@ export async function POST(request: Request) {
     // Append the new sale
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: "Sales!A:G",
+      range: "Sales!A:H",
       valueInputOption: "RAW",
       requestBody: {
         values: [
@@ -167,6 +167,7 @@ export async function POST(request: Request) {
             saleData.quantity || "",
             saleData.unitPrice || "",
             saleData.total || "",
+            saleData.indentNumber || "",
           ],
         ],
       },

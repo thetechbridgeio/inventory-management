@@ -7,16 +7,23 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { ColumnDef } from "@tanstack/react-table"
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
+  columns: ColumnDef<TData, TValue>[] | (() => ColumnDef<TData, TValue>[])
   data: TData[]
   onRowSelectionChange?: (rows: TData[]) => void
 }
 
-export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  columns: columnsOrFn,
+  data,
+  onRowSelectionChange,
+}: DataTableProps<TData, TValue>) {
   // Simple state management without complex hooks
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({})
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(15)
+
+  // Resolve columns if it's a function
+  const columns = typeof columnsOrFn === "function" ? columnsOrFn() : columnsOrFn
 
   // Calculate pagination
   const pageCount = Math.ceil(data.length / pageSize)
@@ -278,4 +285,3 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
     </div>
   )
 }
-

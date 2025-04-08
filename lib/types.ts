@@ -30,6 +30,7 @@ export interface SalesItem {
   contact: string
   companyName: string
   dateOfIssue: string
+  indentNumber?: string
 }
 
 export interface Supplier {
@@ -78,4 +79,3 @@ export interface Client {
   username?: string
   password?: string
 }
-

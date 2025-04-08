@@ -14,70 +14,93 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 
-export const salesColumns: ColumnDef<SalesItem>[] = [
-  {
-    id: "select",
-    header: "Select",
-  },
-  {
-    accessorKey: "srNo",
-    header: "Sr. No",
-    // The cell rendering is now handled by the DataTable component
-  },
-  {
-    accessorKey: "product",
-    header: "Product",
-    cell: ({ row }) => (
-      <div className="font-medium truncate max-w-[200px]" title={row.original.product || "Unknown Product"}>
-        {row.original.product || "Unknown Product"}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "quantity",
-    header: "Quantity",
-    cell: ({ row }) => <div>{row.original.quantity || 0}</div>,
-  },
-  {
-    accessorKey: "unit",
-    header: "Unit",
-    cell: ({ row }) => <div className="text-muted-foreground">{row.original.unit || "N/A"}</div>,
-  },
-  {
-    accessorKey: "contact",
-    header: "Contact",
-    cell: ({ row }) => <div>{row.original.contact || "N/A"}</div>,
-  },
-  {
-    accessorKey: "companyName",
-    header: "Company",
-    cell: ({ row }) => <div>{row.original.companyName || "N/A"}</div>,
-  },
-  {
-    accessorKey: "dateOfIssue",
-    header: "Date Issued",
-    cell: ({ row }) => {
-      const dateString = row.original.dateOfIssue || ""
+// Create a function that returns columns based on client name
+export const getSalesColumns = (clientName?: string | null): ColumnDef<SalesItem>[] => {
+  const isCranoist = clientName?.toLowerCase() === "cranoist"
 
-      if (!dateString) {
-        return <div>Not set</div>
-      }
+  const columns: ColumnDef<SalesItem>[] = [
+    {
+      id: "select",
+      header: "Select",
+    },
+    {
+      accessorKey: "srNo",
+      header: "Sr. No",
+      // The cell rendering is now handled by the DataTable component
+    },
+    {
+      accessorKey: "product",
+      header: "Product",
+      cell: ({ row }) => (
+        <div className="font-medium truncate max-w-[200px]" title={row.original.product || "Unknown Product"}>
+          {row.original.product || "Unknown Product"}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "quantity",
+      header: "Quantity",
+      cell: ({ row }) => <div>{row.original.quantity || 0}</div>,
+    },
+    {
+      accessorKey: "unit",
+      header: "Unit",
+      cell: ({ row }) => <div className="text-muted-foreground">{row.original.unit || "N/A"}</div>,
+    },
+    {
+      accessorKey: "contact",
+      header: "Contact",
+      cell: ({ row }) => <div>{row.original.contact || "N/A"}</div>,
+    },
+    {
+      accessorKey: "companyName",
+      header: "Company",
+      cell: ({ row }) => <div>{row.original.companyName || "N/A"}</div>,
+    },
+    {
+      accessorKey: "dateOfIssue",
+      header: "Date Issued",
+      cell: ({ row }) => {
+        // Get the raw date string directly from the row data
+        const dateString = row.original.dateOfIssue || ""
 
-      try {
-        const date = new Date(dateString)
+        // If empty, show "Not set"
+        if (!dateString) {
+          return <div>Not set</div>
+        }
 
-        if (!isNaN(date.getTime())) {
-          const formatted = format(date, "MMM d, yyyy")
-          return <div>{formatted}</div>
-        } else {
+        // Try to parse as a date
+        try {
+          const date = new Date(dateString)
+
+          // Check if it's a valid date
+          if (!isNaN(date.getTime())) {
+            // Format only if it's a valid date
+            const formatted = format(date, "MMM d, yyyy")
+            return <div>{formatted}</div>
+          } else {
+            // If invalid date, just show the original string
+            return <div>{dateString}</div>
+          }
+        } catch (error) {
+          // On any error, show the original string
           return <div>{dateString}</div>
         }
-      } catch (error) {
-        return <div>{dateString}</div>
-      }
+      },
     },
-  },
-  {
+  ]
+
+  // Add Indent Number column only for Cranoist
+  if (isCranoist) {
+    columns.splice(8, 0, {
+      accessorKey: "indentNumber",
+      header: "Indent Number",
+      cell: ({ row }) => <div>{row.original.indentNumber || "N/A"}</div>,
+    })
+  }
+
+  // Add the actions column at the end
+  columns.push({
     id: "actions",
     cell: ({ row }) => {
       return (
@@ -98,6 +121,7 @@ export const salesColumns: ColumnDef<SalesItem>[] = [
         </DropdownMenu>
       )
     },
-  },
-]
+  })
 
+  return columns
+}

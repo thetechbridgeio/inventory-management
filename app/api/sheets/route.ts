@@ -457,6 +457,8 @@ export async function POST(request: Request) {
           value = entryWithSrNo.pricePerUnit
         } else if (headerLower === "value") {
           value = entryWithSrNo.value
+        } else if (headerLower === "indent number") {
+          value = entryWithSrNo.indentNumber
         }
       }
 
