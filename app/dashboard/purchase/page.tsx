@@ -601,8 +601,8 @@ export default function PurchasePage() {
             },
             body: JSON.stringify({
               product: entry.product,
-              newStock,
-              newValue,
+              newStock: newStock, // Ensure newStock is included
+              newValue: newValue, // Ensure newValue is included
               clientId: client?.id,
             }),
           })

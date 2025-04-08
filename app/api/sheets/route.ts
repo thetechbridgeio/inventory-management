@@ -91,9 +91,6 @@ export async function GET(request: NextRequest) {
         item.srNo = index + 1
       }
 
-      // First, log the entire row for debugging
-      console.log(`Processing row ${index + 1}:`, row)
-
       headers.forEach((header: string, i: number) => {
         // Make sure we have a value for this cell
         if (i < row.length) {
@@ -101,7 +98,6 @@ export async function GET(request: NextRequest) {
           if (header.toLowerCase().includes("date")) {
             // Get the raw value
             const rawValue = row[i]
-            console.log(`Date field ${header} raw value:`, rawValue)
 
             // For Purchase sheet, map "Date of receiving" to "dateOfReceiving"
             if (sheet === "Purchase" && header === "Date of receiving") {
@@ -156,8 +152,6 @@ export async function GET(request: NextRequest) {
     // After fetching data, log the result size
     console.log(`API /sheets: Fetched ${rows.length} rows from ${sheet} sheet`)
 
-    // Log a sample of the processed data with focus on dates
-
     return NextResponse.json({ data })
   } catch (error) {
     console.error(`API /sheets: Error fetching ${sheet} data:`, error)
@@ -188,23 +182,26 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Invalid JSON in request body" }, { status: 400 })
     }
 
-    const { product, updatedData, clientId } = requestData
+    // Extract the required fields with better error handling
+    const { product, newStock, newValue, clientId } = requestData
+    const updatedData = { newStock, newValue }
 
     console.log("Extracted values:", {
-      product: product,
-      updatedData: updatedData,
-      clientId: clientId,
+      product,
+      newStock,
+      newValue,
+      clientId,
     })
 
-    if (!product || !updatedData) {
-      console.log("Validation failed:", {
-        hasProduct: !!product,
-        hasUpdatedData: !!updatedData,
-      })
-      return NextResponse.json(
-        { error: "Invalid request. Product name and updated data are required." },
-        { status: 400 },
-      )
+    // Validate the required fields
+    if (!product) {
+      console.log("Validation failed: Missing product name")
+      return NextResponse.json({ error: "Invalid request. Product name is required." }, { status: 400 })
+    }
+
+    if (newStock === undefined || newValue === undefined) {
+      console.log("Validation failed: Missing newStock or newValue")
+      return NextResponse.json({ error: "Invalid request. newStock and newValue are required." }, { status: 400 })
     }
 
     // Determine which sheet ID to use
@@ -234,33 +231,6 @@ export async function PUT(request: Request) {
       spreadsheetId: SHEET_ID,
       range: "Inventory!A:Z", // Get all columns to find the headers
     })
-
-    // Check the GET function for any deduplication logic
-    // Look for the part where we process the data from the sheets:
-
-    // Process inventory data
-    const inventoryItems = inventoryResponse.data.values || []
-    if (inventoryItems.length === 0) {
-      return NextResponse.json({ data: [] })
-    }
-
-    // Extract headers from the first row
-    const headers = inventoryItems[0]
-
-    // Map the data to objects with proper keys
-    const data = inventoryItems.slice(1).map((row: any, index: number) => {
-      const item: Record<string, any> = {}
-      headers.forEach((header: string, i: number) => {
-        if (i < row.length) {
-          item[header] = row[i]
-        } else {
-          item[header] = ""
-        }
-      })
-      return item
-    })
-
-    // Make sure there's no filtering or deduplication here
 
     const inventoryRows = inventoryResponse.data.values || []
     if (inventoryRows.length === 0) {
@@ -326,7 +296,7 @@ export async function PUT(request: Request) {
       range: `Inventory!${String.fromCharCode(64 + stockColIndex)}${rowIndex}`, // Convert column index to letter
       valueInputOption: "RAW",
       requestBody: {
-        values: [[updatedData.newStock]],
+        values: [[newStock]],
       },
     })
 
@@ -337,7 +307,7 @@ export async function PUT(request: Request) {
       range: `Inventory!${String.fromCharCode(64 + valueColIndex)}${rowIndex}`, // Convert column index to letter
       valueInputOption: "RAW",
       requestBody: {
-        values: [[updatedData.newValue]],
+        values: [[newValue]],
       },
     })
 
