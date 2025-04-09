@@ -31,10 +31,31 @@ export function DataTable<TData, TValue>({
   const endIndex = Math.min(startIndex + pageSize, data.length)
   const currentPageData = data.slice(startIndex, endIndex)
 
-  // Handle row selection
+  // Add a helper function to generate consistent unique IDs for rows
+  const generateUniqueRowId = (row: any, index: number): string => {
+    // If the row has a unique ID property, use that
+    if (row._uniqueId) return `id_${row._uniqueId}`
+
+    // If it has srNo and product, combine them (common in inventory items)
+    if (row.srNo && row.product) return `sr_${row.srNo}_p_${row.product}`
+
+    // If it has a timestamp, include that for uniqueness
+    if (row.timestamp) return `t_${row.timestamp}_i_${index}`
+
+    // For date fields that might be present
+    const dateField = row.dateOfReceiving || row.dateOfIssue
+    if (dateField && row.product) return `d_${dateField}_p_${row.product}_i_${index}`
+
+    // Last resort: stringify the row with its index
+    return `idx_${index}_${JSON.stringify(row).substring(0, 50)}`
+  }
+
+  // Update the toggleRowSelection function to use a more reliable identifier
   const toggleRowSelection = (row: any) => {
-    // Use a unique identifier for the row - fallback to index if no id/srNo/_uniqueId
-    const rowId = row._uniqueId || row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+    // Create a more reliable unique identifier by combining multiple properties
+    // Use index-based position in the filtered data as a fallback
+    const rowIndex = currentPageData.findIndex((r) => r === row)
+    const rowId = generateUniqueRowId(row, rowIndex)
 
     const newSelectedRows = { ...selectedRows }
     newSelectedRows[rowId] = !newSelectedRows[rowId]
@@ -42,53 +63,49 @@ export function DataTable<TData, TValue>({
 
     // Notify parent component of selection change
     if (onRowSelectionChange) {
-      const selectedItems = data.filter((item: any) => {
-        const itemId = item._uniqueId || item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
+      const selectedItems = data.filter((item: any, index) => {
+        const itemId = generateUniqueRowId(item, index)
         return newSelectedRows[itemId]
       })
       onRowSelectionChange(selectedItems)
     }
   }
 
-  // Handle select all rows on current page
-  const toggleSelectAll = () => {
-    const newSelectedRows = { ...selectedRows }
-    const allSelected = currentPageData.every((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
+  // Update the allRowsSelected check
+  const allRowsSelected =
+    currentPageData.length > 0 &&
+    currentPageData.every((row: any, index) => {
+      const rowId = generateUniqueRowId(row, index)
       return selectedRows[rowId]
     })
 
-    currentPageData.forEach((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      newSelectedRows[rowId] = !allSelected
+  // Update the someRowsSelected check
+  const someRowsSelected =
+    currentPageData.some((row: any, index) => {
+      const rowId = generateUniqueRowId(row, index)
+      return selectedRows[rowId]
+    }) && !allRowsSelected
+
+  // Update the toggleSelectAll function
+  const toggleSelectAll = () => {
+    const newSelectedRows = { ...selectedRows }
+
+    currentPageData.forEach((row: any, index) => {
+      const rowId = generateUniqueRowId(row, index)
+      newSelectedRows[rowId] = !allRowsSelected
     })
 
     setSelectedRows(newSelectedRows)
 
     // Notify parent component of selection change
     if (onRowSelectionChange) {
-      const selectedItems = data.filter((item: any) => {
-        const itemId = item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
+      const selectedItems = data.filter((item: any, index) => {
+        const itemId = generateUniqueRowId(item, index)
         return newSelectedRows[itemId]
       })
       onRowSelectionChange(selectedItems)
     }
   }
-
-  // Check if all rows on current page are selected
-  const allRowsSelected =
-    currentPageData.length > 0 &&
-    currentPageData.every((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      return selectedRows[rowId]
-    })
-
-  // Check if some rows on current page are selected
-  const someRowsSelected =
-    currentPageData.some((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      return selectedRows[rowId]
-    }) && !allRowsSelected
 
   // Count total selected rows
   const selectedRowsCount = Object.values(selectedRows).filter(Boolean).length
@@ -148,9 +165,8 @@ export function DataTable<TData, TValue>({
                           <div className="flex items-center">
                             <input
                               type="checkbox"
-                              checked={
-                                !!selectedRows[row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)]
-                              }
+                              type="checkbox"
+                              checked={!!selectedRows[generateUniqueRowId(row, rowIndex)]}
                               onChange={() => toggleRowSelection(row)}
                               className="h-4 w-4 rounded border-gray-300"
                             />

@@ -53,6 +53,7 @@ export default function SettingsPage() {
   const [isAddingNewUnit, setIsAddingNewUnit] = useState(false)
   const [categorySearchQuery, setCategorySearchQuery] = useState("")
   const [unitSearchQuery, setUnitSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   const { client } = useClientContext()
 
@@ -439,6 +440,7 @@ export default function SettingsPage() {
     try {
       // Show loading state
       toast.loading("Adding product...")
+      setIsLoading(true)
 
       // Create new product
       const newProduct = {
@@ -484,6 +486,8 @@ export default function SettingsPage() {
       console.error("Error adding product:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to add product")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -1107,7 +1111,16 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex justify-end mt-6">
-                  <Button type="submit">Add Product</Button>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                        Adding...
+                      </>
+                    ) : (
+                      "Add Product"
+                    )}
+                  </Button>
                 </div>
               </form>
             </CardContent>
@@ -1117,4 +1130,3 @@ export default function SettingsPage() {
     </div>
   )
 }
-

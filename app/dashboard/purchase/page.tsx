@@ -1214,7 +1214,7 @@ export default function PurchasePage() {
           </Popover>
           <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedRows.length === 0}>
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected
+            Delete Selected ({selectedRows.length})
           </Button>
         </div>
       </div>
