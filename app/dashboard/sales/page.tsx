@@ -265,6 +265,43 @@ export default function SalesPage() {
       setIsDeleting(true)
       toast.loading("Deleting selected items...")
 
+      // First, update inventory stock for each deleted sales entry
+      for (const salesItem of selectedRows) {
+        // Find the corresponding product in inventory
+        const productIndex = inventoryData.findIndex((item) => item.product === salesItem.product)
+
+        if (productIndex !== -1) {
+          // For sales deletion, we need to INCREASE the stock
+          const currentStock = inventoryData[productIndex].stock
+          const newStock = currentStock + salesItem.quantity
+          const newValue = newStock * inventoryData[productIndex].pricePerUnit
+
+          // Update inventory in Google Sheet
+          const inventoryResponse = await fetch("/api/sheets", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              product: salesItem.product,
+              newStock: newStock,
+              newValue: newValue,
+              clientId: client?.id,
+            }),
+          })
+
+          if (!inventoryResponse.ok) {
+            console.error(`Failed to update inventory for ${salesItem.product}`)
+          } else {
+            // Update local inventory data
+            const updatedInventory = [...inventoryData]
+            updatedInventory[productIndex].stock = newStock
+            updatedInventory[productIndex].value = newValue
+            setInventoryData(updatedInventory)
+          }
+        }
+      }
+
       // Call the API to delete the items from Google Sheets
       const response = await fetch("/api/sheets/delete", {
         method: "POST",

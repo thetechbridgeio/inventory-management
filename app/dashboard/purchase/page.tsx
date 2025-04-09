@@ -287,6 +287,43 @@ export default function PurchasePage() {
       // Log the items we're trying to delete
       console.log("Attempting to delete items:", selectedRows)
 
+      // First, update inventory stock for each deleted purchase entry
+      for (const purchaseItem of selectedRows) {
+        // Find the corresponding product in inventory
+        const productIndex = inventoryData.findIndex((item) => item.product === purchaseItem.product)
+
+        if (productIndex !== -1) {
+          // For purchase deletion, we need to DECREASE the stock
+          const currentStock = inventoryData[productIndex].stock
+          const newStock = currentStock - purchaseItem.quantity
+          const newValue = newStock * inventoryData[productIndex].pricePerUnit
+
+          // Update inventory in Google Sheet
+          const inventoryResponse = await fetch("/api/sheets", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              product: purchaseItem.product,
+              newStock: newStock,
+              newValue: newValue,
+              clientId: client?.id,
+            }),
+          })
+
+          if (!inventoryResponse.ok) {
+            console.error(`Failed to update inventory for ${purchaseItem.product}`)
+          } else {
+            // Update local inventory data
+            const updatedInventory = [...inventoryData]
+            updatedInventory[productIndex].stock = newStock
+            updatedInventory[productIndex].value = newValue
+            setInventoryData(updatedInventory)
+          }
+        }
+      }
+
       // Call the API to delete the items from Google Sheets
       const response = await fetch("/api/sheets/delete", {
         method: "POST",
