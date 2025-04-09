@@ -46,21 +46,32 @@ export default function InventoryPage() {
       setError(null)
 
       // Add timestamp to prevent caching
-      const timestamp = new Date().getTime()
+      const timestamp = Date.now() + Math.random()
+      console.log(`Inventory: Fetching data with timestamp ${timestamp} for clientId=${client?.id || "none"}`)
 
       // Ensure client ID is properly passed in the URL
       const clientParam = client?.id ? `&clientId=${encodeURIComponent(client.id)}` : ""
       console.log(`Inventory: Using client parameter: ${clientParam}`)
 
-      const response = await fetch(`/api/sheets?sheet=Inventory${clientParam}&t=${timestamp}`)
+      const inventoryResponse = await fetch(`/api/sheets?sheet=Inventory${clientParam}&t=${timestamp}`, {
+        cache: "no-store",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      })
 
-      if (!response.ok) {
-        const errorData = await response.json()
+      // Add more logging after the fetch:
+      console.log(`Inventory: Fetch completed with status ${inventoryResponse.status}`)
+
+      if (!inventoryResponse.ok) {
+        const errorData = await inventoryResponse.json()
         console.error("Error response:", errorData)
-        throw new Error(errorData.error || `HTTP error ${response.status}`)
+        throw new Error(errorData.error || `HTTP error ${inventoryResponse.status}`)
       }
 
-      const result = await response.json()
+      const result = await inventoryResponse.json()
       console.log("Inventory data fetched:", result)
 
       if (result.data && Array.isArray(result.data)) {

@@ -65,8 +65,14 @@ export async function GET(request: NextRequest) {
 
     // Add logging for the spreadsheet ID being used
     console.log(`API /sheets: Using spreadsheetId=${sheetId} for clientId=${clientId || "none"}`)
+    console.log(
+      `API /sheets: Final spreadsheetId determined: ${sheetId.substring(0, 5)}... for clientId=${clientId || "none"}`,
+    )
 
     // Fetch data from Google Sheets
+    console.log(
+      `API /sheets: Making request to Google Sheets API for sheet=${sheet}, spreadsheetId=${sheetId.substring(0, 5)}...`,
+    )
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
       range: `${sheet}!A:Z`, // Get all columns
@@ -152,7 +158,16 @@ export async function GET(request: NextRequest) {
     // After fetching data, log the result size
     console.log(`API /sheets: Fetched ${rows.length} rows from ${sheet} sheet`)
 
-    return NextResponse.json({ data })
+    return NextResponse.json(
+      { data, _timestamp: Date.now() },
+      {
+        headers: {
+          "Cache-Control": "no-store, max-age=0, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
+    )
   } catch (error) {
     console.error(`API /sheets: Error fetching ${sheet} data:`, error)
     return NextResponse.json(

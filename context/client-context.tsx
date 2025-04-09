@@ -36,6 +36,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
 
   // Save client to localStorage whenever it changes
   useEffect(() => {
+    console.log(`ClientContext: Setting client to ${client?.name || "null"} (${client?.id || "none"})`)
     if (client) {
       localStorage.setItem("client", JSON.stringify(client))
       // Also store the client ID in sessionStorage for consistency
@@ -78,7 +79,38 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  return <ClientContext.Provider value={{ client, setClient, fetchClients }}>{children}</ClientContext.Provider>
+  const clearCaches = () => {
+    console.log("ClientContext: Clearing all caches")
+
+    // Clear any fetch cache
+    if ("caches" in window) {
+      caches.keys().then((names) => {
+        names.forEach((name) => {
+          caches.delete(name)
+        })
+      })
+    }
+
+    // Force a hard reload of all data
+    window.sessionStorage.setItem("force-reload", Date.now().toString())
+  }
+
+  return (
+    <ClientContext.Provider
+      value={{
+        client,
+        setClient: (newClient) => {
+          if (newClient?.id !== client?.id) {
+            clearCaches()
+          }
+          setClient(newClient)
+        },
+        fetchClients,
+      }}
+    >
+      {children}
+    </ClientContext.Provider>
+  )
 }
 
 export function useClientContext() {

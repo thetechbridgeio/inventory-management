@@ -14,6 +14,7 @@ export async function fetchClientData(clientId: string) {
     }
 
     console.log(`fetchClientData: Using master sheet ID: ${masterSheetId.substring(0, 5)}...`)
+    console.log(`fetchClientData: Will search for client ID ${clientId} in master sheet`)
 
     // Initialize Google Sheets API
     const auth = new google.auth.JWT(
@@ -49,8 +50,6 @@ export async function fetchClientData(clientId: string) {
       const id = row[0]
 
       if (id === clientId) {
-        console.log(`fetchClientData: Found client with ID ${clientId} at row ${i + 1}`)
-
         const client: Record<string, any> = {}
         headers.forEach((header: string, index: number) => {
           // Convert header to camelCase for consistent property naming
@@ -58,12 +57,18 @@ export async function fetchClientData(clientId: string) {
           client[key] = row[index] || ""
         })
 
+        console.log(`fetchClientData: Found client with ID ${clientId} at row ${i + 1}`)
+        console.log(
+          `fetchClientData: Client ${clientId} found with sheet ID: ${client.sheetId?.substring(0, 5) || "undefined"}...`,
+        )
+
         console.log(`fetchClientData: Client data: ${JSON.stringify(client)}`)
         return client
       }
     }
 
     console.log(`fetchClientData: No client found with ID ${clientId}`)
+    console.log(`fetchClientData: Will return null for client ${clientId}`)
     return null
   } catch (error) {
     console.error("fetchClientData: Error fetching client data:", error)

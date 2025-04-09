@@ -8,6 +8,7 @@ import { JWT } from "google-auth-library"
  * @returns The client-specific sheet ID if available, or the default sheet ID
  */
 export async function getSheetId(request?: Request): Promise<string> {
+  console.log(`getSheetId called with request: ${request ? "provided" : "not provided"}`)
   // For server components and API routes
   let clientId = null
 
@@ -56,7 +57,7 @@ export async function getSheetId(request?: Request): Promise<string> {
       // Fetch the client's sheet ID from the master sheet
       const clientData = await fetchClientData(clientId)
       if (clientData?.sheetId) {
-        console.log(`getSheetId: Using sheet ID ${clientData.sheetId} for client ${clientId}`)
+        console.log(`getSheetId: Found sheet ID ${clientData.sheetId} for client ${clientId}`)
         return clientData.sheetId
       } else {
         console.log(`getSheetId: No sheet ID found for client ${clientId}`)
@@ -68,7 +69,7 @@ export async function getSheetId(request?: Request): Promise<string> {
 
   // Fallback to default sheet ID
   const defaultSheetId = process.env.GOOGLE_SHEET_ID || ""
-  console.log(`getSheetId: Using default sheet ID: ${defaultSheetId.substring(0, 5)}...`)
+  console.log(`getSheetId: Using default sheet ID: ${defaultSheetId}`)
   return defaultSheetId
 }
 
@@ -81,6 +82,8 @@ async function fetchClientData(clientId: string) {
     if (!masterSheetId) {
       throw new Error("Master Sheet ID not found in environment variables")
     }
+
+    console.log(`getSheetId: Attempting to fetch client data for client ID: ${clientId}`)
 
     // Initialize Google Sheets API
     const auth = new JWT({
