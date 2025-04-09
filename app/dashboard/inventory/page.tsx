@@ -183,7 +183,10 @@ export default function InventoryPage() {
       }
 
       // Update the local state to remove the deleted items
-      const updatedData = data.filter((item) => !selectedRows.some((row) => row.srNo === item.srNo))
+      const updatedData = data.filter((item) => {
+        // Only filter out items that exactly match the selected rows
+        return !selectedRows.some((row) => row.srNo === item.srNo && row.product === item.product)
+      })
       setData(updatedData)
       setSelectedRows([])
 
