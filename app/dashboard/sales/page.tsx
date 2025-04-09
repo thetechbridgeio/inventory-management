@@ -56,6 +56,7 @@ export default function SalesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isAddingNewCompany, setIsAddingNewCompany] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [productOptions, setProductOptions] = useState<SearchableSelectOption[]>([])
   const [companyOptions, setCompanyOptions] = useState<SearchableSelectOption[]>([])
   const [filters, setFilters] = useState<SalesFilterState>({
@@ -261,6 +262,7 @@ export default function SalesPage() {
     if (selectedRows.length === 0) return
 
     try {
+      setIsDeleting(true)
       toast.loading("Deleting selected items...")
 
       // Call the API to delete the items from Google Sheets
@@ -305,6 +307,8 @@ export default function SalesPage() {
       console.error("Error deleting items:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to delete items")
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -1293,9 +1297,22 @@ export default function SalesPage() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedRows.length === 0}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected ({selectedRows.length})
+          <Button
+            variant="destructive"
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0 || isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Selected ({selectedRows.length})
+              </>
+            )}
           </Button>
         </div>
       </div>

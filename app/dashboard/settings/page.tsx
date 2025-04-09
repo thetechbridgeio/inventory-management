@@ -53,7 +53,9 @@ export default function SettingsPage() {
   const [isAddingNewUnit, setIsAddingNewUnit] = useState(false)
   const [categorySearchQuery, setCategorySearchQuery] = useState("")
   const [unitSearchQuery, setUnitSearchQuery] = useState("")
+  // Add a new state variable for tracking update loading state
   const [isLoading, setIsLoading] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const { client } = useClientContext()
 
@@ -292,6 +294,7 @@ export default function SettingsPage() {
 
   const filteredUnits = units.filter((unit) => unit.toLowerCase().includes(unitSearchQuery.toLowerCase()))
 
+  // Update the handleUpdateProduct function to use the loading state
   const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -310,6 +313,7 @@ export default function SettingsPage() {
     }
 
     try {
+      setIsUpdating(true)
       toast.loading("Updating product...")
 
       // Find the original product to get its srNo
@@ -380,6 +384,8 @@ export default function SettingsPage() {
       console.error("Error updating product:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to update product")
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -814,7 +820,16 @@ export default function SettingsPage() {
 
                 {selectedProduct && (
                   <div className="flex justify-end mt-6">
-                    <Button type="submit">Update Product</Button>
+                    <Button type="submit" disabled={isUpdating}>
+                      {isUpdating ? (
+                        <>
+                          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                          Updating...
+                        </>
+                      ) : (
+                        "Update Product"
+                      )}
+                    </Button>
                   </div>
                 )}
               </form>

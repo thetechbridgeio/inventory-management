@@ -55,6 +55,7 @@ export default function PurchasePage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isAddingNewSupplier, setIsAddingNewSupplier] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [productOptions, setProductOptions] = useState<SearchableSelectOption[]>([])
   const [supplierOptions, setSupplierOptions] = useState<SearchableSelectOption[]>([])
   const [filters, setFilters] = useState<PurchaseFilterState>({
@@ -280,6 +281,7 @@ export default function PurchasePage() {
     if (selectedRows.length === 0) return
 
     try {
+      setIsDeleting(true)
       toast.loading("Deleting selected items...")
 
       // Log the items we're trying to delete
@@ -330,6 +332,8 @@ export default function PurchasePage() {
       console.error("Error deleting items:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to delete items")
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -1212,9 +1216,22 @@ export default function PurchasePage() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedRows.length === 0}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected ({selectedRows.length})
+          <Button
+            variant="destructive"
+            onClick={handleDeleteSelected}
+            disabled={selectedRows.length === 0 || isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Selected ({selectedRows.length})
+              </>
+            )}
           </Button>
         </div>
       </div>
