@@ -102,6 +102,9 @@ export default function SettingsPage() {
 
         setProductOptions(options)
 
+        // Add console log to show number of items in the dropdown
+        console.log(`Number of products in dropdown: ${options.length}`)
+
         if (processedData.length > 0) {
           // Extract unique categories
           const uniqueCategories = Array.from(
@@ -142,6 +145,11 @@ export default function SettingsPage() {
       setLoading(false) // Stop loading if no client ID
     }
   }, [client?.id])
+
+  // Add a useEffect to log when productOptions changes
+  useEffect(() => {
+    console.log(`Product dropdown updated: ${productOptions.length} items available`)
+  }, [productOptions])
 
   const handleProductSelect = (value: string) => {
     console.log("Selected product:", value)
@@ -541,7 +549,10 @@ export default function SettingsPage() {
                         <SearchableSelect
                           options={productOptions}
                           value={selectedProduct}
-                          onValueChange={handleProductSelect}
+                          onValueChange={(value) => {
+                            console.log(`Selected product from dropdown (${productOptions.length} total options)`)
+                            handleProductSelect(value)
+                          }}
                           placeholder="Search for a product..."
                           emptyMessage="No products found."
                         />
