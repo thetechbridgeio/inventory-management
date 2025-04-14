@@ -108,7 +108,7 @@ export default function LoginPage() {
     await new Promise((resolve) => setTimeout(resolve, 1000))
 
     // Check for admin credentials
-    if (username === "Lexwell" && password === "lexwell@123") {
+    if (username === "Admin" && password === "admin@123") {
       // Store admin login state
       sessionStorage.setItem("isLoggedIn", "true")
       sessionStorage.setItem("userRole", "admin")
@@ -133,6 +133,14 @@ export default function LoginPage() {
       }
 
       const result = await response.json()
+
+      // Add this to the login function in login-page.tsx
+      console.log("Fetched clients:", result.data);
+      console.log("Entered credentials:", { username, password });
+      const clientconsole = result.data.find((console: any) => {
+      console.log("Comparing with:", { username: console.username, password: console.password });
+      return console.username === username && console.password === password;
+    });
 
       if (!result.data || !Array.isArray(result.data)) {
         throw new Error("Invalid client data format")
