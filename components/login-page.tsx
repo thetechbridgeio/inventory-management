@@ -137,17 +137,15 @@ export default function LoginPage() {
       // Add this to the login function in login-page.tsx
       console.log("Fetched clients:", result.data);
       console.log("Entered credentials:", { username, password });
-      const clientconsole = result.data.find((console: any) => {
-      console.log("Comparing with:", { username: console.username, password: console.password });
-      return console.username === username && console.password === password;
+    if (!result.data || !Array.isArray(result.data)) {
+      throw new Error("Invalid client data format")
+    }
+
+    // Find client with matching credentials
+    const client = result.data.find((c: any) => {
+      console.log("Comparing with:", { username: c.username, password: c.password });
+      return c.username === username && c.password === password;
     });
-
-      if (!result.data || !Array.isArray(result.data)) {
-        throw new Error("Invalid client data format")
-      }
-
-      // Find client with matching credentials
-      const client = result.data.find((c: any) => c.username === username && c.password === password)
 
       if (client) {
         // Store client login state
