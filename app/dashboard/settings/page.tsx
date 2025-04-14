@@ -31,6 +31,7 @@ export default function SettingsPage() {
     maximumQuantity: "",
     reorderQuantity: "",
     pricePerUnit: "",
+    stock: "", // Add this line to include stock in the form state
   })
   const [newProductForm, setNewProductForm] = useState({
     product: "",
@@ -158,6 +159,7 @@ export default function SettingsPage() {
         maximumQuantity: product.maximumQuantity.toString(),
         reorderQuantity: product.reorderQuantity.toString(),
         pricePerUnit: product.pricePerUnit.toString(),
+        stock: product.stock.toString(), // Add this line to include stock
       })
     }
   }
@@ -306,7 +308,8 @@ export default function SettingsPage() {
       !productForm.minimumQuantity ||
       !productForm.maximumQuantity ||
       !productForm.reorderQuantity ||
-      !productForm.pricePerUnit
+      !productForm.pricePerUnit ||
+      !productForm.stock // Add stock validation
     ) {
       toast.error("Please fill in all required fields")
       return
@@ -332,9 +335,9 @@ export default function SettingsPage() {
         minimumQuantity: Number(productForm.minimumQuantity),
         maximumQuantity: Number(productForm.maximumQuantity),
         reorderQuantity: Number(productForm.reorderQuantity),
-        stock: originalProduct.stock, // Keep the current stock
+        stock: Number(productForm.stock), // Use the updated stock value
         pricePerUnit: Number(productForm.pricePerUnit),
-        value: originalProduct.stock * Number(productForm.pricePerUnit), // Recalculate value
+        value: Number(productForm.stock) * Number(productForm.pricePerUnit), // Recalculate value based on new stock
       }
 
       console.log("Updated product:", updatedProduct)
@@ -810,6 +813,19 @@ export default function SettingsPage() {
                           name="pricePerUnit"
                           type="number"
                           value={productForm.pricePerUnit}
+                          onChange={handleProductFormChange}
+                          className="col-span-3"
+                        />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="stock" className="text-right">
+                          Current Stock
+                        </Label>
+                        <Input
+                          id="stock"
+                          name="stock"
+                          type="number"
+                          value={productForm.stock}
                           onChange={handleProductFormChange}
                           className="col-span-3"
                         />
