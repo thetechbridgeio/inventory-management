@@ -95,8 +95,8 @@ export default function SettingsPage() {
         // Create options for searchable select
         const options = processedData
           .filter((item) => item.product && typeof item.product === "string")
-          .map((item: InventoryItem) => ({
-            value: item.product,
+          .map((item: InventoryItem, index) => ({
+            value: `${item.product}__${index}`, // Create unique value using array index
             label: item.product,
           }))
 
@@ -153,10 +153,13 @@ export default function SettingsPage() {
 
   const handleProductSelect = (value: string) => {
     console.log("Selected product:", value)
+    // Extract the product name and index from the value
+    const [productName, indexStr] = value.split("__")
+    const index = Number.parseInt(indexStr, 10)
     setSelectedProduct(value)
 
-    // Find the selected product in inventory data
-    const product = inventoryData.find((item) => item.product === value)
+    // Find the selected product in inventory data using the index
+    const product = inventoryData[index]
 
     if (product) {
       setProductForm({
@@ -167,7 +170,7 @@ export default function SettingsPage() {
         maximumQuantity: product.maximumQuantity.toString(),
         reorderQuantity: product.reorderQuantity.toString(),
         pricePerUnit: product.pricePerUnit.toString(),
-        stock: product.stock.toString(), // Add this line to include stock
+        stock: product.stock.toString(),
       })
     }
   }
@@ -327,8 +330,12 @@ export default function SettingsPage() {
       setIsUpdating(true)
       toast.loading("Updating product...")
 
-      // Find the original product to get its srNo
-      const originalProduct = inventoryData.find((item) => item.product === selectedProduct)
+      // Extract the original product name and index from the selectedProduct value
+      const [originalProductName, indexStr] = selectedProduct.split("__")
+      const index = Number.parseInt(indexStr, 10)
+
+      // Get the original product using the index
+      const originalProduct = inventoryData[index]
 
       if (!originalProduct) {
         throw new Error("Product not found")
@@ -343,15 +350,15 @@ export default function SettingsPage() {
         minimumQuantity: Number(productForm.minimumQuantity),
         maximumQuantity: Number(productForm.maximumQuantity),
         reorderQuantity: Number(productForm.reorderQuantity),
-        stock: Number(productForm.stock), // Use the updated stock value
+        stock: Number(productForm.stock),
         pricePerUnit: Number(productForm.pricePerUnit),
-        value: Number(productForm.stock) * Number(productForm.pricePerUnit), // Recalculate value based on new stock
+        value: Number(productForm.stock) * Number(productForm.pricePerUnit),
       }
 
       console.log("Updated product:", updatedProduct)
       console.log("API request payload:", {
-        product: selectedProduct, // This is the original product name
-        updatedData: updatedProduct, // This is the updated product data
+        product: originalProduct.product, // Use the original product name
+        updatedData: updatedProduct,
         clientId: client?.id,
       })
 
@@ -362,7 +369,7 @@ export default function SettingsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          product: selectedProduct,
+          product: originalProduct.product, // Use the original product name
           updatedData: updatedProduct,
           clientId: client?.id,
         }),
