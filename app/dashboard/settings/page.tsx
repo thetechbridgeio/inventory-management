@@ -126,7 +126,7 @@ export default function SettingsPage() {
         setProductOptions(options)
 
         // Add console log to show number of items in the dropdown and inventory
-        console.log(`Inventory data has ${processedData.length} items, dropdown has ${options.length} options`)
+        // console.log(`Inventory data has ${processedData.length} items, dropdown has ${options.length} options`)
         console.log(`Any missing items: ${processedData.length - options.length}`)
 
         if (processedData.length > 0) {
