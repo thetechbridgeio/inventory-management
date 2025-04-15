@@ -92,18 +92,22 @@ export default function SettingsPage() {
 
         setInventoryData(processedData)
 
-        // Create options for searchable select
-        const options = processedData
-          .filter((item) => item.product && typeof item.product === "string")
-          .map((item: InventoryItem, index) => ({
-            value: `${item.product}__${index}`, // Create unique value using array index
-            label: item.product,
-          }))
+        // Create options for searchable select - don't filter out any products
+        const options = processedData.map((item: InventoryItem, index) => {
+          // Ensure product has a value, even if it's empty
+          const productName = item.product && typeof item.product === "string" ? item.product : "Unnamed Product"
+          // Create a truly unique value using the array index only
+          return {
+            value: `${index}`, // Just use the index as the value
+            label: productName, // Show the product name as the label
+          }
+        })
 
         setProductOptions(options)
 
-        // Add console log to show number of items in the dropdown
-        console.log(`Number of products in dropdown: ${options.length}`)
+        // Add console log to show number of items in the dropdown and inventory
+        console.log(`Inventory data has ${processedData.length} items, dropdown has ${options.length} options`)
+        console.log(`Any missing items: ${processedData.length - options.length}`)
 
         if (processedData.length > 0) {
           // Extract unique categories
@@ -153,9 +157,8 @@ export default function SettingsPage() {
 
   const handleProductSelect = (value: string) => {
     console.log("Selected product:", value)
-    // Extract the product name and index from the value
-    const [productName, indexStr] = value.split("__")
-    const index = Number.parseInt(indexStr, 10)
+    // The value is now just the index
+    const index = Number.parseInt(value, 10)
     setSelectedProduct(value)
 
     // Find the selected product in inventory data using the index
@@ -320,7 +323,7 @@ export default function SettingsPage() {
       !productForm.maximumQuantity ||
       !productForm.reorderQuantity ||
       !productForm.pricePerUnit ||
-      !productForm.stock // Add stock validation
+      !productForm.stock
     ) {
       toast.error("Please fill in all required fields")
       return
@@ -330,9 +333,8 @@ export default function SettingsPage() {
       setIsUpdating(true)
       toast.loading("Updating product...")
 
-      // Extract the original product name and index from the selectedProduct value
-      const [originalProductName, indexStr] = selectedProduct.split("__")
-      const index = Number.parseInt(indexStr, 10)
+      // The selectedProduct value is now just the index
+      const index = Number.parseInt(selectedProduct, 10)
 
       // Get the original product using the index
       const originalProduct = inventoryData[index]
