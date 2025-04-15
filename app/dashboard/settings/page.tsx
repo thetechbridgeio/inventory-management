@@ -94,8 +94,28 @@ export default function SettingsPage() {
 
         // Create options for searchable select - don't filter out any products
         const options = processedData.map((item: InventoryItem, index) => {
-          // Ensure product has a value, even if it's empty
-          const productName = item.product && typeof item.product === "string" ? item.product : "Unnamed Product"
+          // More robust handling of product names
+          let productName = "Unnamed Product"
+
+          // Check for product name in various formats
+          if (item.product !== undefined && item.product !== null) {
+            // Convert to string regardless of original type
+            productName = String(item.product).trim()
+          } else if (item["Product"] !== undefined && item["Product"] !== null) {
+            // Try alternative property name with capital P
+            productName = String(item["Product"]).trim()
+          }
+
+          // If after all checks we have an empty string, use "Unnamed Product"
+          if (productName === "") {
+            productName = "Unnamed Product"
+          }
+
+          // Log any items that still end up as "Unnamed Product" for debugging
+          if (productName === "Unnamed Product") {
+            console.log(`Item at index ${index} has no valid product name:`, item)
+          }
+
           // Create a truly unique value using the array index only
           return {
             value: `${index}`, // Just use the index as the value
@@ -165,8 +185,16 @@ export default function SettingsPage() {
     const product = inventoryData[index]
 
     if (product) {
+      // Log the raw product data to see what's actually in there
+      console.log("Raw product data:", product)
+      console.log("Product name type:", typeof product.product)
+
+      // Get the product name, ensuring it's a string
+      const productName =
+        product.product !== undefined && product.product !== null ? String(product.product).trim() : ""
+
       setProductForm({
-        product: product.product,
+        product: productName,
         category: product.category,
         unit: product.unit,
         minimumQuantity: product.minimumQuantity.toString(),
