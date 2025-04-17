@@ -574,21 +574,20 @@ export default function PurchasePage() {
         // Determine the supplier to use
         const supplier = isAddingNewSupplier ? entry.newSupplier : entry.supplier
 
-        // Ensure the date is properly formatted
+        // Ensure the date is properly formatted without timezone issues
         let formattedDate
         try {
-          // If it's a Date object, format it to YYYY-MM-DD
+          // If it's a Date object, format it using date-fns
           if (entry.dateOfReceiving instanceof Date) {
-            formattedDate = entry.dateOfReceiving.toISOString().split("T")[0]
+            formattedDate = format(entry.dateOfReceiving, "yyyy-MM-dd")
           } else {
             // Otherwise try to parse and format it
             const dateStr = String(entry.dateOfReceiving)
-
             const date = new Date(dateStr)
             if (!isNaN(date.getTime())) {
-              formattedDate = date.toISOString().split("T")[0]
+              formattedDate = format(date, "yyyy-MM-dd")
             } else {
-              // IMPORTANT: Use the original string instead of today's date
+              // Use the original string if parsing fails
               formattedDate = dateStr
             }
           }
