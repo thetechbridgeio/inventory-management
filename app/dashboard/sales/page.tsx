@@ -72,6 +72,10 @@ export default function SalesPage() {
   const [productFilters, setProductFilters] = useState<Record<string, boolean>>({})
   const [companyFilters, setCompanyFilters] = useState<Record<string, boolean>>({})
 
+  // Add these new state variables at the top of the component, after the existing state declarations
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingItem, setEditingItem] = useState<SalesItem | null>(null)
+
   // Create columns based on client name
   const columns = getSalesColumns(client?.name)
 
@@ -236,6 +240,46 @@ export default function SalesPage() {
 
     fetchData()
   }, [client?.id])
+
+  // Add this useEffect to listen for the edit-sales-item event
+  useEffect(() => {
+    const handleEditSalesItem = (event: CustomEvent<SalesItem>) => {
+      const item = event.detail
+      console.log("Editing sales item:", item)
+
+      // Set the editing item
+      setEditingItem(item)
+
+      // Convert the item to form entries format
+      const dateObj = item.dateOfIssue ? new Date(item.dateOfIssue) : new Date()
+
+      setFormEntries([
+        {
+          product: item.product || "",
+          quantity: item.quantity?.toString() || "",
+          unit: item.unit || "",
+          contact: item.contact || "",
+          companyName: item.companyName || "",
+          newCompany: "",
+          dateOfIssue: dateObj,
+          indentNumber: item.indentNumber || "",
+          stock: "", // This will be populated when product is selected
+        },
+      ])
+
+      // Set edit mode and open dialog
+      setIsEditMode(true)
+      setIsDialogOpen(true)
+    }
+
+    // Add event listener
+    document.addEventListener("edit-sales-item", handleEditSalesItem as EventListener)
+
+    // Clean up
+    return () => {
+      document.removeEventListener("edit-sales-item", handleEditSalesItem as EventListener)
+    }
+  }, [])
 
   useEffect(() => {
     // Update filters.product when productFilters change
@@ -483,6 +527,7 @@ export default function SalesPage() {
     }))
   }
 
+  // Update the handleProductChange function to also fetch and set the stock information
   const handleProductChange = (product: string, index: number) => {
     setFormEntries((prev) => {
       const newEntries = [...prev]
@@ -568,6 +613,7 @@ export default function SalesPage() {
   }
 
   // Update the handleSubmit function to pass clientId
+  // Find the handleSubmit function and replace it with this updated version
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -589,72 +635,37 @@ export default function SalesPage() {
     try {
       setIsLoading(true)
 
-      // Track entries with insufficient stock for warning purposes
-      const insufficientStockEntries = []
-
-      // Process all entries
-      for (let i = 0; i < formEntries.length; i++) {
-        const entry = formEntries[i]
+      if (isEditMode && editingItem) {
+        // EDIT MODE - Update existing entry
+        const entry = formEntries[0] // In edit mode, we only have one entry
 
         // Determine the company name to use
         const companyName = isAddingNewCompany ? entry.newCompany : entry.companyName
 
-        // Find the handleSubmit function and update the newEntry object creation to include indentNumber
-        // Inside the handleSubmit function, update the newEntry object:
-        const newEntry = {
-          // Don't include srNo here, it will be assigned by the server
+        // Calculate the quantity difference (new quantity - old quantity)
+        const oldQuantity = editingItem.quantity || 0
+        const newQuantity = Number.parseInt(entry.quantity)
+        const quantityDifference = newQuantity - oldQuantity
+
+        // Create updated entry object
+        const updatedEntry = {
+          srNo: editingItem.srNo,
           product: entry.product,
-          quantity: Number.parseInt(entry.quantity),
+          quantity: newQuantity,
           unit: entry.unit,
           contact: entry.contact,
           companyName: companyName,
           dateOfIssue: format(entry.dateOfIssue, "yyyy-MM-dd"),
-          indentNumber: entry.indentNumber, // Ensure this line is present
+          indentNumber: entry.indentNumber,
         }
 
-        // Check if there's enough stock (for warning purposes only)
+        // First, update the inventory stock based on the quantity difference
         const productIndex = inventoryData.findIndex((item) => item.product === entry.product)
-        if (productIndex !== -1) {
-          const currentStock = inventoryData[productIndex].stock
-          const requestedQuantity = Number.parseInt(entry.quantity)
 
-          if (currentStock < requestedQuantity) {
-            insufficientStockEntries.push({
-              product: entry.product,
-              requested: requestedQuantity,
-              available: currentStock,
-              unit: entry.unit,
-            })
-          }
-        }
-
-        // Add the sales entry to the Google Sheet regardless of stock
-        const salesResponse = await fetch("/api/sheets", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sheetName: "Sales",
-            entry: newEntry,
-            clientId: client?.id,
-          }),
-        })
-
-        if (!salesResponse.ok) {
-          throw new Error(`Failed to add sales entry ${i + 1}`)
-        }
-
-        const salesResult = await salesResponse.json()
-
-        // Update the local data with the new entry at the beginning (newest first)
-        setData((prev) => sortByDateDesc([salesResult.data, ...prev]))
-
-        // Update inventory stock even if it goes negative
         if (productIndex !== -1) {
           // Calculate new stock and value
           const currentStock = inventoryData[productIndex].stock
-          const newStock = currentStock - Number.parseInt(entry.quantity)
+          const newStock = currentStock - quantityDifference // Subtract the difference (could be positive or negative)
           const newValue = newStock * inventoryData[productIndex].pricePerUnit
 
           // Update inventory in Google Sheet
@@ -672,7 +683,7 @@ export default function SalesPage() {
           })
 
           if (!inventoryResponse.ok) {
-            throw new Error(`Failed to update inventory for entry ${i + 1}`)
+            throw new Error(`Failed to update inventory for edited entry`)
           }
 
           // Update local inventory data
@@ -682,113 +693,266 @@ export default function SalesPage() {
           setInventoryData(updatedInventory)
         }
 
-        // If it's a new company, add it to the company filters and options
-        if (isAddingNewCompany && !companyFilters[entry.newCompany]) {
-          try {
-            // Add the new company to the Suppliers sheet - only set the companyName field
-            const supplierResponse = await fetch("/api/sheets", {
-              method: "POST",
+        // Now update the sales entry in the sheet
+        // For simplicity, we'll delete the old entry and add a new one
+        // In a real application, you might want to implement a proper update API
+
+        // Delete the old entry
+        const deleteResponse = await fetch("/api/sheets/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sheetName: "Sales",
+            items: [editingItem],
+            clientId: client?.id,
+          }),
+        })
+
+        if (!deleteResponse.ok) {
+          throw new Error(`Failed to delete old sales entry`)
+        }
+
+        // Add the updated entry
+        const salesResponse = await fetch("/api/sheets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sheetName: "Sales",
+            entry: updatedEntry,
+            clientId: client?.id,
+          }),
+        })
+
+        if (!salesResponse.ok) {
+          throw new Error(`Failed to add updated sales entry`)
+        }
+
+        const salesResult = await salesResponse.json()
+
+        // Update the local data
+        setData((prev) => {
+          // Remove the old entry
+          const filtered = prev.filter(
+            (item) =>
+              !(
+                item.srNo === editingItem.srNo &&
+                item.product === editingItem.product &&
+                item.dateOfIssue === editingItem.dateOfIssue
+              ),
+          )
+
+          // Add the updated entry
+          return sortByDateDesc([salesResult.data, ...filtered])
+        })
+
+        toast.success(`Sales entry updated successfully`)
+      } else {
+        // ADD MODE - Process all entries as before
+        // Track entries with insufficient stock for warning purposes
+        const insufficientStockEntries = []
+
+        // Process all entries
+        for (let i = 0; i < formEntries.length; i++) {
+          const entry = formEntries[i]
+
+          // Determine the company name to use
+          const companyName = isAddingNewCompany ? entry.newCompany : entry.companyName
+
+          // Find the handleSubmit function and update the newEntry object creation to include indentNumber
+          // Inside the handleSubmit function, update the newEntry object:
+          const newEntry = {
+            // Don't include srNo here, it will be assigned by the server
+            product: entry.product,
+            quantity: Number.parseInt(entry.quantity),
+            unit: entry.unit,
+            contact: entry.contact,
+            companyName: companyName,
+            dateOfIssue: format(entry.dateOfIssue, "yyyy-MM-dd"),
+            indentNumber: entry.indentNumber, // Ensure this line is present
+          }
+
+          // Check if there's enough stock (for warning purposes only)
+          const productIndex = inventoryData.findIndex((item) => item.product === entry.product)
+          if (productIndex !== -1) {
+            const currentStock = inventoryData[productIndex].stock
+            const requestedQuantity = Number.parseInt(entry.quantity)
+
+            if (currentStock < requestedQuantity) {
+              insufficientStockEntries.push({
+                product: entry.product,
+                requested: requestedQuantity,
+                available: currentStock,
+                unit: entry.unit,
+              })
+            }
+          }
+
+          // Add the sales entry to the Google Sheet regardless of stock
+          const salesResponse = await fetch("/api/sheets", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              sheetName: "Sales",
+              entry: newEntry,
+              clientId: client?.id,
+            }),
+          })
+
+          if (!salesResponse.ok) {
+            throw new Error(`Failed to add sales entry ${i + 1}`)
+          }
+
+          const salesResult = await salesResponse.json()
+
+          // Update the local data with the new entry at the beginning (newest first)
+          setData((prev) => sortByDateDesc([salesResult.data, ...prev]))
+
+          // Update inventory stock even if it goes negative
+          if (productIndex !== -1) {
+            // Calculate new stock and value
+            const currentStock = inventoryData[productIndex].stock
+            const newStock = currentStock - Number.parseInt(entry.quantity)
+            const newValue = newStock * inventoryData[productIndex].pricePerUnit
+
+            // Update inventory in Google Sheet
+            const inventoryResponse = await fetch("/api/sheets", {
+              method: "PUT",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                sheetName: "Suppliers",
-                entry: {
-                  supplier: "", // Leave supplier empty
-                  companyName: entry.newCompany,
-                },
+                product: entry.product,
+                newStock,
+                newValue,
                 clientId: client?.id,
               }),
             })
 
-            if (supplierResponse.ok) {
-              // Update UI components
-              setCompanyFilters((prev) => ({
-                ...prev,
-                [entry.newCompany]: false,
-              }))
-
-              // Add to company options
-              setCompanyOptions((prev) => [...prev, { value: entry.newCompany, label: entry.newCompany }])
-
-              // Add to supplier data
-              const newSupplier: Supplier = {
-                supplier: "",
-                companyName: entry.newCompany,
-              }
-              setSupplierData((prev) => [...prev, newSupplier])
+            if (!inventoryResponse.ok) {
+              throw new Error(`Failed to update inventory for entry ${i + 1}`)
             }
-          } catch (error) {
-            console.error("Error adding company to Suppliers sheet:", error)
-            // Continue with the sale even if adding the company fails
+
+            // Update local inventory data
+            const updatedInventory = [...inventoryData]
+            updatedInventory[productIndex].stock = newStock
+            updatedInventory[productIndex].value = newValue
+            setInventoryData(updatedInventory)
+          }
+
+          // If it's a new company, add it to the company filters and options
+          if (isAddingNewCompany && !companyFilters[entry.newCompany]) {
+            try {
+              // Add the new company to the Suppliers sheet - only set the companyName field
+              const supplierResponse = await fetch("/api/sheets", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  sheetName: "Suppliers",
+                  entry: {
+                    supplier: "", // Leave supplier empty
+                    companyName: entry.newCompany,
+                  },
+                  clientId: client?.id,
+                }),
+              })
+
+              if (supplierResponse.ok) {
+                // Update UI components
+                setCompanyFilters((prev) => ({
+                  ...prev,
+                  [entry.newCompany]: false,
+                }))
+
+                // Add to company options
+                setCompanyOptions((prev) => [...prev, { value: entry.newCompany, label: entry.newCompany }])
+
+                // Add to supplier data
+                const newSupplier: Supplier = {
+                  supplier: "",
+                  companyName: entry.newCompany,
+                }
+                setSupplierData((prev) => [...prev, newSupplier])
+              }
+            } catch (error) {
+              console.error("Error adding company to Suppliers sheet:", error)
+              // Continue with the sale even if adding the company fails
+            }
           }
         }
-      }
 
-      // Show success message
-      toast.success(`${formEntries.length} sales entries added successfully`, {
-        duration: 5000,
-        position: "bottom-right",
-      })
+        // Show success message
+        toast.success(`${formEntries.length} sales entries added successfully`, {
+          duration: 5000,
+          position: "bottom-right",
+        })
 
-      // Show warning about insufficient stock if any
-      if (insufficientStockEntries.length > 0) {
-        toast.custom(
-          (t) => (
-            <div
-              className={`${
-                t.visible ? "animate-enter" : "animate-leave"
-              } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex flex-col ring-1 ring-black ring-opacity-5`}
-            >
-              <div className="p-4 border-l-4 border-amber-500">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 pt-0.5">
-                    <svg
-                      className="h-5 w-5 text-amber-500"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-3 flex-1">
-                    <p className="text-sm font-medium text-gray-900">Warning: Insufficient Stock</p>
-                    <div className="mt-2 max-h-40 overflow-y-auto">
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
-                        {insufficientStockEntries.map((item, index) => (
-                          <li key={index}>
-                            <span>
-                              <span className="font-medium">{item.product}</span>: Sold {item.requested} {item.unit}(s),
-                              but only {item.available} were available
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
+        // Show warning about insufficient stock if any
+        if (insufficientStockEntries.length > 0) {
+          toast.custom(
+            (t) => (
+              <div
+                className={`${
+                  t.visible ? "animate-enter" : "animate-leave"
+                } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex flex-col ring-1 ring-black ring-opacity-5`}
+              >
+                <div className="p-4 border-l-4 border-amber-500">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <svg
+                        className="h-5 w-5 text-amber-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3 flex-1">
+                      <p className="text-sm font-medium text-gray-900">Warning: Insufficient Stock</p>
+                      <div className="mt-2 max-h-40 overflow-y-auto">
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                          {insufficientStockEntries.map((item, index) => (
+                            <li key={index}>
+                              <span>
+                                <span className="font-medium">{item.product}</span>: Sold {item.requested} {item.unit}
+                                (s), but only {item.available} were available
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="flex border-t border-gray-200">
+                  <button
+                    onClick={() => toast.dismiss(t.id)}
+                    className="w-full border border-transparent rounded-none rounded-b-lg p-3 flex items-center justify-center text-sm font-medium text-amber-600 hover:text-amber-500 focus:outline-none"
+                  >
+                    Dismiss
+                  </button>
+                </div>
               </div>
-              <div className="flex border-t border-gray-200">
-                <button
-                  onClick={() => toast.dismiss(t.id)}
-                  className="w-full border border-transparent rounded-none rounded-b-lg p-3 flex items-center justify-center text-sm font-medium text-amber-600 hover:text-amber-500 focus:outline-none"
-                >
-                  Dismiss
-                </button>
-              </div>
-            </div>
-          ),
-          {
-            duration: 10000,
-            position: "top-center",
-            id: "insufficient-stock-warning",
-          },
-        )
+            ),
+            {
+              duration: 10000,
+              position: "top-center",
+              id: "insufficient-stock-warning",
+            },
+          )
+        }
       }
 
       // Reset form data
@@ -806,16 +970,35 @@ export default function SalesPage() {
         },
       ])
       setIsAddingNewCompany(false)
+      setIsEditMode(false)
+      setEditingItem(null)
 
       // Close dialog
       setIsDialogOpen(false)
     } catch (error) {
-      console.error("Error adding sale:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to add sales entries")
+      console.error("Error processing sales entry:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to process sales entry")
     } finally {
       setIsLoading(false)
     }
   }
+
+  // Update the submit button text to reflect edit mode
+  // Update the submit button text to reflect edit mode
+  return (
+    <Button type="submit" disabled={isLoading}>
+      {isLoading ? (
+        <>
+          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+          {isEditMode ? "Updating..." : "Adding..."}
+        </>
+      ) : isEditMode ? (
+        `Update ${getSalesTerm(client?.name)} Entry`
+      ) : (
+        `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
+      )}
+    </Button>
+  )
 
   const handleProductFilterChange = (product: string, checked: boolean) => {
     setProductFilters((prev) => ({
@@ -914,6 +1097,8 @@ export default function SalesPage() {
                   },
                 ])
                 setIsAddingNewCompany(false)
+                setIsEditMode(false) // Reset edit mode
+                setEditingItem(null) // Clear editing item
               }
             }}
           >
@@ -927,9 +1112,13 @@ export default function SalesPage() {
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 {/* Update the dialog title and description */}
-                <DialogTitle>Add New {getSalesTerm(client?.name)}</DialogTitle>
+                <DialogTitle>
+                  {isEditMode ? `Edit ${getSalesTerm(client?.name)}` : `Add New ${getSalesTerm(client?.name)}`}
+                </DialogTitle>
                 <DialogDescription>
-                  Enter the details of the new {getSalesTerm(client?.name).toLowerCase()} entries.
+                  {isEditMode
+                    ? `Update the details of the ${getSalesTerm(client?.name).toLowerCase()} entry.`
+                    : `Enter the details of the new ${getSalesTerm(client?.name).toLowerCase()} entries.`}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
@@ -1181,25 +1370,28 @@ export default function SalesPage() {
                   </div>
                 ))}
 
-                <div className="flex justify-center my-4">
-                  <Button type="button" variant="outline" onClick={addEntry} className="w-full max-w-xs">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Another Entry
-                  </Button>
-                </div>
+                {/* Update the "Add Another Entry" button to only show in add mode, not edit mode */}
+                {!isEditMode && (
+                  <div className="flex justify-center my-4">
+                    <Button type="button" variant="outline" onClick={addEntry} className="w-full max-w-xs">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Another Entry
+                    </Button>
+                  </div>
+                )}
 
                 <DialogFooter>
-                  {/* Update the submit button text */}
+                  {/* Update the submit button text to reflect edit mode */}
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                        Adding...
+                        {isEditMode ? "Updating..." : "Adding..."}
                       </>
+                    ) : isEditMode ? (
+                      `Update ${getSalesTerm(client?.name)} Entry`
                     ) : (
-                      `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${
-                        formEntries.length > 1 ? "Entries" : "Entry"
-                      }`
+                      `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
                     )}
                   </Button>
                 </DialogFooter>

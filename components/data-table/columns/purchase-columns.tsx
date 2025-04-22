@@ -104,7 +104,18 @@ export const purchaseColumns: ColumnDef<PurchaseItem>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                // Dispatch a custom event with the row data
+                const event = new CustomEvent("edit-purchase-item", {
+                  detail: row.original,
+                  bubbles: true,
+                })
+                document.dispatchEvent(event)
+              }}
+            >
+              Edit
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

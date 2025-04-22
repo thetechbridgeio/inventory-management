@@ -1,5 +1,7 @@
 "use client"
 
+import { DialogFooter } from "@/components/ui/dialog"
+
 import type React from "react"
 
 import { useState, useEffect } from "react"
@@ -10,7 +12,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -86,6 +87,10 @@ export default function PurchasePage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const { client } = useClientContext()
+
+  // Add these new state variables at the top of the component, after the existing state declarations
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingItem, setEditingItem] = useState<PurchaseItem | null>(null)
 
   // Function to sort data by date (newest first)
   const sortByDateDesc = (items: PurchaseItem[]) => {
@@ -253,6 +258,45 @@ export default function PurchasePage() {
   useEffect(() => {
     fetchData()
   }, [client?.id])
+
+  // Add this useEffect to listen for the edit-purchase-item event
+  useEffect(() => {
+    const handleEditPurchaseItem = (event: CustomEvent<PurchaseItem>) => {
+      const item = event.detail
+      console.log("Editing purchase item:", item)
+
+      // Set the editing item
+      setEditingItem(item)
+
+      // Convert the item to form entries format
+      const dateObj = item.dateOfReceiving ? new Date(item.dateOfReceiving) : new Date()
+
+      setFormEntries([
+        {
+          product: item.product || "",
+          quantity: item.quantity?.toString() || "",
+          unit: item.unit || "",
+          poNumber: item.poNumber || "",
+          supplier: item.supplier || "",
+          newSupplier: "",
+          dateOfReceiving: dateObj,
+          rackNumber: item.rackNumber || "",
+        },
+      ])
+
+      // Set edit mode and open dialog
+      setIsEditMode(true)
+      setIsDialogOpen(true)
+    }
+
+    // Add event listener
+    document.addEventListener("edit-purchase-item", handleEditPurchaseItem as EventListener)
+
+    // Clean up
+    return () => {
+      document.removeEventListener("edit-purchase-item", handleEditPurchaseItem as EventListener)
+    }
+  }, [])
 
   useEffect(() => {
     // Update filters.product when productFilters change
@@ -567,12 +611,17 @@ export default function PurchasePage() {
     try {
       setIsLoading(true)
 
-      // Process all entries
-      for (let i = 0; i < formEntries.length; i++) {
-        const entry = formEntries[i]
+      if (isEditMode && editingItem) {
+        // EDIT MODE - Update existing entry
+        const entry = formEntries[0] // In edit mode, we only have one entry
 
         // Determine the supplier to use
         const supplier = isAddingNewSupplier ? entry.newSupplier : entry.supplier
+
+        // Calculate the quantity difference (new quantity - old quantity)
+        const oldQuantity = editingItem.quantity || 0
+        const newQuantity = Number.parseInt(entry.quantity)
+        const quantityDifference = newQuantity - oldQuantity
 
         // Ensure the date is properly formatted without timezone issues
         let formattedDate
@@ -596,11 +645,11 @@ export default function PurchasePage() {
           formattedDate = String(entry.dateOfReceiving)
         }
 
-        // Create new purchase entry
-        const newEntry = {
-          // Don't include srNo here, it will be assigned by the server
+        // Create updated entry object
+        const updatedEntry = {
+          srNo: editingItem.srNo,
           product: entry.product,
-          quantity: Number.parseInt(entry.quantity),
+          quantity: newQuantity,
           unit: entry.unit,
           poNumber: entry.poNumber,
           supplier: supplier,
@@ -608,35 +657,14 @@ export default function PurchasePage() {
           rackNumber: entry.rackNumber,
         }
 
-        // Add the purchase entry to the Google Sheet
-        const purchaseResponse = await fetch("/api/sheets", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            sheetName: "Purchase",
-            entry: newEntry,
-            clientId: client?.id,
-          }),
-        })
-
-        if (!purchaseResponse.ok) {
-          throw new Error(`Failed to add purchase entry ${i + 1}`)
-        }
-
-        const purchaseResult = await purchaseResponse.json()
-
-        // Update the local data with the new entry at the beginning (newest first)
-        setData((prev) => sortByDateDesc([purchaseResult.data, ...prev]))
-
-        // Find the product in inventory data to update stock
+        // First, update the inventory stock based on the quantity difference
         const productIndex = inventoryData.findIndex((item) => item.product === entry.product)
 
         if (productIndex !== -1) {
           // Calculate new stock and value
           const currentStock = inventoryData[productIndex].stock
-          const newStock = currentStock + Number.parseInt(entry.quantity)
+          // For purchases, adding more increases stock, reducing decreases stock
+          const newStock = currentStock + quantityDifference
           const newValue = newStock * inventoryData[productIndex].pricePerUnit
 
           // Update inventory in Google Sheet
@@ -647,14 +675,14 @@ export default function PurchasePage() {
             },
             body: JSON.stringify({
               product: entry.product,
-              newStock: newStock, // Ensure newStock is included
-              newValue: newValue, // Ensure newValue is included
+              newStock,
+              newValue,
               clientId: client?.id,
             }),
           })
 
           if (!inventoryResponse.ok) {
-            throw new Error(`Failed to update inventory for entry ${i + 1}`)
+            throw new Error(`Failed to update inventory for edited entry`)
           }
 
           // Update local inventory data
@@ -664,48 +692,207 @@ export default function PurchasePage() {
           setInventoryData(updatedInventory)
         }
 
-        // If it's a new supplier, add it to the supplier data (only for the first entry with this supplier)
-        if (isAddingNewSupplier && !supplierData.some((s) => s.supplier === entry.newSupplier)) {
+        // Now update the purchase entry in the sheet
+        // For simplicity, we'll delete the old entry and add a new one
+        // In a real application, you might want to implement a proper update API
+
+        // Delete the old entry
+        const deleteResponse = await fetch("/api/sheets/delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sheetName: "Purchase",
+            items: [editingItem],
+            clientId: client?.id,
+          }),
+        })
+
+        if (!deleteResponse.ok) {
+          throw new Error(`Failed to delete old purchase entry`)
+        }
+
+        // Add the updated entry
+        const purchaseResponse = await fetch("/api/sheets", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            sheetName: "Purchase",
+            entry: updatedEntry,
+            clientId: client?.id,
+          }),
+        })
+
+        if (!purchaseResponse.ok) {
+          throw new Error(`Failed to add updated purchase entry`)
+        }
+
+        const purchaseResult = await purchaseResponse.json()
+
+        // Update the local data
+        setData((prev) => {
+          // Remove the old entry
+          const filtered = prev.filter(
+            (item) =>
+              !(
+                item.srNo === editingItem.srNo &&
+                item.product === editingItem.product &&
+                item.dateOfReceiving === editingItem.dateOfReceiving
+              ),
+          )
+
+          // Add the updated entry
+          return sortByDateDesc([purchaseResult.data, ...filtered])
+        })
+
+        toast.success(`Purchase entry updated successfully`)
+      } else {
+        // ADD MODE - Process all entries as before
+        // Process all entries
+        for (let i = 0; i < formEntries.length; i++) {
+          const entry = formEntries[i]
+
+          // Determine the supplier to use
+          const supplier = isAddingNewSupplier ? entry.newSupplier : entry.supplier
+
+          // Ensure the date is properly formatted without timezone issues
+          let formattedDate
           try {
-            // Add the new supplier to the Suppliers sheet - only set the supplier field
-            const supplierResponse = await fetch("/api/sheets", {
-              method: "POST",
+            // If it's a Date object, format it using date-fns
+            if (entry.dateOfReceiving instanceof Date) {
+              formattedDate = format(entry.dateOfReceiving, "yyyy-MM-dd")
+            } else {
+              // Otherwise try to parse and format it
+              const dateStr = String(entry.dateOfReceiving)
+              const date = new Date(dateStr)
+              if (!isNaN(date.getTime())) {
+                formattedDate = format(date, "yyyy-MM-dd")
+              } else {
+                // Use the original string if parsing fails
+                formattedDate = dateStr
+              }
+            }
+          } catch (error) {
+            // Use the original string if possible
+            formattedDate = String(entry.dateOfReceiving)
+          }
+
+          // Create new purchase entry
+          const newEntry = {
+            // Don't include srNo here, it will be assigned by the server
+            product: entry.product,
+            quantity: Number.parseInt(entry.quantity),
+            unit: entry.unit,
+            poNumber: entry.poNumber,
+            supplier: supplier,
+            dateOfReceiving: formattedDate,
+            rackNumber: entry.rackNumber,
+          }
+
+          // Add the purchase entry to the Google Sheet
+          const purchaseResponse = await fetch("/api/sheets", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              sheetName: "Purchase",
+              entry: newEntry,
+              clientId: client?.id,
+            }),
+          })
+
+          if (!purchaseResponse.ok) {
+            throw new Error(`Failed to add purchase entry ${i + 1}`)
+          }
+
+          const purchaseResult = await purchaseResponse.json()
+
+          // Update the local data with the new entry at the beginning (newest first)
+          setData((prev) => sortByDateDesc([purchaseResult.data, ...prev]))
+
+          // Find the product in inventory data to update stock
+          const productIndex = inventoryData.findIndex((item) => item.product === entry.product)
+
+          if (productIndex !== -1) {
+            // Calculate new stock and value
+            const currentStock = inventoryData[productIndex].stock
+            const newStock = currentStock + Number.parseInt(entry.quantity)
+            const newValue = newStock * inventoryData[productIndex].pricePerUnit
+
+            // Update inventory in Google Sheet
+            const inventoryResponse = await fetch("/api/sheets", {
+              method: "PUT",
               headers: {
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                sheetName: "Suppliers",
-                entry: {
-                  supplier: entry.newSupplier,
-                  // Leave companyName empty
-                  companyName: "",
-                },
+                product: entry.product,
+                newStock: newStock, // Ensure newStock is included
+                newValue: newValue, // Ensure newValue is included
                 clientId: client?.id,
               }),
             })
 
-            if (supplierResponse.ok) {
-              // Add to supplier data
-              const newSupplier: Supplier = {
-                supplier: entry.newSupplier,
-                companyName: "",
-              }
-              setSupplierData((prev) => [...prev, newSupplier])
-
-              // Add to supplier options
-              setSupplierOptions((prev) => [...prev, { value: newSupplier.supplier, label: newSupplier.supplier }])
-
-              // Add to supplier filters
-              setSupplierFilters((prev) => ({
-                ...prev,
-                [entry.newSupplier]: false,
-              }))
+            if (!inventoryResponse.ok) {
+              throw new Error(`Failed to update inventory for entry ${i + 1}`)
             }
-          } catch (error) {
-            console.error("Error adding company to Suppliers sheet:", error)
-            // Continue with the sale even if adding the company fails
+
+            // Update local inventory data
+            const updatedInventory = [...inventoryData]
+            updatedInventory[productIndex].stock = newStock
+            updatedInventory[productIndex].value = newValue
+            setInventoryData(updatedInventory)
+          }
+
+          // If it's a new supplier, add it to the supplier data (only for the first entry with this supplier)
+          if (isAddingNewSupplier && !supplierData.some((s) => s.supplier === entry.newSupplier)) {
+            try {
+              // Add the new supplier to the Suppliers sheet - only set the supplier field
+              const supplierResponse = await fetch("/api/sheets", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  sheetName: "Suppliers",
+                  entry: {
+                    supplier: entry.newSupplier,
+                    // Leave companyName empty
+                    companyName: "",
+                  },
+                  clientId: client?.id,
+                }),
+              })
+
+              if (supplierResponse.ok) {
+                // Add to supplier data
+                const newSupplier: Supplier = {
+                  supplier: entry.newSupplier,
+                  companyName: "",
+                }
+                setSupplierData((prev) => [...prev, newSupplier])
+
+                // Add to supplier options
+                setSupplierOptions((prev) => [...prev, { value: newSupplier.supplier, label: newSupplier.supplier }])
+
+                // Add to supplier filters
+                setSupplierFilters((prev) => ({
+                  ...prev,
+                  [entry.newSupplier]: false,
+                }))
+              }
+            } catch (error) {
+              console.error("Error adding company to Suppliers sheet:", error)
+              // Continue with the sale even if adding the company fails
+            }
           }
         }
+
+        toast.success(`${formEntries.length} purchase entries added successfully`)
       }
 
       // Reset form data
@@ -722,14 +909,14 @@ export default function PurchasePage() {
         },
       ])
       setIsAddingNewSupplier(false)
+      setIsEditMode(false)
+      setEditingItem(null)
 
       // Close dialog
       setIsDialogOpen(false)
-
-      toast.success(`${formEntries.length} purchase entries added successfully`)
     } catch (error) {
-      console.error("Error adding purchase:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to add purchase entries")
+      console.error("Error processing purchase:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to process purchase entries")
     } finally {
       setIsLoading(false)
     }
@@ -830,6 +1017,8 @@ export default function PurchasePage() {
                   },
                 ])
                 setIsAddingNewSupplier(false)
+                setIsEditMode(false) // Reset edit mode
+                setEditingItem(null) // Clear editing item
               }
             }}
           >
@@ -841,9 +1030,13 @@ export default function PurchasePage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New {getPurchaseTerm(client?.name)}</DialogTitle>
+                <DialogTitle>
+                  {isEditMode ? `Edit ${getPurchaseTerm(client?.name)}` : `Add New ${getPurchaseTerm(client?.name)}`}
+                </DialogTitle>
                 <DialogDescription>
-                  Enter the details of the new {getPurchaseTerm(client?.name).toLowerCase()} entries.
+                  {isEditMode
+                    ? `Update the details of the ${getPurchaseTerm(client?.name).toLowerCase()} entry.`
+                    : `Enter the details of the new ${getPurchaseTerm(client?.name).toLowerCase()} entries.`}
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit}>
@@ -1080,24 +1273,26 @@ export default function PurchasePage() {
                   </div>
                 ))}
 
-                <div className="flex justify-center my-4">
-                  <Button type="button" variant="outline" onClick={addEntry} className="w-full max-w-xs">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Another Entry
-                  </Button>
-                </div>
+                {!isEditMode && (
+                  <div className="flex justify-center my-4">
+                    <Button type="button" variant="outline" onClick={addEntry} className="w-full max-w-xs">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Another Entry
+                    </Button>
+                  </div>
+                )}
 
                 <DialogFooter>
                   <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                        Adding...
+                        {isEditMode ? "Updating..." : "Adding..."}
                       </>
+                    ) : isEditMode ? (
+                      `Update ${getPurchaseTerm(client?.name)} Entry`
                     ) : (
-                      `Add ${formEntries.length} ${getPurchaseTerm(client?.name)} ${
-                        formEntries.length > 1 ? "Entries" : "Entry"
-                      }`
+                      `Add ${formEntries.length} ${getPurchaseTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
                     )}
                   </Button>
                 </DialogFooter>
