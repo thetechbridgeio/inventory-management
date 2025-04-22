@@ -983,23 +983,6 @@ export default function SalesPage() {
     }
   }
 
-  // Update the submit button text to reflect edit mode
-  // Update the submit button text to reflect edit mode
-  return (
-    <Button type="submit" disabled={isLoading}>
-      {isLoading ? (
-        <>
-          <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-          {isEditMode ? "Updating..." : "Adding..."}
-        </>
-      ) : isEditMode ? (
-        `Update ${getSalesTerm(client?.name)} Entry`
-      ) : (
-        `Add ${formEntries.length} ${getSalesTerm(client?.name)} ${formEntries.length > 1 ? "Entries" : "Entry"}`
-      )}
-    </Button>
-  )
-
   const handleProductFilterChange = (product: string, checked: boolean) => {
     setProductFilters((prev) => ({
       ...prev,
