@@ -44,6 +44,7 @@ interface SalesEntryForm {
   newCompany: string
   dateOfIssue: Date
   indentNumber?: string // Add this new field
+  stock?: string // Add this new field
 }
 
 export default function SalesPage() {
@@ -85,6 +86,7 @@ export default function SalesPage() {
       newCompany: "",
       dateOfIssue: new Date(),
       indentNumber: "", // Add this new field
+      stock: "", // Add this new field
     },
   ])
 
@@ -257,7 +259,8 @@ export default function SalesPage() {
     setSelectedRows(rows)
   }
 
-  // Update the handleDeleteSelected function to pass clientId
+  // Find the handleDeleteSelected function and replace it with this updated version:
+
   const handleDeleteSelected = async () => {
     if (selectedRows.length === 0) return
 
@@ -486,11 +489,12 @@ export default function SalesPage() {
       // Find the selected product in inventory data
       const selectedProduct = inventoryData.find((item) => item.product === product)
 
-      // Update the unit based on the selected product
+      // Update the unit and stock based on the selected product
       newEntries[index] = {
         ...newEntries[index],
         product,
         unit: selectedProduct ? selectedProduct.unit : newEntries[index].unit,
+        stock: selectedProduct ? selectedProduct.stock.toString() : "", // Add this line
       }
       return newEntries
     })
@@ -553,6 +557,7 @@ export default function SalesPage() {
         newCompany: isAddingNewCompany ? prev[0].newCompany : "", // Copy new company if adding new
         dateOfIssue: prev[0].dateOfIssue, // Copy date from first entry
         indentNumber: prev[0].indentNumber, // Copy indent number from first entry
+        stock: "", // Add this line
       },
     ])
   }
@@ -797,6 +802,7 @@ export default function SalesPage() {
           newCompany: "",
           dateOfIssue: new Date(),
           indentNumber: "",
+          stock: "",
         },
       ])
       setIsAddingNewCompany(false)
@@ -904,6 +910,7 @@ export default function SalesPage() {
                     newCompany: "",
                     dateOfIssue: new Date(),
                     indentNumber: "",
+                    stock: "", // Add this line
                   },
                 ])
                 setIsAddingNewCompany(false)
@@ -979,6 +986,20 @@ export default function SalesPage() {
                           id={`unit-${index}`}
                           name="unit"
                           value={entry.unit}
+                          readOnly
+                          className="col-span-3 bg-muted"
+                        />
+                      </div>
+
+                      {/* Add this after the unit input field in the form */}
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor={`stock-${index}`} className="text-right">
+                          Available Stock
+                        </Label>
+                        <Input
+                          id={`stock-${index}`}
+                          name="stock"
+                          value={entry.stock}
                           readOnly
                           className="col-span-3 bg-muted"
                         />
