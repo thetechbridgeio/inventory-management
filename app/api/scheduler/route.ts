@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { startScheduler, runLowStockEmailJob, runDashboardSummaryEmailJob } from "@/lib/scheduler"
+import { runLowStockEmailJob, runDashboardSummaryEmailJob } from "@/lib/scheduler"
 
-// This is a simple endpoint that can be used to start the scheduler
+// This endpoint is now used only for manual triggering of email jobs
+// Automated scheduling is handled by Netlify scheduled functions
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -20,9 +21,13 @@ export async function GET(request: Request) {
       await Promise.all([runLowStockEmailJob(), runDashboardSummaryEmailJob()])
       return NextResponse.json({ success: true, message: "All email jobs triggered successfully" })
     } else {
-      // Start the scheduler
-      startScheduler()
-      return NextResponse.json({ success: true, message: "Scheduler started successfully" })
+      // Return info about available actions since startScheduler is no longer available
+      return NextResponse.json({
+        success: true,
+        message:
+          "Scheduler endpoint available. Use ?action=run-low-stock, ?action=run-dashboard, or ?action=run-all to trigger email jobs manually.",
+        note: "Automated scheduling is now handled by Netlify scheduled functions at 6 PM IST daily.",
+      })
     }
   } catch (error) {
     console.error("Error with scheduler:", error)
@@ -32,4 +37,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
