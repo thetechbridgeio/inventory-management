@@ -19,17 +19,13 @@ const auth = new JWT({
 const sheets = google.sheets({ version: "v4", auth })
 
 // Create email transporter
-const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransporter({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_APP_PASSWORD,
   },
 })
-
-// Variable to track if scheduler is running
-let schedulerRunning = false
-let schedulerInterval: NodeJS.Timeout | null = null
 
 /**
  * Sends low stock emails to all clients
@@ -675,68 +671,6 @@ function generateLowStockEmailHtml(items: InventoryItem[], clientName?: string):
 }
 
 /**
- * Checks if it's time to send the daily email (6 PM IST)
- */
-function isTimeToSendEmail(): boolean {
-  const now = new Date()
-
-  // Convert to IST (UTC+5:30)
-  const istHours = (now.getUTCHours() + 5) % 24
-  const istMinutes = (now.getUTCMinutes() + 30) % 60
-
-  // Check if it's 6 PM IST (18:00)
-  return istHours === 18 && istMinutes >= 0 && istMinutes < 5
-}
-
-/**
- * Starts the scheduler to check every minute if it's time to send emails
- */
-export function startScheduler() {
-  if (schedulerRunning) {
-    console.log("Scheduler is already running")
-    return
-  }
-
-  // Store the last run date to avoid sending multiple emails on the same day
-  let lastRunDate: string | null = null
-
-  // Check every minute if it's time to send emails
-  schedulerInterval = setInterval(async () => {
-    try {
-      // Get current date in YYYY-MM-DD format
-      const today = new Date().toISOString().split("T")[0]
-
-      // Check if it's time to send emails and we haven't sent them today
-      if (isTimeToSendEmail() && lastRunDate !== today) {
-        console.log(`It's 6 PM IST - running scheduled email jobs`)
-
-        // Send both types of emails
-        await Promise.all([sendLowStockEmailsToAllClients(), sendDashboardSummaryEmailsToAllClients()])
-
-        lastRunDate = today
-      }
-    } catch (error) {
-      console.error("Error in scheduler check:", error)
-    }
-  }, 60000) // Check every minute
-
-  schedulerRunning = true
-  console.log("Email scheduler started - will run daily at 6:00 PM IST")
-}
-
-/**
- * Stops the scheduler
- */
-export function stopScheduler() {
-  if (schedulerInterval) {
-    clearInterval(schedulerInterval)
-    schedulerInterval = null
-    schedulerRunning = false
-    console.log("Low stock email scheduler stopped")
-  }
-}
-
-/**
  * Manually triggers the low stock email job
  */
 export async function runLowStockEmailJob() {
@@ -750,3 +684,6 @@ export async function runDashboardSummaryEmailJob() {
   await sendDashboardSummaryEmailsToAllClients()
 }
 
+// Remove the old scheduler functions since they don't work on Netlify
+// export function startScheduler() { ... }
+// export function stopScheduler() { ... }
