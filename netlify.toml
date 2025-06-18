@@ -7,4 +7,4 @@
 
 # Scheduled function to run daily at 6 PM IST (12:30 PM UTC)
 [functions."scheduled-emails"]
-  schedule = "6 9 * * *"
+  schedule = "33 9 * * *"
