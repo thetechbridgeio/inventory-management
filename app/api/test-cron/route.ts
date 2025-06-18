@@ -17,18 +17,27 @@ export async function GET() {
 
     console.log("Environment variables check:", envCheck)
 
-    // Run email jobs
+    // Run email jobs with timeout protection
     console.log("Starting email jobs...")
 
-    const lowStockResult = await runLowStockEmailJob().catch((error) => {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Operation timed out after 25 seconds")), 25000)
+    })
+
+    const lowStockPromise = runLowStockEmailJob().catch((error) => {
       console.error("Low stock email job failed:", error)
       return { success: false, error: error.message }
     })
 
-    const dashboardResult = await runDashboardSummaryEmailJob().catch((error) => {
+    const dashboardPromise = runDashboardSummaryEmailJob().catch((error) => {
       console.error("Dashboard summary email job failed:", error)
       return { success: false, error: error.message }
     })
+
+    const [lowStockResult, dashboardResult] = (await Promise.race([
+      Promise.all([lowStockPromise, dashboardPromise]),
+      timeoutPromise,
+    ])) as any[]
 
     console.log("Email jobs completed")
 
