@@ -8,20 +8,41 @@ export async function POST(request: Request) {
     // Get client information from the request body
     const { clientEmail, clientName, clientId } = await request.json()
 
+    console.log("Low stock email request received:", { clientEmail, clientName, clientId })
+    console.log("Environment check:", {
+      VERCEL_URL: process.env.VERCEL_URL,
+      NODE_ENV: process.env.NODE_ENV,
+      EMAIL_USER: process.env.EMAIL_USER ? "Set" : "Not set",
+      EMAIL_APP_PASSWORD: process.env.EMAIL_APP_PASSWORD ? "Set" : "Not set",
+    })
+
     if (!clientEmail) {
       return NextResponse.json({ success: false, error: "Client email is required" }, { status: 400 })
     }
 
-    // Fetch inventory data
-    const response = await fetch(
-      `${process.env.VERCEL_URL || "http://localhost:3000"}/api/sheets?sheet=Inventory&clientId=${clientId || ""}`,
-      {
-        cache: "no-store",
+    // Get the base URL for the current environment
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NODE_ENV === "production"
+        ? "https://client-inventory-management.netlify.app"
+        : "http://localhost:3000"
+
+    const response = await fetch(`${baseUrl}/api/sheets?sheet=Inventory&clientId=${clientId || ""}`, {
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
       },
-    )
+    })
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch inventory data: ${response.statusText}`)
+      const errorText = await response.text()
+      console.error("Failed to fetch inventory data:", {
+        status: response.status,
+        statusText: response.statusText,
+        errorText,
+        url: `${baseUrl}/api/sheets?sheet=Inventory&clientId=${clientId || ""}`,
+      })
+      throw new Error(`Failed to fetch inventory data: ${response.status} ${response.statusText} - ${errorText}`)
     }
 
     const result = await response.json()
@@ -163,4 +184,3 @@ function generateLowStockEmailHtml(items: InventoryItem[], clientName?: string):
    </html>
  `
 }
-
