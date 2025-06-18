@@ -6,7 +6,7 @@ import type { InventoryItem } from "./types"
 
 // Create email transporter
 function createTransporter() {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
@@ -254,13 +254,16 @@ async function sendLowStockEmailForClient(client: any) {
       </div>
     `
 
+    // Create and send email
     const transporter = createTransporter()
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.EMAIL_USER,
       to: client.email,
       subject: `🚨 Low Stock Alert - ${client.name}`,
       html: emailContent,
-    })
+    }
+
+    await transporter.sendMail(mailOptions)
 
     console.log(`Low stock email sent successfully to ${client.email}`)
     return { success: true, message: `Email sent to ${client.email}`, itemCount: lowStockItems.length }
@@ -347,13 +350,16 @@ async function sendDashboardSummaryForClient(client: any) {
       </div>
     `
 
+    // Create and send email
     const transporter = createTransporter()
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.EMAIL_USER,
       to: client.email,
       subject: `📊 Daily Summary - ${client.name} - ${new Date().toLocaleDateString("en-IN")}`,
       html: emailContent,
-    })
+    }
+
+    await transporter.sendMail(mailOptions)
 
     console.log(`Dashboard summary email sent successfully to ${client.email}`)
     return {
