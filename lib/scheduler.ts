@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer"
 import { google } from "googleapis"
+import { JWT } from "google-auth-library"
 
 // Create email transporter
 function createTransporter() {
@@ -26,38 +27,100 @@ function getBaseUrl() {
   return "https://client-inventory-management.netlify.app"
 }
 
+// Create Google Sheets client with proper authentication
+function createSheetsClient() {
+  const auth = new JWT({
+    email: process.env.GOOGLE_CLIENT_EMAIL,
+    key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+  })
+
+  return google.sheets({ version: "v4", auth })
+}
+
 // Fetch all clients from master sheet
 async function fetchAllClients() {
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
-    })
+    console.log("Fetching clients from master sheet...")
+    console.log("Master Sheet ID:", process.env.MASTER_SHEET_ID?.substring(0, 10) + "...")
+    console.log("Google Client Email:", process.env.GOOGLE_CLIENT_EMAIL?.substring(0, 20) + "...")
 
-    const sheets = google.sheets({ version: "v4", auth })
+    if (!process.env.MASTER_SHEET_ID) {
+      throw new Error("MASTER_SHEET_ID environment variable not found")
+    }
+
+    if (!process.env.GOOGLE_CLIENT_EMAIL) {
+      throw new Error("GOOGLE_CLIENT_EMAIL environment variable not found")
+    }
+
+    if (!process.env.GOOGLE_PRIVATE_KEY) {
+      throw new Error("GOOGLE_PRIVATE_KEY environment variable not found")
+    }
+
+    const sheets = createSheetsClient()
+
+    console.log("Attempting to fetch from range: Clients!A:F")
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.MASTER_SHEET_ID,
-      range: "Clients!A:E",
+      range: "Clients!A:F",
     })
 
     const rows = response.data.values || []
-    if (rows.length <= 1) return []
+    console.log(`Found ${rows.length} rows in master sheet`)
+
+    if (rows.length <= 1) {
+      console.log("No client data found (only headers or empty sheet)")
+      return []
+    }
 
     const headers = rows[0]
-    const clients = rows.slice(1).map((row) => {
+    console.log("Headers found:", headers)
+
+    const clients = rows.slice(1).map((row, index) => {
       const client: any = {}
-      headers.forEach((header, index) => {
-        client[header] = row[index] || ""
+      headers.forEach((header, headerIndex) => {
+        // Convert header to camelCase for consistent property naming
+        const key = header.toLowerCase().replace(/\s(.)/g, (_, char) => char.toUpperCase())
+        client[key] = row[headerIndex] || ""
       })
+
+      // Also add the original format for compatibility
+      client.clientId = client.id || client.clientId
+      client.name = client.name || client.clientName
+      client.email = client.email || client.clientEmail
+      client.sheetId = client.sheetId || client.googleSheetId
+
+      console.log(`Client ${index + 1}:`, {
+        id: client.clientId,
+        name: client.name,
+        email: client.email,
+        hasSheetId: !!client.sheetId,
+      })
+
       return client
     })
 
-    return clients.filter((client) => client.email && client.sheetId)
+    // Filter clients with required fields
+    const validClients = clients.filter((client) => {
+      const isValid = client.email && client.sheetId && client.clientId
+      if (!isValid) {
+        console.log(`Skipping invalid client:`, {
+          id: client.clientId,
+          hasEmail: !!client.email,
+          hasSheetId: !!client.sheetId,
+        })
+      }
+      return isValid
+    })
+
+    console.log(`Found ${validClients.length} valid clients out of ${clients.length} total`)
+    return validClients
   } catch (error) {
     console.error("Error fetching clients:", error)
+    if (error instanceof Error) {
+      console.error("Error details:", error.message)
+      console.error("Error stack:", error.stack)
+    }
     return []
   }
 }
@@ -65,15 +128,21 @@ async function fetchAllClients() {
 // Send low stock email for a specific client
 async function sendLowStockEmailForClient(client: any) {
   try {
+    console.log(`Processing low stock email for client: ${client.name} (${client.clientId})`)
+
     const baseUrl = getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/sheets?clientId=${client.clientId}`)
+    const url = `${baseUrl}/api/sheets?clientId=${client.clientId}`
+    console.log(`Fetching inventory from: ${url}`)
+
+    const response = await fetch(url)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch inventory data: ${response.status}`)
+      throw new Error(`Failed to fetch inventory data: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
     const inventory = data.inventory || []
+    console.log(`Found ${inventory.length} inventory items for ${client.name}`)
 
     // Find low stock items
     const lowStockItems = inventory.filter((item: any) => {
@@ -81,6 +150,8 @@ async function sendLowStockEmailForClient(client: any) {
       const minQty = Number.parseInt(item.minimumQuantity) || 0
       return stock < minQty && minQty > 0
     })
+
+    console.log(`Found ${lowStockItems.length} low stock items for ${client.name}`)
 
     if (lowStockItems.length === 0) {
       console.log(`No low stock items for client: ${client.name}`)
@@ -150,14 +221,24 @@ async function sendLowStockEmailForClient(client: any) {
 // Send dashboard summary email for a specific client
 async function sendDashboardSummaryForClient(client: any) {
   try {
+    console.log(`Processing dashboard summary for client: ${client.name} (${client.clientId})`)
+
     const baseUrl = getBaseUrl()
-    const response = await fetch(`${baseUrl}/api/dashboard?clientId=${client.clientId}`)
+    const url = `${baseUrl}/api/dashboard?clientId=${client.clientId}`
+    console.log(`Fetching dashboard data from: ${url}`)
+
+    const response = await fetch(url)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch dashboard data: ${response.status}`)
+      throw new Error(`Failed to fetch dashboard data: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
+    console.log(`Dashboard data fetched for ${client.name}:`, {
+      totalProducts: data.totalProducts,
+      lowStockCount: data.lowStockCount,
+      totalStockValue: data.totalStockValue,
+    })
 
     // Create email content
     const emailContent = `
@@ -231,6 +312,7 @@ export async function runLowStockEmailJob() {
     return { success: false, message: "No clients found" }
   }
 
+  console.log(`Processing ${clients.length} clients for low stock emails`)
   const results = []
   for (const client of clients) {
     const result = await sendLowStockEmailForClient(client)
@@ -251,6 +333,7 @@ export async function runDashboardSummaryEmailJob() {
     return { success: false, message: "No clients found" }
   }
 
+  console.log(`Processing ${clients.length} clients for dashboard summary emails`)
   const results = []
   for (const client of clients) {
     const result = await sendDashboardSummaryForClient(client)
