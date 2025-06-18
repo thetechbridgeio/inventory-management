@@ -6,7 +6,7 @@ import type { InventoryItem } from "./types"
 
 // Create email transporter
 function createTransporter() {
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
