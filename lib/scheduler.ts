@@ -379,7 +379,7 @@ async function sendDashboardSummaryForClient(client: any) {
   }
 }
 
-// Run low stock email job for all clients
+// Run low stock email job for all clients with better timeout handling
 export async function runLowStockEmailJob() {
   console.log("Starting low stock email job...")
 
@@ -392,14 +392,32 @@ export async function runLowStockEmailJob() {
   console.log(`Processing ${clients.length} clients for low stock emails`)
   const results = []
 
-  // Process clients sequentially to avoid overwhelming the email service
-  for (const client of clients) {
-    const result = await sendLowStockEmailForClient(client)
-    results.push({ client: client.name, ...result })
+  // Process clients with timeout protection
+  for (let i = 0; i < clients.length; i++) {
+    const client = clients[i]
+    console.log(`Processing client ${i + 1}/${clients.length}: ${client.name}`)
 
-    // Add a small delay between emails to avoid rate limiting
-    if (!result.skipped) {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Set timeout for each client (5 seconds max)
+      const clientPromise = sendLowStockEmailForClient(client)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Timeout processing ${client.name}`)), 5000)
+      })
+
+      const result = await Promise.race([clientPromise, timeoutPromise])
+      results.push({ client: client.name, ...result })
+
+      // Add delay between emails to avoid rate limiting
+      if (!result.skipped) {
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+    } catch (error) {
+      console.error(`Error processing client ${client.name}:`, error)
+      results.push({
+        client: client.name,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
     }
   }
 
@@ -408,7 +426,7 @@ export async function runLowStockEmailJob() {
   return { success: true, results, summary: `${sentEmails} emails sent` }
 }
 
-// Run dashboard summary email job for all clients
+// Run dashboard summary email job for all clients with better timeout handling
 export async function runDashboardSummaryEmailJob() {
   console.log("Starting dashboard summary email job...")
 
@@ -421,13 +439,31 @@ export async function runDashboardSummaryEmailJob() {
   console.log(`Processing ${clients.length} clients for dashboard summary emails`)
   const results = []
 
-  // Process clients sequentially to avoid overwhelming the email service
-  for (const client of clients) {
-    const result = await sendDashboardSummaryForClient(client)
-    results.push({ client: client.name, ...result })
+  // Process clients with timeout protection
+  for (let i = 0; i < clients.length; i++) {
+    const client = clients[i]
+    console.log(`Processing client ${i + 1}/${clients.length}: ${client.name}`)
 
-    // Add a small delay between emails to avoid rate limiting
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Set timeout for each client (5 seconds max)
+      const clientPromise = sendDashboardSummaryForClient(client)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error(`Timeout processing ${client.name}`)), 5000)
+      })
+
+      const result = await Promise.race([clientPromise, timeoutPromise])
+      results.push({ client: client.name, ...result })
+
+      // Add delay between emails to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    } catch (error) {
+      console.error(`Error processing client ${client.name}:`, error)
+      results.push({
+        client: client.name,
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
   }
 
   const sentEmails = results.filter((r) => r.success).length
