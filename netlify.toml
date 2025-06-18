@@ -7,7 +7,5 @@
 
 [functions]
   directory = "netlify/functions"
-
-[[functions]]
   name = "scheduled-emails"
   schedule = "30 12 * * *"
