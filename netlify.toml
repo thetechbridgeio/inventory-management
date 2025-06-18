@@ -5,7 +5,8 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-[functions]
-  directory = "netlify/functions"
+# Netlify scheduled functions syntax
+[[functions]]
   name = "scheduled-emails"
-  schedule = "30 12 * * *"
+  schedule = "0 18 * * *"
+  timezone = "Asia/Kolkata"
