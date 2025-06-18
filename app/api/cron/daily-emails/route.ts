@@ -21,19 +21,10 @@ export async function GET(request: Request) {
       })
     }
 
-    // Check authorization
-    const authHeader = request.headers.get("authorization")
-    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`
-
-    if (!authHeader || authHeader !== expectedAuth) {
-      console.log("Unauthorized cron request")
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     // Update last run time
     lastRunTime = now
 
-    console.log("Authorization successful, starting email jobs...")
+    console.log("Starting email jobs...")
 
     // Run both email jobs in parallel for faster execution
     const [lowStockResult, dashboardResult] = await Promise.all([
