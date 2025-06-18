@@ -8,7 +8,6 @@
 [functions]
   directory = "netlify/functions"
 
-# Scheduled function to run daily at 6 PM IST (12:30 PM UTC)
 [[functions]]
   name = "scheduled-emails"
   schedule = "30 12 * * *"
