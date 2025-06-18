@@ -71,6 +71,12 @@ async function fetchAllClients() {
 
     const validClients = clients.filter((client) => client.email && client.sheetId && client.clientId)
     console.log(`Found ${validClients.length} valid clients`)
+
+    // Log client details for debugging
+    validClients.forEach((client, index) => {
+      console.log(`Client ${index + 1}: ${client.name} (${client.email})`)
+    })
+
     return validClients
   } catch (error) {
     console.error("Error fetching clients:", error)
@@ -187,7 +193,7 @@ async function fetchClientSales(sheetId: string) {
   }
 }
 
-// Send low stock email for a specific client
+// Send consolidated low stock email to a specific client
 async function sendLowStockEmailForClient(client: any) {
   try {
     console.log(`Processing low stock email for client: ${client.name} (${client.clientId})`)
@@ -206,14 +212,14 @@ async function sendLowStockEmailForClient(client: any) {
 
     if (lowStockItems.length === 0) {
       console.log(`No low stock items for client: ${client.name}`)
-      return { success: true, message: "No low stock items" }
+      return { success: true, message: "No low stock items", skipped: true }
     }
 
     // Create email content
     const emailContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #dc2626;">🚨 Low Stock Alert - ${client.name}</h2>
-        <p>The following items are running low and need to be restocked:</p>
+        <p>The following ${lowStockItems.length} item${lowStockItems.length > 1 ? "s are" : " is"} running low and need${lowStockItems.length > 1 ? "" : "s"} to be restocked:</p>
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <thead>
@@ -259,13 +265,13 @@ async function sendLowStockEmailForClient(client: any) {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: client.email,
-      subject: `🚨 Low Stock Alert - ${client.name}`,
+      subject: `🚨 Low Stock Alert - ${client.name} (${lowStockItems.length} items)`,
       html: emailContent,
     }
 
     await transporter.sendMail(mailOptions)
 
-    console.log(`Low stock email sent successfully to ${client.email}`)
+    console.log(`Low stock email sent successfully to ${client.email} for ${lowStockItems.length} items`)
     return { success: true, message: `Email sent to ${client.email}`, itemCount: lowStockItems.length }
   } catch (error) {
     console.error(`Error sending low stock email to ${client.email}:`, error)
@@ -385,13 +391,21 @@ export async function runLowStockEmailJob() {
 
   console.log(`Processing ${clients.length} clients for low stock emails`)
   const results = []
+
+  // Process clients sequentially to avoid overwhelming the email service
   for (const client of clients) {
     const result = await sendLowStockEmailForClient(client)
     results.push({ client: client.name, ...result })
+
+    // Add a small delay between emails to avoid rate limiting
+    if (!result.skipped) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
   }
 
-  console.log("Low stock email job completed:", results)
-  return { success: true, results }
+  const sentEmails = results.filter((r) => r.success && !r.skipped).length
+  console.log(`Low stock email job completed: ${sentEmails} emails sent out of ${clients.length} clients`)
+  return { success: true, results, summary: `${sentEmails} emails sent` }
 }
 
 // Run dashboard summary email job for all clients
@@ -406,11 +420,17 @@ export async function runDashboardSummaryEmailJob() {
 
   console.log(`Processing ${clients.length} clients for dashboard summary emails`)
   const results = []
+
+  // Process clients sequentially to avoid overwhelming the email service
   for (const client of clients) {
     const result = await sendDashboardSummaryForClient(client)
     results.push({ client: client.name, ...result })
+
+    // Add a small delay between emails to avoid rate limiting
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 
-  console.log("Dashboard summary email job completed:", results)
-  return { success: true, results }
+  const sentEmails = results.filter((r) => r.success).length
+  console.log(`Dashboard summary email job completed: ${sentEmails} emails sent out of ${clients.length} clients`)
+  return { success: true, results, summary: `${sentEmails} emails sent` }
 }
