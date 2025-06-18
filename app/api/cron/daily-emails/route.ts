@@ -35,13 +35,8 @@ export async function GET(request: Request) {
 
     console.log("Authorization successful, starting email jobs...")
 
-    // Set a timeout for the entire operation (25 seconds)
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Operation timed out after 25 seconds")), 25000)
-    })
-
-    // Run both email jobs with timeout
-    const emailJobsPromise = Promise.all([
+    // Run both email jobs in parallel for faster execution
+    const [lowStockResult, dashboardResult] = await Promise.all([
       runLowStockEmailJob().catch((error) => {
         console.error("Low stock email job failed:", error)
         return { success: false, error: error.message }
@@ -51,8 +46,6 @@ export async function GET(request: Request) {
         return { success: false, error: error.message }
       }),
     ])
-
-    const [lowStockResult, dashboardResult] = await Promise.race([emailJobsPromise, timeoutPromise])
 
     console.log("Low stock email result:", lowStockResult)
     console.log("Dashboard summary result:", dashboardResult)
