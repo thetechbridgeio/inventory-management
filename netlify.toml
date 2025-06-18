@@ -1,16 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "out"
-  environment = { NODE_VERSION = "18" }
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  publish = ".next"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-# Scheduled function to run daily at 6 PM IST (12:30 PM UTC)
-[functions."scheduled-emails"]
-  schedule = "15 10 * * *"
