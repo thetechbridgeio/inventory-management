@@ -1,33 +1,50 @@
 import { NextResponse } from "next/server"
 import { runLowStockEmailJob, runDashboardSummaryEmailJob } from "@/lib/scheduler"
 
-// This endpoint will be called by an external cron service (like cron-job.org or GitHub Actions)
 export async function GET(request: Request) {
   try {
-    // Verify the request is from a trusted source (optional security measure)
-    const authHeader = request.headers.get("authorization")
-    const expectedAuth = process.env.CRON_SECRET || "your-secret-key"
+    console.log("Daily emails cron job triggered at:", new Date().toISOString())
 
-    if (authHeader !== `Bearer ${expectedAuth}`) {
+    // Check authorization
+    const authHeader = request.headers.get("authorization")
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`
+
+    if (!authHeader || authHeader !== expectedAuth) {
+      console.log("Unauthorized cron request")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    console.log("Running daily email cron job at:", new Date().toISOString())
+    console.log("Authorization successful, starting email jobs...")
 
     // Run both email jobs
-    await Promise.all([runLowStockEmailJob(), runDashboardSummaryEmailJob()])
+    const [lowStockResult, dashboardResult] = await Promise.all([
+      runLowStockEmailJob().catch((error) => {
+        console.error("Low stock email job failed:", error)
+        return { success: false, error: error.message }
+      }),
+      runDashboardSummaryEmailJob().catch((error) => {
+        console.error("Dashboard summary email job failed:", error)
+        return { success: false, error: error.message }
+      }),
+    ])
+
+    console.log("Low stock email result:", lowStockResult)
+    console.log("Dashboard summary result:", dashboardResult)
 
     return NextResponse.json({
       success: true,
-      message: "Daily emails sent successfully",
       timestamp: new Date().toISOString(),
+      results: {
+        lowStock: lowStockResult,
+        dashboard: dashboardResult,
+      },
     })
   } catch (error) {
-    console.error("Error in daily email cron job:", error)
+    console.error("Error in daily emails cron job:", error)
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to send daily emails",
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },
       { status: 500 },
@@ -35,7 +52,7 @@ export async function GET(request: Request) {
   }
 }
 
-// Also support POST method for flexibility
+// Also support POST method for external cron services
 export async function POST(request: Request) {
   return GET(request)
 }
