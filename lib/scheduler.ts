@@ -557,6 +557,7 @@ async function sendLowStockEmailToClient(client: any) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: client.email,
+    bcc: "businesscoachakhill@gmail.com",
     subject: `Low Stock Alert - ${client.name || "Inventory Management System"}`,
     html: emailHtml,
   }
