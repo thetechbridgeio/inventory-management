@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching data:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch data" },
@@ -218,7 +218,7 @@ export async function POST(request: Request) {
     const createdEntry = { ...entry, srNo: nextSrNo }
 
     return NextResponse.json({ success: true, data: createdEntry })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding entry:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add entry" }, { status: 500 })
   }
@@ -247,7 +247,7 @@ export async function PUT(request: Request) {
           SHEET_ID = clientData.sheetId
           console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -339,7 +339,7 @@ export async function PUT(request: Request) {
       success: true,
       message: "Product updated successfully",
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error updating product:", error)
     return NextResponse.json(
       {
@@ -389,7 +389,7 @@ async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching client data:", error)
     return null
   }

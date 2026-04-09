@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
-import { useToast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
@@ -26,7 +26,6 @@ interface MobileNavProps {
 
 export function MobileNav({ client }: MobileNavProps) {
   const { data: session, status } = useSession()
-  const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
@@ -73,8 +72,7 @@ export function MobileNav({ client }: MobileNavProps) {
                     <DropdownMenuItem
                       onSelect={() => {
                         signOut()
-                        toast({
-                          title: "Signed out",
+                        toast.success("Signed out", {
                           description: "You have been signed out.",
                         })
                       }}
@@ -103,4 +101,3 @@ export function MobileNav({ client }: MobileNavProps) {
     </Sheet>
   )
 }
-

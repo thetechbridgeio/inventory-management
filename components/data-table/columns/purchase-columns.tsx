@@ -78,7 +78,7 @@ export const purchaseColumns: ColumnDef<PurchaseItem>[] = [
           // If invalid date, just show the original string
           return <div>{dateString}</div>
         }
-      } catch (error) {
+      } catch (error:any) {
         // On any error, show the original string
         return <div>{dateString}</div>
       }

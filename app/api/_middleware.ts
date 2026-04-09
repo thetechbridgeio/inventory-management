@@ -12,7 +12,7 @@ export function middleware(request: NextRequest) {
       startScheduler()
       schedulerStarted = true
       console.log("Scheduler started via middleware")
-    } catch (error) {
+    } catch (error:any) {
       console.error("Failed to start scheduler:", error)
     }
   }

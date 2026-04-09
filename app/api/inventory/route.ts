@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data: inventory })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching inventory:", error)
 
     let errorMessage = "Failed to fetch inventory"
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
       message: "Inventory item added successfully",
       item: itemData,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding inventory item:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add inventory item" },

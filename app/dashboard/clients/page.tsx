@@ -73,7 +73,7 @@ export default function ClientsPage() {
           setError(result.error)
         }
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching clients:", error)
       setError(error instanceof Error ? error.message : "Failed to fetch clients")
       toast.error("Failed to fetch clients")
@@ -131,7 +131,7 @@ export default function ClientsPage() {
       setIsAddDialogOpen(false)
 
       toast.success("Client added successfully")
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error adding client:", error)
       toast.error(error instanceof Error ? error.message : "Failed to add client")
     }

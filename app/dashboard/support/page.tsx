@@ -64,7 +64,7 @@ export default function SupportPage() {
         subject: "",
         message: "",
       })
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error sending support message:", error)
       toast.error("Failed to send message. Please try again later.")
     } finally {

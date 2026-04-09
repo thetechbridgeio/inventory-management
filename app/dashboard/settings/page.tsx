@@ -91,7 +91,7 @@ export default function SettingsPage() {
 
         // Create options for searchable select
         const options = processedData
-          .filter((item) => item.product && typeof item.product === "string")
+          .filter((item: InventoryItem) => item.product && typeof item.product === "string")
           .map((item: InventoryItem) => ({
             value: item.product,
             label: item.product,
@@ -101,20 +101,20 @@ export default function SettingsPage() {
 
         if (processedData.length > 0) {
           // Extract unique categories
-          const uniqueCategories = Array.from(
-            new Set(
-              processedData
-                .filter((item) => item.category && typeof item.category === "string")
-                .map((item) => item.category),
-            ),
-          ).sort()
+            const uniqueCategories = Array.from(
+              new Set(
+                processedData
+                  .filter((item: InventoryItem) => item.category && typeof item.category === "string")
+                  .map((item: InventoryItem) => item.category),
+              ),
+            ).sort() as string[]
 
           // Extract unique units
           const uniqueUnits = Array.from(
             new Set(
-              processedData.filter((item) => item.unit && typeof item.unit === "string").map((item) => item.unit),
+              processedData.filter((item: InventoryItem) => item.unit && typeof item.unit === "string").map((item: InventoryItem) => item.unit),
             ),
-          ).sort()
+          ).sort() as string[]
 
           setCategories(uniqueCategories)
           setUnits(uniqueUnits)
@@ -123,7 +123,7 @@ export default function SettingsPage() {
         console.error("Invalid data format received:", inventoryResult)
         toast.error("Failed to load inventory data: Invalid format")
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching settings data:", error)
       toast.error("Failed to fetch settings data. Please try again later.")
     } finally {
@@ -359,7 +359,7 @@ export default function SettingsPage() {
 
       // Redirect to inventory page after successful update
       router.push("/dashboard/inventory")
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error updating product:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to update product")
@@ -454,14 +454,14 @@ export default function SettingsPage() {
       }
 
       const result = await response.json()
-      console.log("API response:", result)
+      // console.log("API response:", result)
 
       toast.dismiss()
       toast.success("Product added successfully")
 
       // Redirect to inventory page after successful addition
       router.push("/dashboard/inventory")
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error adding product:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to add product")

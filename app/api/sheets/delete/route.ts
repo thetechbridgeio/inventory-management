@@ -36,7 +36,7 @@ export async function POST(request: Request) {
           SHEET_ID = clientData.sheetId
           console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
                     }
                     continue
                   }
-                } catch (error) {
+                } catch (error:any) {
                   // If date parsing fails, fall back to string comparison
                 }
               }
@@ -243,7 +243,7 @@ export async function POST(request: Request) {
       success: true,
       message: `Successfully deleted ${rowsToDelete.length} rows from ${sheetName}`,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error deleting rows:", error)
     return NextResponse.json(
       {
@@ -293,7 +293,7 @@ async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching client data:", error)
     return null
   }

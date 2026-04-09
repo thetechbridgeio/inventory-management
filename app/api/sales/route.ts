@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data: sales })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching sales:", error)
 
     let errorMessage = "Failed to fetch sales"
@@ -175,7 +175,7 @@ export async function POST(request: Request) {
       message: "Sale added successfully",
       sale: saleData,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding sale:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add sale" }, { status: 500 })
   }

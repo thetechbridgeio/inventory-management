@@ -72,7 +72,7 @@ export const salesColumns: ColumnDef<SalesItem>[] = [
         } else {
           return <div>{dateString}</div>
         }
-      } catch (error) {
+      } catch (error:any) {
         return <div>{dateString}</div>
       }
     },

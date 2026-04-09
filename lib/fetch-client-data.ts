@@ -50,7 +50,7 @@ export async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching client data:", error)
     return null
   }

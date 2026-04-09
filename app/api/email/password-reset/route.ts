@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       success: true,
       message: "Password reset request sent successfully",
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error sending password reset request:", error)
     return NextResponse.json(
       {

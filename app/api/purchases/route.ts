@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data: purchases })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching purchases:", error)
 
     let errorMessage = "Failed to fetch purchases"
@@ -177,7 +177,7 @@ export async function POST(request: Request) {
       message: "Purchase added successfully",
       purchase: purchaseData,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding purchase:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add purchase" },

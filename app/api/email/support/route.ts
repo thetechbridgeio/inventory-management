@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       success: true,
       message: "Support email sent successfully",
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error sending support email:", error)
     return NextResponse.json(
       {

@@ -99,7 +99,7 @@ export default function PurchasePage() {
           if (!isNaN(dateA) && !isNaN(dateB)) {
             return dateB - dateA // Descending order (newest first)
           }
-        } catch (error) {}
+        } catch (error:any) {}
       }
 
       // Fallback to srNo if dates can't be compared
@@ -177,7 +177,7 @@ export default function PurchasePage() {
         const uniqueProducts = [...new Set(processedInventory.map((item: InventoryItem) => item.product))]
         const initialProductFilters: Record<string, boolean> = {}
         uniqueProducts.forEach((product) => {
-          initialProductFilters[product] = false
+          initialProductFilters[product as string] = false
         })
         setProductFilters(initialProductFilters)
       }
@@ -199,7 +199,7 @@ export default function PurchasePage() {
 
         // Create supplier options for searchable select - use only the supplier field
         const options = processedSuppliers
-          .filter((item) => item.supplier) // Only include items with a supplier value
+          .filter((item: Supplier) => item.supplier) // Only include items with a supplier value
           .map((item: Supplier) => ({
             value: item.supplier,
             label: item.supplier,
@@ -215,7 +215,7 @@ export default function PurchasePage() {
         })
         setSupplierFilters(initialSupplierFilters)
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching data:", error)
       toast.error("Failed to fetch data")
     } finally {
@@ -287,7 +287,7 @@ export default function PurchasePage() {
         result = { error: "Invalid response format" }
       }
 
-      console.log("Parsed result:", result)
+      // console.log("Parsed result:", result)
 
       if (!response.ok) {
         console.error("Delete API error:", result)
@@ -301,7 +301,7 @@ export default function PurchasePage() {
 
       toast.dismiss()
       toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error deleting items:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to delete items")
@@ -335,7 +335,7 @@ export default function PurchasePage() {
           if (!isNaN(date.getTime())) {
             dateDisplay = format(date, "MMM d, yyyy")
           }
-        } catch (error) {}
+        } catch (error:any) {}
       }
 
       return [
@@ -520,7 +520,7 @@ export default function PurchasePage() {
               formattedDate = dateStr
             }
           }
-        } catch (error) {
+        } catch (error:any) {
           // Use the original string if possible
           formattedDate = String(entry.dateOfReceiving)
         }
@@ -630,7 +630,7 @@ export default function PurchasePage() {
                 [entry.newSupplier]: false,
               }))
             }
-          } catch (error) {
+          } catch (error:any) {
             // Continue with the purchase even if adding the supplier fails
           }
         }
@@ -655,7 +655,7 @@ export default function PurchasePage() {
       setIsDialogOpen(false)
 
       toast.success(`${formEntries.length} purchase entries added successfully`)
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error adding purchase:", error)
       toast.error(error instanceof Error ? error.message : "Failed to add purchase entries")
     } finally {
@@ -709,7 +709,7 @@ export default function PurchasePage() {
         if (isNaN(itemDate.getTime())) {
           return false
         }
-      } catch (error) {
+      } catch (error:any) {
         return false
       }
 

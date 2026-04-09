@@ -24,7 +24,7 @@ export async function GET(request: Request) {
       startScheduler()
       return NextResponse.json({ success: true, message: "Scheduler started successfully" })
     }
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error with scheduler:", error)
     return NextResponse.json(
       { error: "Failed to process scheduler request", details: error instanceof Error ? error.message : String(error) },

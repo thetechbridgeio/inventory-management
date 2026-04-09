@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data: suppliers })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching suppliers:", error)
 
     let errorMessage = "Failed to fetch suppliers"
@@ -168,7 +168,7 @@ export async function POST(request: Request) {
       message: "Supplier added successfully",
       supplier: supplierData,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding supplier:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add supplier" },

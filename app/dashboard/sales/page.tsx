@@ -155,7 +155,7 @@ export default function SalesPage() {
           // Initialize product filters
           const uniqueProducts = [...new Set(processedInventory.map((item: InventoryItem) => item.product))]
           const initialProductFilters: Record<string, boolean> = {}
-          uniqueProducts.forEach((product) => {
+          uniqueProducts.forEach((product:any) => {
             initialProductFilters[product] = false
           })
           setProductFilters(initialProductFilters)
@@ -178,7 +178,7 @@ export default function SalesPage() {
 
           // Create company options for searchable select - use only the companyName field
           const options = processedSuppliers
-            .filter((item) => item.companyName) // Only include items with a companyName value
+            .filter((item:any) => item.companyName) // Only include items with a companyName value
             .map((item: Supplier) => ({
               value: item.companyName,
               label: item.companyName,
@@ -194,7 +194,7 @@ export default function SalesPage() {
           })
           setCompanyFilters(initialCompanyFilters)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching data:", error)
         toast.error("Failed to fetch data")
       } finally {
@@ -272,7 +272,7 @@ export default function SalesPage() {
 
       toast.dismiss()
       toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error deleting items:", error)
       toast.dismiss()
       toast.error(error instanceof Error ? error.message : "Failed to delete items")
@@ -494,7 +494,7 @@ export default function SalesPage() {
       setIsLoading(true)
 
       // Track entries with insufficient stock for warning purposes
-      const insufficientStockEntries = []
+      const insufficientStockEntries = [] as any[]
 
       // Process all entries
       for (let i = 0; i < formEntries.length; i++) {
@@ -620,7 +620,7 @@ export default function SalesPage() {
               }
               setSupplierData((prev) => [...prev, newSupplier])
             }
-          } catch (error) {
+          } catch (error:any) {
             console.error("Error adding company to Suppliers sheet:", error)
             // Continue with the sale even if adding the company fails
           }
@@ -636,7 +636,7 @@ export default function SalesPage() {
       // Show warning about insufficient stock if any
       if (insufficientStockEntries.length > 0) {
         toast.custom(
-          (t) => (
+          (t:any) => (
             <div
               className={`${
                 t.visible ? "animate-enter" : "animate-leave"
@@ -709,7 +709,7 @@ export default function SalesPage() {
 
       // Close dialog
       setIsDialogOpen(false)
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error adding sale:", error)
       toast.error(error instanceof Error ? error.message : "Failed to add sales entries")
     } finally {

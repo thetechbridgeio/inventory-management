@@ -46,13 +46,13 @@ async function sendLowStockEmailsToAllClients() {
     for (const client of clients) {
       try {
         await sendLowStockEmailToClient(client)
-      } catch (error) {
+      } catch (error:any) {
         console.error(`Error sending low stock email to client ${client.id} (${client.name}):`, error)
       }
     }
 
     console.log("Completed scheduled low stock email job")
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in scheduled low stock email job:", error)
   }
 }
@@ -72,13 +72,13 @@ async function sendDashboardSummaryEmailsToAllClients() {
     for (const client of clients) {
       try {
         await sendDashboardSummaryEmailToClient(client)
-      } catch (error) {
+      } catch (error:any) {
         console.error(`Error sending dashboard summary email to client ${client.id} (${client.name}):`, error)
       }
     }
 
     console.log("Completed scheduled dashboard summary email job")
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in scheduled dashboard summary email job:", error)
   }
 }
@@ -121,7 +121,7 @@ async function sendDashboardSummaryEmailToClient(client: any) {
 
     await transporter.sendMail(mailOptions)
     console.log(`Dashboard summary email sent to ${client.email}`)
-  } catch (error) {
+  } catch (error:any) {
     console.error(`Error generating dashboard summary for client ${client.id}:`, error)
     throw error
   }
@@ -225,7 +225,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
           if (date >= oneWeekAgo && date <= today) {
             newProductsThisWeek++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing inventory timestamp:", error)
         }
       }
@@ -259,7 +259,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing purchase timestamp:", error)
       }
     }
@@ -282,7 +282,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing purchase date:", error)
       }
     }
@@ -312,7 +312,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing sales timestamp:", error)
       }
     }
@@ -335,7 +335,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing sales date:", error)
       }
     }
@@ -716,7 +716,7 @@ export function startScheduler() {
 
         lastRunDate = today
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error in scheduler check:", error)
     }
   }, 60000) // Check every minute

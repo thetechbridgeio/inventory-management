@@ -4,6 +4,12 @@ import * as React from "react"
 import { ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+interface SimpleSelectItemProps {
+  value: string
+  children?: React.ReactNode
+  disabled?: boolean
+}
+
 interface SimpleSelectProps {
   value?: string
   onValueChange?: (value: string) => void
@@ -11,6 +17,13 @@ interface SimpleSelectProps {
   children?: React.ReactNode
   className?: string
   disabled?: boolean
+}
+
+function isSelectItem(child: React.ReactNode): child is React.ReactElement<SimpleSelectItemProps> {
+  return (
+    React.isValidElement<SimpleSelectItemProps>(child) &&
+    (child.type as React.FC & { displayName?: string }).displayName === "SimpleSelectItem"
+  )
 }
 
 export const SimpleSelect: React.FC<SimpleSelectProps> = ({
@@ -21,67 +34,60 @@ export const SimpleSelect: React.FC<SimpleSelectProps> = ({
   className,
   disabled,
 }) => {
-  // Use a native select element instead of a custom dropdown
+  const onValueChangeRef = React.useRef(onValueChange)
+  React.useEffect(() => {
+    onValueChangeRef.current = onValueChange
+  })
+
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onValueChange) {
-      onValueChange(e.target.value)
-    }
+    onValueChangeRef.current?.(e.target.value)
   }
 
-  // Ensure we have a valid value
   React.useEffect(() => {
-    // If no value is set and we have children, set the first non-disabled option as the value
-    if (!value && children && onValueChange) {
-      // Find the first non-disabled option
-      const options = React.Children.toArray(children).filter(
-        (child) =>
-          React.isValidElement(child) && child.type === SimpleSelectItem && !child.props.disabled && child.props.value,
-      ) as React.ReactElement[]
+    if (value || !children) return
 
-      if (options.length > 0) {
-        onValueChange(options[0].props.value)
-      }
+    const first = React.Children.toArray(children)
+      .filter(isSelectItem)
+      .find((child) => !child.props.disabled && Boolean(child.props.value))
+
+    if (first) {
+      onValueChangeRef.current?.(first.props.value)
     }
-  }, [value, children, onValueChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, children])
+
+  const options = React.Children.toArray(children).filter(isSelectItem)
 
   return (
     <div className={cn("relative", className)}>
       <select
-        value={value || ""}
+        value={value ?? ""}
         onChange={handleChange}
         disabled={disabled}
         className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none",
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-8 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none",
         )}
       >
         <option value="" disabled hidden>
           {placeholder}
         </option>
-        {React.Children.map(children, (child) => {
-          if (React.isValidElement(child) && child.type === SimpleSelectItem) {
-            return (
-              <option value={child.props.value || ""} disabled={child.props.disabled}>
-                {child.props.children}
-              </option>
-            )
-          }
-          return null
-        })}
+        {options.map((child) => (
+          <option
+            key={child.props.value}
+            value={child.props.value}
+            disabled={child.props.disabled}
+          >
+            {child.props.children}
+          </option>
+        ))}
       </select>
-      <ChevronDown className="absolute right-3 top-3 h-4 w-4 opacity-50 pointer-events-none" />
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
     </div>
   )
 }
 
-interface SimpleSelectItemProps {
-  value: string
-  children?: React.ReactNode
-  disabled?: boolean
-}
+SimpleSelect.displayName = "SimpleSelect"
 
-export const SimpleSelectItem: React.FC<SimpleSelectItemProps> = ({ value, children, disabled }) => {
-  // This component doesn't render anything on its own
-  // It's just used as a way to define options for the SimpleSelect
-  return null
-}
+export const SimpleSelectItem: React.FC<SimpleSelectItemProps> = () => null
 
+SimpleSelectItem.displayName = "SimpleSelectItem"

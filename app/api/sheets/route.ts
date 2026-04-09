@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
     // Determine which sheet ID to use
     let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
 
+
     // If clientId is provided, try to get the client-specific sheet ID
     if (clientId) {
       try {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
           SHEET_ID = clientData.sheetId
           console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
     // Log a sample of the processed data with focus on dates
 
     return NextResponse.json({ data })
-  } catch (error) {
+  } catch (error:any) {
     console.error(`API /sheets: Error fetching ${sheet} data:`, error)
     return NextResponse.json(
       {
@@ -201,7 +202,7 @@ export async function PUT(request: Request) {
           SHEET_ID = clientData.sheetId
           console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -298,7 +299,7 @@ export async function PUT(request: Request) {
 
     console.log("Inventory updated successfully")
     return NextResponse.json({ success: true, message: "Inventory updated successfully" })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error updating data in Google Sheets:", error)
     return NextResponse.json(
       {
@@ -328,7 +329,7 @@ export async function POST(request: Request) {
           SHEET_ID = clientData.sheetId
           console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -475,7 +476,7 @@ export async function POST(request: Request) {
       message: `New ${sheetName} entry added successfully`,
       data: entryWithSrNo,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error(`Error adding entry:`, error)
     return NextResponse.json(
       {
@@ -526,7 +527,7 @@ async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching client data:", error)
     return null
   }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -12,78 +12,78 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (rows: TData[]) => void
 }
 
+// Separate component to handle the indeterminate checkbox correctly via ref
+function IndeterminateCheckbox({
+  checked,
+  indeterminate,
+  onChange,
+}: {
+  checked: boolean
+  indeterminate: boolean
+  onChange: () => void
+}) {
+  const ref = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = indeterminate
+    }
+  }, [indeterminate])
+
+  return (
+    <input
+      type="checkbox"
+      ref={ref}
+      checked={checked}
+      onChange={onChange}
+      className="h-4 w-4 rounded border-gray-300"
+    />
+  )
+}
+
 export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }: DataTableProps<TData, TValue>) {
-  // Simple state management without complex hooks
   const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({})
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(15)
 
-  // Calculate pagination
   const pageCount = Math.ceil(data.length / pageSize)
   const startIndex = currentPage * pageSize
   const endIndex = Math.min(startIndex + pageSize, data.length)
   const currentPageData = data.slice(startIndex, endIndex)
 
-  // Handle row selection
-  const toggleRowSelection = (row: any) => {
-    // Use a unique identifier for the row - fallback to index if no id/srNo
-    const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-
-    const newSelectedRows = { ...selectedRows }
-    newSelectedRows[rowId] = !newSelectedRows[rowId]
-    setSelectedRows(newSelectedRows)
-
-    // Notify parent component of selection change
-    if (onRowSelectionChange) {
-      const selectedItems = data.filter((item: any) => {
-        const itemId = item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
-        return newSelectedRows[itemId]
-      })
-      onRowSelectionChange(selectedItems)
-    }
+  const getRowId = (row: unknown): string => {
+    const r = row as Record<string, unknown>
+    return (r.srNo?.toString() ?? r.id?.toString()) ?? JSON.stringify(row)
   }
 
-  // Handle select all rows on current page
+  const toggleRowSelection = (row: TData) => {
+    const rowId = getRowId(row)
+    const newSelectedRows = { ...selectedRows, [rowId]: !selectedRows[rowId] }
+    setSelectedRows(newSelectedRows)
+
+    onRowSelectionChange?.(
+      data.filter((item) => newSelectedRows[getRowId(item)])
+    )
+  }
+
   const toggleSelectAll = () => {
+    const allSelected = currentPageData.every((row) => selectedRows[getRowId(row)])
     const newSelectedRows = { ...selectedRows }
-    const allSelected = currentPageData.every((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      return selectedRows[rowId]
-    })
 
-    currentPageData.forEach((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      newSelectedRows[rowId] = !allSelected
+    currentPageData.forEach((row) => {
+      newSelectedRows[getRowId(row)] = !allSelected
     })
 
     setSelectedRows(newSelectedRows)
-
-    // Notify parent component of selection change
-    if (onRowSelectionChange) {
-      const selectedItems = data.filter((item: any) => {
-        const itemId = item.srNo?.toString() || item.id?.toString() || JSON.stringify(item)
-        return newSelectedRows[itemId]
-      })
-      onRowSelectionChange(selectedItems)
-    }
+    onRowSelectionChange?.(data.filter((item) => newSelectedRows[getRowId(item)]))
   }
 
-  // Check if all rows on current page are selected
   const allRowsSelected =
-    currentPageData.length > 0 &&
-    currentPageData.every((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      return selectedRows[rowId]
-    })
+    currentPageData.length > 0 && currentPageData.every((row) => selectedRows[getRowId(row)])
 
-  // Check if some rows on current page are selected
   const someRowsSelected =
-    currentPageData.some((row: any) => {
-      const rowId = row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)
-      return selectedRows[rowId]
-    }) && !allRowsSelected
+    !allRowsSelected && currentPageData.some((row) => selectedRows[getRowId(row)])
 
-  // Count total selected rows
   const selectedRowsCount = Object.values(selectedRows).filter(Boolean).length
 
   return (
@@ -93,28 +93,31 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
           <TableHeader>
             <TableRow>
               {columns.map((column, index) => {
-                // Special handling for the select column
                 if (column.id === "select") {
                   return (
                     <TableHead key="select" className="w-12">
                       <div className="flex items-center">
-                        <input
-                          type="checkbox"
+                        <IndeterminateCheckbox
                           checked={allRowsSelected}
-                          indeterminate={someRowsSelected ? "true" : undefined}
+                          indeterminate={someRowsSelected}
                           onChange={toggleSelectAll}
-                          className="h-4 w-4 rounded border-gray-300"
                         />
                       </div>
                     </TableHead>
                   )
                 }
 
-                // Regular column header
                 return (
                   <TableHead key={index}>
                     {typeof column.header === "function"
-                      ? column.header({ column: { getIsSorted: () => false, toggleSorting: () => {} } })
+                      ? column.header({
+                          column: {
+                            getIsSorted: () => false,
+                            toggleSorting: () => {},
+                          } as any,
+                          header: {} as any,
+                          table: {} as any,
+                        })
                       : column.header}
                   </TableHead>
                 )
@@ -123,76 +126,70 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
           </TableHeader>
           <TableBody>
             {currentPageData.length > 0 ? (
-              currentPageData.map((row, rowIndex) => (
-                <TableRow
-                  key={rowIndex}
-                  className="cursor-pointer hover:bg-muted/50 h-10"
-                  data-state={
-                    selectedRows[row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)]
-                      ? "selected"
-                      : undefined
-                  }
-                >
-                  {columns.map((column, colIndex) => {
-                    // Special handling for the select column
-                    if (column.id === "select") {
-                      return (
-                        <TableCell key="select" onClick={(e) => e.stopPropagation()} className="py-1">
-                          <div className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={
-                                !!selectedRows[row.srNo?.toString() || row.id?.toString() || JSON.stringify(row)]
-                              }
-                              onChange={() => toggleRowSelection(row)}
-                              className="h-4 w-4 rounded border-gray-300"
-                            />
-                          </div>
-                        </TableCell>
-                      )
-                    }
+              currentPageData.map((row, rowIndex) => {
+                const rowId = getRowId(row)
+                return (
+                  <TableRow
+                    key={rowIndex}
+                    className="cursor-pointer hover:bg-muted/50 h-10"
+                    data-state={selectedRows[rowId] ? "selected" : undefined}
+                  >
+                    {columns.map((column, colIndex) => {
+                      if (column.id === "select") {
+                        return (
+                          <TableCell key="select" onClick={(e) => e.stopPropagation()} className="py-1">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={!!selectedRows[rowId]}
+                                onChange={() => toggleRowSelection(row)}
+                                className="h-4 w-4 rounded border-gray-300"
+                              />
+                            </div>
+                          </TableCell>
+                        )
+                      }
 
-                    // Special handling for the srNo column - display sequential number
-                    if (column.accessorKey === "srNo") {
-                      return (
-                        <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
-                          <div className="text-center font-medium">{startIndex + rowIndex + 1}</div>
-                        </TableCell>
-                      )
-                    }
+                      if ((column as any).accessorKey === "srNo") {
+                        return (
+                          <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
+                            <div className="text-center font-medium">{startIndex + rowIndex + 1}</div>
+                          </TableCell>
+                        )
+                      }
 
-                    // Special handling for the actions column
-                    if (column.id === "actions" && typeof column.cell === "function") {
-                      return (
-                        <TableCell key={colIndex} onClick={(e) => e.stopPropagation()} className="py-1">
-                          {column.cell({ row: { original: row } })}
-                        </TableCell>
-                      )
-                    }
+                      if (column.id === "actions" && typeof column.cell === "function") {
+                        return (
+                          <TableCell key={colIndex} onClick={(e) => e.stopPropagation()} className="py-1">
+                            {column.cell({ row: { original: row } } as any)}
+                          </TableCell>
+                        )
+                      }
 
-                    // Regular cell with accessor
-                    if ("accessorKey" in column) {
-                      const accessorKey = column.accessorKey as keyof typeof row
-                      const value = row[accessorKey]
+                      if ("accessorKey" in column) {
+                        const accessorKey = column.accessorKey as string
+                        const value = (row as Record<string, unknown>)[accessorKey]
+
+                        return (
+                          <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
+                            {typeof column.cell === "function"
+                              ? column.cell({ row: { getValue: () => value, original: row } } as any)
+                              : String(value ?? "")}
+                          </TableCell>
+                        )
+                      }
 
                       return (
                         <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
                           {typeof column.cell === "function"
-                            ? column.cell({ row: { getValue: () => value, original: row } })
-                            : String(value !== undefined ? value : "")}
+                            ? column.cell({ row: { original: row } } as any)
+                            : null}
                         </TableCell>
                       )
-                    }
-
-                    // Fallback for other column types
-                    return (
-                      <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
-                        {typeof column.cell === "function" ? column.cell({ row: { original: row } }) : null}
-                      </TableCell>
-                    )
-                  })}
-                </TableRow>
-              ))
+                    })}
+                  </TableRow>
+                )
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -219,7 +216,7 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value))
-              setCurrentPage(0) // Reset to first page when changing page size
+              setCurrentPage(0)
             }}
             className="h-8 w-[70px] rounded-md border border-input bg-background px-2"
           >
@@ -278,4 +275,3 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
     </div>
   )
 }
-

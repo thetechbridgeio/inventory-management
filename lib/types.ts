@@ -20,6 +20,7 @@ export interface PurchaseItem {
   supplier: string
   dateOfReceiving: string
   rackNumber: string
+  timestamp?: string
 }
 
 export interface SalesItem {
@@ -30,6 +31,7 @@ export interface SalesItem {
   contact: string
   companyName: string
   dateOfIssue: string
+  timestamp?: string
 }
 
 export interface Supplier {

@@ -80,7 +80,7 @@ export default function LoginPage() {
         contactNumber: "",
         companyName: "",
       })
-    } catch (error) {
+    } catch (error:any) {
       console.error("Password reset request error:", error)
       toast.error("Failed to send password reset request. Please try again.")
     } finally {
@@ -149,7 +149,7 @@ export default function LoginPage() {
       } else {
         setError("Invalid username or password")
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Login error:", error)
       setError("An error occurred during login. Please try again.")
     } finally {

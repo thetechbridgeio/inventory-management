@@ -47,7 +47,7 @@ export async function GET() {
     })
 
     return NextResponse.json({ data: clients })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching clients:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch clients" },
@@ -160,7 +160,7 @@ export async function POST(request: Request) {
       message: "Client added successfully",
       client,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error adding client:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add client" },

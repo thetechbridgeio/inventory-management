@@ -65,7 +65,7 @@ export async function POST(request: Request) {
             }
           }
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching client sheet ID:", error)
         // Continue with default sheet ID if there's an error
       }
@@ -171,7 +171,7 @@ export async function POST(request: Request) {
       success: true,
       message: `Dashboard summary email sent to ${clientEmail}`,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error sending dashboard summary email:", error)
     return NextResponse.json(
       {
@@ -214,7 +214,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
           if (date >= oneWeekAgo && date <= today) {
             newProductsThisWeek++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing inventory timestamp:", error)
         }
       }
@@ -248,7 +248,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing purchase timestamp:", error)
       }
     }
@@ -271,7 +271,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing purchase date:", error)
       }
     }
@@ -301,7 +301,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing sales timestamp:", error)
       }
     }
@@ -324,7 +324,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error parsing sales date:", error)
       }
     }

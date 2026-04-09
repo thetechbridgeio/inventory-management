@@ -77,9 +77,9 @@ export default function InventoryPage() {
         // Extract unique categories (excluding empty or null)
         const uniqueCategories = [
           ...new Set(
-            processedData.map((item: InventoryItem) => item.category).filter((category) => category && category !== ""),
+            processedData.map((item: InventoryItem) => item.category).filter((category: string) => category && category !== ""),
           ),
-        ]
+        ] as string[]
 
         setCategories(uniqueCategories)
 
