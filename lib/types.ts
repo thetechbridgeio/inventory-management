@@ -9,6 +9,10 @@ export interface InventoryItem {
   stock: number
   pricePerUnit: number
   value: number
+  timestamp?: string
+  location?: string
+  productType: "Raw" | "Finished"
+  openingStock?: number
 }
 
 export interface PurchaseItem {
@@ -48,6 +52,7 @@ export interface FilterState {
   category: string[]
   stockStatus: string
   search: string
+  productType: string[]
 }
 
 export interface PurchaseFilterState {

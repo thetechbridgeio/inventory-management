@@ -13,7 +13,6 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
   {
     accessorKey: "srNo",
     header: "Sr. No",
-    // The cell rendering is now handled by the DataTable component
   },
   {
     accessorKey: "product",
@@ -48,6 +47,64 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
     },
   },
   {
+    accessorKey: "location",
+    header: "Location",
+    cell: ({ row }) => {
+      const location = row.original.location
+      return (
+        <div className="text-muted-foreground">
+          {location || "—"}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "productType",
+    header: "Product Type",
+    cell: ({ row }) => {
+      const productType = row.original.productType || "Raw Material"
+
+      const getBadgeStyle = (type: string) => {
+        const normalizedType = type.toLowerCase().trim()
+
+        switch (normalizedType) {
+          case "raw":
+          case "raw material":
+            return {
+              backgroundColor: "#c5d7e7",
+              color: "#3b5875",
+            }
+          case "finished":
+          case "finished product":
+            return {
+              backgroundColor: "#d9ead3",
+              color: "#3d6e36",
+            }
+          default:
+            return {
+              backgroundColor: "#e5e7eb", // Gray fallback
+              color: "#374151",
+            }
+        }
+      }
+
+      const badgeStyle = getBadgeStyle(productType)
+
+      return (
+        <Badge
+          variant="outline"
+          className="min-w-[80px] text-center justify-center border-0 font-medium lowercase"
+          style={{
+            backgroundColor: badgeStyle.backgroundColor,
+            color: badgeStyle.color,
+          }}
+        >
+          {productType}
+        </Badge>
+      )
+    },
+  },
+  {
     accessorKey: "stock",
     header: "Stock",
     cell: ({ row }) => {
@@ -68,31 +125,26 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
             return {
               backgroundColor: "#fee2e2",
               color: "#b91c1c",
-              hoverBg: "#fecaca",
             }
           case "low":
             return {
               backgroundColor: "#f5cbcc",
               color: "#7d3f3f",
-              hoverBg: "#edbdbe",
             }
           case "normal":
             return {
               backgroundColor: "#d9ead3",
               color: "#3d6e36",
-              hoverBg: "#c8e0bf",
             }
           case "excess":
             return {
               backgroundColor: "#c5d7e7",
               color: "#3b5875",
-              hoverBg: "#b4c9dc",
             }
           default:
             return {
               backgroundColor: "#d9ead3",
               color: "#3d6e36",
-              hoverBg: "#c8e0bf",
             }
         }
       }
@@ -109,7 +161,7 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
               color: statusStyle.color,
             }}
           >
-            {status === "negative" ? "negative" : status}
+            {status}
           </Badge>
         </div>
       )
@@ -119,7 +171,6 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
     accessorKey: "pricePerUnit",
     header: "Price",
     cell: ({ row }) => {
-      // Handle potentially undefined pricePerUnit
       const pricePerUnit = row.original.pricePerUnit
       const amount = pricePerUnit !== undefined ? Number.parseFloat(pricePerUnit.toString()) : 0
       return <div className="font-medium">{formatCurrency(amount)}</div>
@@ -129,11 +180,9 @@ export const inventoryColumns: ColumnDef<InventoryItem>[] = [
     accessorKey: "value",
     header: "Value",
     cell: ({ row }) => {
-      // Handle potentially undefined value
       const value = row.original.value
       const amount = value !== undefined ? Number.parseFloat(value.toString()) : 0
       return <div className="font-medium">{formatCurrency(amount)}</div>
     },
   },
 ]
-
