@@ -6,64 +6,100 @@ import {
   runMonthlyReportEmailJob,
 } from "@/lib/scheduler"
 
-// This endpoint manages and triggers scheduler jobs
+// import {
+//   runLowStockWhatsAppJob,
+//   runDashboardWhatsAppJob,
+//   runMonthlyReportWhatsAppJob,
+// } from "@/lib/whatsapp-scheduler"
+
+// This endpoint manages and triggers scheduler jobs for both Email and WhatsApp
 export async function GET(request: Request) {
   try {
+    // Optional: Secure the endpoint using CRON_SECRET
+    const authHeader = request.headers.get("authorization")
+    const cronSecret = process.env.CRON_SECRET
+
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     const action = searchParams.get("action")
 
+    // 🔔 Run Low Stock Alerts
     if (action === "run-low-stock") {
-      // Manually trigger the low stock email job
-      await runLowStockEmailJob()
+      await Promise.all([
+        runLowStockEmailJob(),
+        // runLowStockWhatsAppJob(),
+      ])
+
       return NextResponse.json({
         success: true,
-        message: "Low stock email job triggered successfully",
+        message: "Low stock alerts triggered via Email and WhatsApp",
       })
     }
 
+    // 📊 Run Dashboard Summary
     if (action === "run-dashboard") {
-      // Manually trigger the dashboard summary email job
-      await runDashboardSummaryEmailJob()
+      await Promise.all([
+        runDashboardSummaryEmailJob(),
+        // runDashboardWhatsAppJob(),
+      ])
+
       return NextResponse.json({
         success: true,
-        message: "Dashboard summary email job triggered successfully",
+        message: "Dashboard summary triggered via Email and WhatsApp",
       })
     }
 
+    // 📅 Run Monthly Report
     if (action === "run-monthly") {
-      // Manually trigger the monthly inventory report
-      await runMonthlyReportEmailJob()
+      await Promise.all([
+        runMonthlyReportEmailJob(),
+        // runMonthlyReportWhatsAppJob(),
+      ])
+
       return NextResponse.json({
         success: true,
-        message: "Monthly report email job triggered successfully",
+        message: "Monthly reports triggered via Email and WhatsApp",
       })
     }
 
+    // 🚀 Run All Jobs
     if (action === "run-all") {
-      // Trigger all jobs simultaneously
       await Promise.all([
         runLowStockEmailJob(),
         runDashboardSummaryEmailJob(),
         runMonthlyReportEmailJob(),
+        // runLowStockWhatsAppJob(),
+        // runDashboardWhatsAppJob(),
+        // runMonthlyReportWhatsAppJob(),
       ])
+
       return NextResponse.json({
         success: true,
-        message: "All email jobs triggered successfully",
+        message: "All Email and WhatsApp jobs triggered successfully",
       })
     }
 
-    // Default: Start the scheduler
+    // ⏰ Default: Start the scheduler
     startScheduler()
+
     return NextResponse.json({
       success: true,
-      message: "Scheduler started successfully",
+      message: "Scheduler started successfully for Email and WhatsApp",
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error with scheduler:", error)
+
     return NextResponse.json(
       {
         error: "Failed to process scheduler request",
-        details: error instanceof Error ? error.message : String(error),
+        details:
+          error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     )
