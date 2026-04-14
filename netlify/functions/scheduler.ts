@@ -3,13 +3,16 @@ import {
     runDashboardSummaryEmailJob,
     runMonthlyReportEmailJob,
 } from "@/lib/scheduler"
+import { runDashboardWhatsAppJob, runLowStockWhatsAppJob, runMonthlyReportWhatsAppJob } from "@/lib/whatsapp-scheduler"
 
 export default async () => {
     console.log("Running Netlify Scheduled Job")
 
     await Promise.all([
         runLowStockEmailJob(),
+        runLowStockWhatsAppJob(),
         runDashboardSummaryEmailJob(),
+        runDashboardWhatsAppJob()
     ])
 
     // Run on the 1st of every month
@@ -18,6 +21,7 @@ export default async () => {
 
     if (ist.getDate() === 1) {
         await runMonthlyReportEmailJob()
+        await runMonthlyReportWhatsAppJob()
     }
 
     return {

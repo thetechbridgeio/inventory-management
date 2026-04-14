@@ -6,16 +6,16 @@ import {
   runMonthlyReportEmailJob,
 } from "@/lib/scheduler"
 
-// import {
-//   runLowStockWhatsAppJob,
-//   runDashboardWhatsAppJob,
-//   runMonthlyReportWhatsAppJob,
-// } from "@/lib/whatsapp-scheduler"
+import {
+  runLowStockWhatsAppJob,
+  runDashboardWhatsAppJob,
+  runMonthlyReportWhatsAppJob,
+} from "@/lib/whatsapp-scheduler"
 
 // This endpoint manages and triggers scheduler jobs for both Email and WhatsApp
 export async function GET(request: Request) {
   try {
-    // Optional: Secure the endpoint using CRON_SECRET
+    // 🔐 Secure the endpoint using CRON_SECRET
     // const authHeader = request.headers.get("authorization")
     // const cronSecret = process.env.CRON_SECRET
 
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     if (action === "run-low-stock") {
       await Promise.all([
         runLowStockEmailJob(),
-        // runLowStockWhatsAppJob(),
+        runLowStockWhatsAppJob(),
       ])
 
       return NextResponse.json({
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
     if (action === "run-dashboard") {
       await Promise.all([
         runDashboardSummaryEmailJob(),
-        // runDashboardWhatsAppJob(),
+        runDashboardWhatsAppJob(),
       ])
 
       return NextResponse.json({
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
     if (action === "run-monthly") {
       await Promise.all([
         runMonthlyReportEmailJob(),
-        // runMonthlyReportWhatsAppJob(),
+        runMonthlyReportWhatsAppJob(),
       ])
 
       return NextResponse.json({
@@ -74,9 +74,9 @@ export async function GET(request: Request) {
         runLowStockEmailJob(),
         runDashboardSummaryEmailJob(),
         runMonthlyReportEmailJob(),
-        // runLowStockWhatsAppJob(),
-        // runDashboardWhatsAppJob(),
-        // runMonthlyReportWhatsAppJob(),
+        runLowStockWhatsAppJob(),
+        runDashboardWhatsAppJob(),
+        runMonthlyReportWhatsAppJob(),
       ])
 
       return NextResponse.json({
@@ -85,12 +85,18 @@ export async function GET(request: Request) {
       })
     }
 
-    // ⏰ Default: Start the scheduler
-    startScheduler()
+    // ⏰ Start scheduler only in development (not in Netlify production)
+    if (process.env.NODE_ENV === "development") {
+      startScheduler()
+      return NextResponse.json({
+        success: true,
+        message: "Local scheduler started successfully",
+      })
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Scheduler started successfully for Email and WhatsApp",
+      message: "Scheduler is managed by Netlify Scheduled Functions in production",
     })
   } catch (error: unknown) {
     console.error("Error with scheduler:", error)
