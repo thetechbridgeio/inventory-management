@@ -16,15 +16,15 @@ import {
 export async function GET(request: Request) {
   try {
     // Optional: Secure the endpoint using CRON_SECRET
-    const authHeader = request.headers.get("authorization")
-    const cronSecret = process.env.CRON_SECRET
+    // const authHeader = request.headers.get("authorization")
+    // const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      )
-    }
+    // if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    //   return NextResponse.json(
+    //     { error: "Unauthorized" },
+    //     { status: 401 }
+    //   )
+    // }
 
     const { searchParams } = new URL(request.url)
     const action = searchParams.get("action")
