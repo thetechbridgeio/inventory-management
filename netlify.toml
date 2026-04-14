@@ -8,4 +8,4 @@
 
 # Daily scheduler at 6:00 PM IST (12:30 PM UTC)
 [functions."scheduler"]
-  schedule = "30 12 * * *"
+  schedule = "5 11 * * *"
