@@ -20,6 +20,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useClientContext } from "@/context/client-context"
+import InventoryLayout from "./inventory-layout"
+import LowStockBanner from "@/components/inventory/low-stock-banner"
 
 export default function InventoryPage() {
   const { client } = useClientContext()
@@ -421,166 +423,169 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
-          <p className="text-muted-foreground">Manage and track your product inventory</p>
+    <InventoryLayout clientId={client?.id || ""}>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
+            <p className="text-muted-foreground">Manage and track your product inventory</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="shadow-sm">
+              <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF} className="shadow-sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export PDF
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSendLowStockEmail}
+              className="shadow-sm"
+              disabled={!client?.email}
+              title={!client?.email ? "Client email not available" : "Send low stock alert email"}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Send Low Stock Alert
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSelected}
+              disabled={selectedRows.length === 0}
+              className="shadow-sm"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Selected ({selectedRows.length})
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="shadow-sm">
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
-          </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="shadow-sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleSendLowStockEmail}
-            className="shadow-sm"
-            disabled={!client?.email}
-            title={!client?.email ? "Client email not available" : "Send low stock alert email"}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Send Low Stock Alert
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteSelected}
-            disabled={selectedRows.length === 0}
-            className="shadow-sm"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected ({selectedRows.length})
-          </Button>
-        </div>
-      </div>
+        <LowStockBanner />
 
-      <Card className="shadow-sm border-gray-200 dark:border-gray-800">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>Inventory Items</CardTitle>
-            <div className="flex items-center gap-2">
-              <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 shadow-sm">
-                    <Filter className="h-3.5 w-3.5" />
-                    <span>Filters</span>
-                    {activeFilterCount > 0 && (
-                      <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[220px] p-4" align="end">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Stock Status</h4>
-                      <SimpleSelect
-                        value={filters.stockStatus}
-                        onValueChange={handleStockStatusChange}
-                        className="w-full"
-                      >
-                        {stockStatusOptions.map((option) => (
-                          <SimpleSelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SimpleSelectItem>
-                        ))}
-                      </SimpleSelect>
-                    </div>
+        <Card className="shadow-sm border-gray-200 dark:border-gray-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle>Inventory Items</CardTitle>
+              <div className="flex items-center gap-2">
+                <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1 shadow-sm">
+                      <Filter className="h-3.5 w-3.5" />
+                      <span>Filters</span>
+                      {activeFilterCount > 0 && (
+                        <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[220px] p-4" align="end">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Stock Status</h4>
+                        <SimpleSelect
+                          value={filters.stockStatus}
+                          onValueChange={handleStockStatusChange}
+                          className="w-full"
+                        >
+                          {stockStatusOptions.map((option) => (
+                            <SimpleSelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SimpleSelectItem>
+                          ))}
+                        </SimpleSelect>
+                      </div>
 
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Categories</h4>
-                      <div className="max-h-[150px] overflow-auto space-y-2">
-                        {categories.map((category) => (
-                          <div key={category} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`category-filter-${category}`}
-                              checked={categoryFilters[category] || false}
-                              onCheckedChange={(checked) => handleCategoryFilterChange(category, !!checked)}
-                            />
-                            <Label htmlFor={`category-filter-${category}`} className="text-sm">
-                              {category}
-                            </Label>
-                          </div>
-                        ))}
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Categories</h4>
+                        <div className="max-h-[150px] overflow-auto space-y-2">
+                          {categories.map((category) => (
+                            <div key={category} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`category-filter-${category}`}
+                                checked={categoryFilters[category] || false}
+                                onCheckedChange={(checked) => handleCategoryFilterChange(category, !!checked)}
+                              />
+                              <Label htmlFor={`category-filter-${category}`} className="text-sm">
+                                {category}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Product Type</h4>
+                        <div className="max-h-[120px] overflow-auto space-y-2">
+                          {productTypes.map((pt) => (
+                            <div key={pt} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`pt-filter-${pt}`}
+                                checked={productTypeFilters[pt] || false}
+                                onCheckedChange={(checked) => handleProductTypeFilterChange(pt, !!checked)}
+                              />
+                              <Label htmlFor={`pt-filter-${pt}`} className="text-sm">
+                                {pt}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const resetCategoryFilters: Record<string, boolean> = {}
+                            categories.forEach((c) => { resetCategoryFilters[c] = false })
+                            setCategoryFilters(resetCategoryFilters)
+
+                            const resetProductTypeFilters: Record<string, boolean> = {}
+                            productTypes.forEach((pt) => { resetProductTypeFilters[pt] = false })
+                            setProductTypeFilters(resetProductTypeFilters)
+
+                            setFilters((prev) => ({ ...prev, stockStatus: "all" }))
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button size="sm" onClick={() => setIsFiltersOpen(false)}>
+                          Apply
+                        </Button>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Product Type</h4>
-                      <div className="max-h-[120px] overflow-auto space-y-2">
-                        {productTypes.map((pt) => (
-                          <div key={pt} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`pt-filter-${pt}`}
-                              checked={productTypeFilters[pt] || false}
-                              onCheckedChange={(checked) => handleProductTypeFilterChange(pt, !!checked)}
-                            />
-                            <Label htmlFor={`pt-filter-${pt}`} className="text-sm">
-                              {pt}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between pt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const resetCategoryFilters: Record<string, boolean> = {}
-                          categories.forEach((c) => { resetCategoryFilters[c] = false })
-                          setCategoryFilters(resetCategoryFilters)
-
-                          const resetProductTypeFilters: Record<string, boolean> = {}
-                          productTypes.forEach((pt) => { resetProductTypeFilters[pt] = false })
-                          setProductTypeFilters(resetProductTypeFilters)
-
-                          setFilters((prev) => ({ ...prev, stockStatus: "all" }))
-                        }}
-                      >
-                        Reset
-                      </Button>
-                      <Button size="sm" onClick={() => setIsFiltersOpen(false)}>
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-8 h-8 w-[150px] md:w-[200px] lg:w-[300px] shadow-sm"
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                />
+                  </PopoverContent>
+                </Popover>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    className="pl-8 h-8 w-[150px] md:w-[200px] lg:w-[300px] shadow-sm"
+                    value={filters.search}
+                    onChange={handleSearchChange}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={inventoryColumns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={inventoryColumns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
 
-          {filteredData.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center h-[200px] text-center">
-              <Package className="mx-auto h-12 w-12 opacity-30 mb-2" />
-              <h3 className="font-medium text-lg mb-1">No items found</h3>
-              <p className="text-sm text-muted-foreground">
-                {filters.category.length > 0 || filters.productType.length > 0 || filters.stockStatus !== "all" || filters.search
-                  ? "Try adjusting your filters or search query"
-                  : "Add some inventory items to get started"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            {filteredData.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center h-[200px] text-center">
+                <Package className="mx-auto h-12 w-12 opacity-30 mb-2" />
+                <h3 className="font-medium text-lg mb-1">No items found</h3>
+                <p className="text-sm text-muted-foreground">
+                  {filters.category.length > 0 || filters.productType.length > 0 || filters.stockStatus !== "all" || filters.search
+                    ? "Try adjusting your filters or search query"
+                    : "Add some inventory items to get started"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </InventoryLayout>
   )
 }
