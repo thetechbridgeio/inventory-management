@@ -1,10 +1,12 @@
 "use client"
 
 import { useInventory } from "@/context/low-stock-context"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "../ui/button"
 import { X } from "lucide-react"
 import { Input } from "../ui/input"
+
+type RestockMap = Record<string, number>
 
 export default function LowStockModal({
     open,
@@ -14,25 +16,52 @@ export default function LowStockModal({
     onClose: () => void
 }) {
     const { lowStock, outOfStock } = useInventory()
+    const [restockValues, setRestockValues] = useState<RestockMap>({})
 
-    const [restockValues, setRestockValues] = useState<Record<string, number>>({})
 
-    if (!open) return null
+
+    const getKey = (item: any) => {
+        return item.id || item.Product // 👉 ideally use backend ID
+    }
+
+    useEffect(() => {
+        const initial: RestockMap = {}
+
+            ;[...lowStock, ...outOfStock].forEach((item) => {
+                const key = getKey(item)
+                initial[key] = item["Minimum Quantity"] || 1
+            })
+
+        setRestockValues(initial)
+    }, [lowStock, outOfStock])
 
     const handleChange = (key: string, value: number) => {
-        setRestockValues(prev => ({
+        if (value < 1) return
+
+        setRestockValues((prev) => ({
             ...prev,
             [key]: value,
         }))
     }
 
     const handleRestock = () => {
-        console.log("Restock payload:", restockValues)
+        const payload = Object.entries(restockValues).map(
+            ([productId, quantity]) => ({
+                productId,
+                quantity,
+            })
+        )
+
+        console.log("🚀 Restock payload:", payload)
+
         // 👉 call your API here
     }
 
+    if (!open) return null
+
     const renderItem = (item: any, type: "low" | "out") => {
-        const key = `${type}-${item.Product}-${item.quantity}`
+        const key = getKey(item)
+        const currentQty = type === "out" ? 0 : item.quantity
 
         return (
             <div
@@ -44,27 +73,31 @@ export default function LowStockModal({
                     <span className="font-medium text-gray-800">
                         {item.Product || "Unnamed"}
                     </span>
+
                     <span className="text-xs text-gray-500">
-                        Current: {type === "out" ? 0 : item.quantity}
+                        Current: {currentQty}
+                    </span>
+
+                    <span className="text-xs text-gray-400">
+                        MOQ: {item["Minimum Quantity"] || 1}
                     </span>
                 </div>
 
-                {/* Restock Input */}
-                <div className="flex items-center gap-2">
-                    <Input
-                        type="number"
-                        min={1}
-                        placeholder="Qty"
-                        className="w-20 bg-white text-sm"
-                        value={restockValues[key] || ""}
-                        onChange={(e) =>
-                            handleChange(key, Number(e.target.value))
-                        }
-                    />
-                </div>
+                {/* Input */}
+                <Input
+                    type="number"
+                    min={1}
+                    className="w-24 bg-white text-sm"
+                    value={restockValues[key] ?? ""}
+                    onChange={(e) =>
+                        handleChange(key, Number(e.target.value))
+                    }
+                />
             </div>
         )
     }
+
+    const totalItems = lowStock.length + outOfStock.length
 
     return (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
@@ -72,13 +105,12 @@ export default function LowStockModal({
 
                 {/* Header */}
                 <div className="flex justify-between items-start px-5 py-4 border-b">
-
                     <div className="flex flex-col">
                         <h2 className="text-lg font-semibold text-gray-900">
                             Stock Alerts
                         </h2>
                         <p className="text-xs text-gray-500">
-                            Restock items as per your need
+                            Enter quantities to restock items
                         </p>
                     </div>
 
@@ -132,20 +164,24 @@ export default function LowStockModal({
                             </div>
                         </div>
                     )}
+
+                    {totalItems === 0 && (
+                        <div className="text-center text-sm text-gray-500">
+                            No stock issues 🎉
+                        </div>
+                    )}
                 </div>
 
-                {/* Footer Actions */}
+                {/* Footer */}
                 <div className="flex justify-end gap-3 px-5 py-4 border-t">
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                    >
+                    <Button variant="outline" onClick={onClose}>
                         Cancel
                     </Button>
 
                     <Button
                         onClick={handleRestock}
-                        className="bg-green-600 hover:bg-red-700 text-white"
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        disabled={Object.keys(restockValues).length === 0}
                     >
                         Restock Items
                     </Button>

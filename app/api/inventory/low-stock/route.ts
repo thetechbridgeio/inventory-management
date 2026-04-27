@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
 
-const LOW_STOCK_THRESHOLD = 50
-
 export async function GET(request: Request) {
   try {
     const url = new URL(request.url)
@@ -14,7 +12,7 @@ export async function GET(request: Request) {
       )
     }
 
-    // fetch inventory
+    // Fetch inventory
     const res = await fetch(
       `${url.origin}/api/sheets?sheet=Inventory&clientId=${clientId}`
     )
@@ -22,24 +20,39 @@ export async function GET(request: Request) {
     const json = await res.json()
     const data = json.data || []
 
-    // normalize quantity
-    const inventory = data.map((item: any) => ({
-      ...item,
-      quantity:
+    // Normalize fields
+    const inventory = data.map((item: any) => {
+      const quantity =
         item.quantity ??
         item.Quantity ??
         item.stock ??
         item.Stock ??
-        0,
-    }))
+        0
 
-    // filter
-    const outOfStock = inventory.filter((i: any) => i.quantity === 0)
+      const minimumQuantity =
+        item["Minimum Quantity"] ??
+        item.minimumQuantity ??
+        item.minQty ??
+        0
 
+      return {
+        ...item,
+        quantity,
+        minimumQuantity,
+      }
+    })
+
+    // Out of stock
+    const outOfStock = inventory.filter(
+      (i: any) => i.quantity === 0
+    )
+
+    // Low stock (dynamic threshold)
     const lowStock = inventory.filter(
       (i: any) =>
         i.quantity > 0 &&
-        i.quantity <= LOW_STOCK_THRESHOLD
+        i.minimumQuantity > 0 &&
+        i.quantity <= i.minimumQuantity
     )
 
     return NextResponse.json({

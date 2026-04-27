@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.json({ data })
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error fetching data:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch data" },
@@ -218,135 +218,152 @@ export async function POST(request: Request) {
     const createdEntry = { ...entry, srNo: nextSrNo }
 
     return NextResponse.json({ success: true, data: createdEntry })
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error adding entry:", error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Failed to add entry" }, { status: 500 })
   }
 }
 
+const normalize = (val: any) =>
+  String(val ?? "").toLowerCase().trim()
+
 export async function PUT(request: Request) {
   try {
-    const { product, updatedData, clientId } = await request.json()
+    const { originalProduct, updatedProduct, clientId } =
+      await request.json()
 
-    if (!product || !updatedData) {
+    if (!originalProduct || !updatedProduct) {
       return NextResponse.json(
-        { error: "Invalid request. Product name and updated data are required." },
-        { status: 400 },
+        { error: "originalProduct and updatedProduct are required" },
+        { status: 400 }
       )
     }
 
-    // Determine which sheet ID to use
     let SHEET_ID = process.env.GOOGLE_SHEET_ID || ""
 
-    // If clientId is provided, try to get the client-specific sheet ID
     if (clientId) {
       try {
-        // Fetch client data from master sheet
         const clientData = await fetchClientData(clientId)
         if (clientData?.sheetId) {
           SHEET_ID = clientData.sheetId
-          console.log(`Using client-specific sheet ID for client ${clientId}: ${SHEET_ID}`)
         }
-      } catch (error:any) {
-        console.error("Error fetching client sheet ID:", error)
-        // Continue with default sheet ID if there's an error
+      } catch (err) {
+        console.error("Client sheet fetch failed:", err)
       }
     }
 
     if (!SHEET_ID) {
-      return NextResponse.json({ error: "Sheet ID not configured" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Sheet ID not configured" },
+        { status: 500 }
+      )
     }
 
-    // Find the row index for the product in the Inventory sheet
-    const inventoryResponse = await sheets.spreadsheets.values.get({
+    const res = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,
-      range: "Inventory!A:Z", // Get all columns to find the headers
+      range: "Inventory!A:Z",
     })
 
-    const inventoryRows = inventoryResponse.data.values || []
-    if (inventoryRows.length === 0) {
-      return NextResponse.json({ error: "No inventory data found" }, { status: 404 })
+    const rows = res.data.values || []
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { error: "No inventory data found" },
+        { status: 404 }
+      )
     }
 
-    const headers = inventoryRows[0]
+    const headers = rows[0]
 
-    // Look for either "product" or "Product" in the headers
+    // Find product column
     let productColIndex = headers.indexOf("product")
     if (productColIndex === -1) {
       productColIndex = headers.indexOf("Product")
     }
 
     if (productColIndex === -1) {
-      return NextResponse.json({ error: "Product column not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Product column not found" },
+        { status: 500 }
+      )
     }
 
-    // Find the product row index (add 1 because Google Sheets is 1-indexed and we skip the header row)
+    // 🔥 FIX: normalized matching
+    const targetProduct = normalize(originalProduct)
+
     let rowIndex = -1
-    for (let i = 1; i < inventoryRows.length; i++) {
-      if (inventoryRows[i][productColIndex] === product) {
-        rowIndex = i + 1 // +1 because Google Sheets is 1-indexed
+
+    for (let i = 1; i < rows.length; i++) {
+      const sheetProduct = normalize(rows[i][productColIndex])
+
+      if (sheetProduct === targetProduct) {
+        rowIndex = i + 1
         break
       }
     }
 
     if (rowIndex === -1) {
-      return NextResponse.json({ error: "Product not found" }, { status: 404 })
+      return NextResponse.json(
+        { error: "Product not found (after normalization)" },
+        { status: 404 }
+      )
     }
 
-    // Update each field in the updatedData object
-    const updatePromises = Object.entries(updatedData).map(async ([field, value]) => {
-      // Find the column index for this field
-      let colIndex = headers.indexOf(field)
+    // Update fields
+    const updatePromises = Object.entries(updatedProduct).map(
+      async ([field, value]) => {
+        let colIndex = headers.indexOf(field)
 
-      // Try alternative field names if not found
-      if (colIndex === -1) {
-        // Convert camelCase to Title Case with spaces
-        const titleCaseField = field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
-        colIndex = headers.indexOf(titleCaseField)
-
-        // If still not found, try other common variations
         if (colIndex === -1) {
-          if (field === "minimumQuantity") colIndex = headers.indexOf("Minimum Quantity")
-          else if (field === "maximumQuantity") colIndex = headers.indexOf("Maximum Quantity")
-          else if (field === "reorderQuantity") colIndex = headers.indexOf("Reorder Quantity")
-          else if (field === "pricePerUnit") colIndex = headers.indexOf("Price per Unit")
+          const titleCase = field
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase())
+
+          colIndex = headers.indexOf(titleCase)
+
+          if (colIndex === -1) {
+            if (field === "minimumQuantity")
+              colIndex = headers.indexOf("Minimum Quantity")
+            else if (field === "maximumQuantity")
+              colIndex = headers.indexOf("Maximum Quantity")
+            else if (field === "reorderQuantity")
+              colIndex = headers.indexOf("Reorder Quantity")
+            else if (field === "pricePerUnit")
+              colIndex = headers.indexOf("Price per Unit")
+          }
         }
+
+        if (colIndex === -1) {
+          console.warn(`Column not found for ${field}`)
+          return
+        }
+
+        const colLetter = String.fromCharCode(65 + colIndex)
+
+        return sheets.spreadsheets.values.update({
+          spreadsheetId: SHEET_ID,
+          range: `Inventory!${colLetter}${rowIndex}`,
+          valueInputOption: "RAW",
+          requestBody: {
+            values: [[value]],
+          },
+        })
       }
+    )
 
-      if (colIndex === -1) {
-        console.warn(`Column for field "${field}" not found in headers`)
-        return
-      }
-
-      // Convert column index to letter (A, B, C, etc.)
-      const colLetter = String.fromCharCode(65 + colIndex)
-
-      // Update the cell
-      return sheets.spreadsheets.values.update({
-        spreadsheetId: SHEET_ID,
-        range: `Inventory!${colLetter}${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[value]],
-        },
-      })
-    })
-
-    // Wait for all updates to complete
     await Promise.all(updatePromises)
 
     return NextResponse.json({
       success: true,
       message: "Product updated successfully",
     })
-  } catch (error:any) {
-    console.error("Error updating product:", error)
+  } catch (error: any) {
+    console.error("Update error:", error)
     return NextResponse.json(
       {
         error: "Failed to update product",
-        details: error instanceof Error ? error.message : String(error),
+        details: error.message,
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
@@ -389,7 +406,7 @@ async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error fetching client data:", error)
     return null
   }
