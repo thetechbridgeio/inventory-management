@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useClientContext } from "@/context/client-context"
 import InventoryLayout from "./inventory-layout"
 import LowStockBanner from "@/components/inventory/low-stock-banner"
+import { DeleteSelectedButton } from "@/components/helpers/delete-selected-button"
 
 export default function InventoryPage() {
   const { client } = useClientContext()
@@ -153,54 +154,6 @@ export default function InventoryPage() {
 
   const handleRowSelectionChange = (rows: InventoryItem[]) => {
     setSelectedRows(rows)
-  }
-
-  const handleDeleteSelected = async () => {
-    if (selectedRows.length === 0) return
-
-    try {
-      toast.loading("Deleting selected items...")
-
-      const response = await fetch("/api/sheets/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sheetName: "Inventory",
-          items: selectedRows.map((row) => ({
-            product: row.product,
-          })),
-          clientId: client?.id,
-        }),
-      })
-
-      const responseText = await response.text()
-
-      let result
-      try {
-        result = JSON.parse(responseText)
-      } catch (e) {
-        console.error("Failed to parse response as JSON:", e)
-        result = { error: "Invalid response format" }
-      }
-
-      if (!response.ok) {
-        console.error("Delete API error:", result)
-        throw new Error(result.error || "Failed to delete items")
-      }
-
-      const updatedData = data.filter((item) => !selectedRows.some((row) => row.srNo === item.srNo))
-      setData(updatedData)
-      setSelectedRows([])
-
-      toast.dismiss()
-      toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error) {
-      console.error("Error deleting items:", error)
-      toast.dismiss()
-      toast.error(error instanceof Error ? error.message : "Failed to delete items")
-    }
   }
 
   const handleSendLowStockEmail = async () => {
@@ -449,15 +402,14 @@ export default function InventoryPage() {
               <Mail className="mr-2 h-4 w-4" />
               Send Low Stock Alert
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteSelected}
-              disabled={selectedRows.length === 0}
-              className="shadow-sm"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete Selected ({selectedRows.length})
-            </Button>
+            <DeleteSelectedButton
+              sheetName="Inventory"
+              selectedRows={selectedRows}
+              data={data}
+              setData={setData}
+              setSelectedRows={setSelectedRows}
+              clientId={client?.id}
+            />
           </div>
         </div>
         <LowStockBanner />

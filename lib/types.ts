@@ -84,5 +84,6 @@ export interface Client {
   sheetId?: string
   username?: string
   password?: string
+  superAdminEmail?: string
 }
 

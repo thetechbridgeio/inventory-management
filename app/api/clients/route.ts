@@ -47,7 +47,7 @@ export async function GET() {
     })
 
     return NextResponse.json({ data: clients })
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error fetching clients:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to fetch clients" },
@@ -150,6 +150,7 @@ export async function POST(request: Request) {
             client.sheetId || "",
             client.username,
             client.password,
+            client.superAdminEmail || "",
           ],
         ],
       },
@@ -160,7 +161,7 @@ export async function POST(request: Request) {
       message: "Client added successfully",
       client,
     })
-  } catch (error:any) {
+  } catch (error: any) {
     console.error("Error adding client:", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add client" },
