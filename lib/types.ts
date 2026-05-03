@@ -43,6 +43,15 @@ export interface Supplier {
   companyName: string
 }
 
+export interface Vendor {
+  vendorName: string
+  email?: string
+  phone?: string
+  note?: string
+}
+
+
+
 export interface StockStatus {
   label: string
   value: string
@@ -87,3 +96,11 @@ export interface Client {
   superAdminEmail?: string
 }
 
+export interface SalesFormInput {
+  product: string
+  quantity: number | string
+  unit?: string
+  companyName?: string
+  contact?: string
+  dateOfIssue: Date
+}

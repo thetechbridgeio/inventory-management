@@ -1,53 +1,47 @@
+// app/api/low-stock/route.ts
+
 import { NextResponse } from "next/server"
+import { getSheetId } from "@/utils/get-sheet-id"
+import { getSheetData } from "@/lib/api-sheets/sheet-service"
+import { handleApiError } from "@/lib/api-sheets/api-error"
+
+function normalizeInventory(item: any) {
+  const quantityRaw =
+    item.quantity ??
+    item.Quantity ??
+    item.stock ??
+    item.Stock ??
+    0
+
+  const minRaw =
+    item.minimumQuantity ??
+    item["Minimum Quantity"] ??
+    item.minQty ??
+    0
+
+  return {
+    ...item,
+    quantity: Number(quantityRaw) || 0,
+    minimumQuantity: Number(minRaw) || 0,
+  }
+}
 
 export async function GET(request: Request) {
   try {
-    const url = new URL(request.url)
-    const clientId = url.searchParams.get("clientId")
+    const sheetId = await getSheetId(request)
 
-    if (!clientId) {
+    if (!sheetId) {
       return NextResponse.json(
-        { error: "clientId required" },
+        { error: "clientId required or invalid" },
         { status: 400 }
       )
     }
 
-    // Fetch inventory
-    const res = await fetch(
-      `${url.origin}/api/sheets?sheet=Inventory&clientId=${clientId}`
-    )
+    const data = await getSheetData(sheetId, "Inventory")
 
-    const json = await res.json()
-    const data = json.data || []
+    const inventory = data.map(normalizeInventory)
 
-    // Normalize fields
-    const inventory = data.map((item: any) => {
-      const quantity =
-        item.quantity ??
-        item.Quantity ??
-        item.stock ??
-        item.Stock ??
-        0
-
-      const minimumQuantity =
-        item["Minimum Quantity"] ??
-        item.minimumQuantity ??
-        item.minQty ??
-        0
-
-      return {
-        ...item,
-        quantity,
-        minimumQuantity,
-      }
-    })
-
-    // Out of stock
-    const outOfStock = inventory.filter(
-      (i: any) => i.quantity === 0
-    )
-
-    // Low stock (dynamic threshold)
+    const outOfStock = inventory.filter((i: any) => i.quantity === 0)
     const lowStock = inventory.filter(
       (i: any) =>
         i.quantity > 0 &&
@@ -61,11 +55,6 @@ export async function GET(request: Request) {
       total: lowStock.length + outOfStock.length,
     })
   } catch (error) {
-    console.error("Low stock API error:", error)
-
-    return NextResponse.json(
-      { error: "Failed to fetch low stock data" },
-      { status: 500 }
-    )
+    return handleApiError(error, "Failed to fetch low stock data")
   }
 }
