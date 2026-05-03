@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, AlertTriangle, DollarSign, TrendingUp, TrendingDown, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { InventoryItem, PurchaseItem, SalesItem } from "@/lib/types"
+import type { InventoryItem, PurchaseItem } from "@/lib/types"
 import { getStockStatus } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { format, subDays } from "date-fns"
@@ -14,6 +14,7 @@ import { toast } from "sonner"
 
 // Import the client terminology utilities
 import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
+import { SalesItem } from "@/features/sales/types/sale-entry-form.types"
 
 // Define a type for our time-based metrics
 interface TimeMetrics {
