@@ -27,16 +27,7 @@ export interface PurchaseItem {
   timestamp?: string
 }
 
-export interface SalesItem {
-  srNo: number
-  product: string
-  quantity: number
-  unit: string
-  contact: string
-  companyName: string
-  dateOfIssue: string
-  timestamp?: string
-}
+
 
 export interface Supplier {
   supplier: string
@@ -74,15 +65,7 @@ export interface PurchaseFilterState {
   search: string
 }
 
-export interface SalesFilterState {
-  product: string[]
-  company: string[]
-  dateRange: {
-    from: Date | undefined
-    to: Date | undefined
-  }
-  search: string
-}
+
 
 export interface Client {
   id: string
@@ -94,13 +77,4 @@ export interface Client {
   username?: string
   password?: string
   superAdminEmail?: string
-}
-
-export interface SalesFormInput {
-  product: string
-  quantity: number | string
-  unit?: string
-  companyName?: string
-  contact?: string
-  dateOfIssue: Date
 }

@@ -11,7 +11,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { InventoryItem, PurchaseItem, SalesItem } from "@/lib/types"
+import { InventoryItem, PurchaseItem} from "@/lib/types"
+import { SalesItem } from "@/features/sales/types/sale-entry-form.types"
 
 type RowType = InventoryItem | SalesItem | PurchaseItem
 
