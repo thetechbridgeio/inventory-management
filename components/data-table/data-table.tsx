@@ -12,7 +12,6 @@ interface DataTableProps<TData, TValue> {
   onRowSelectionChange?: (rows: TData[]) => void
 }
 
-// Separate component to handle the indeterminate checkbox correctly via ref
 function IndeterminateCheckbox({
   checked,
   indeterminate,
@@ -42,7 +41,7 @@ function IndeterminateCheckbox({
 }
 
 export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }: DataTableProps<TData, TValue>) {
-  const [selectedRows, setSelectedRows] = useState<Record<string, boolean>>({})
+  const [selectedRows, setSelectedRows] = useState<Record<number, boolean>>({})
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(15)
 
@@ -51,31 +50,24 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
   const endIndex = Math.min(startIndex + pageSize, data.length)
   const currentPageData = data.slice(startIndex, endIndex)
 
-  const getRowId = (row: unknown): string => {
-    const r = row as Record<string, unknown>
-    return (r.srNo?.toString() ?? r.id?.toString()) ?? JSON.stringify(row)
-  }
+  // Use the row's index in the full data array — always unique, no duplicates
+  const getRowId = (row: TData): number => data.indexOf(row)
 
   const toggleRowSelection = (row: TData) => {
     const rowId = getRowId(row)
     const newSelectedRows = { ...selectedRows, [rowId]: !selectedRows[rowId] }
     setSelectedRows(newSelectedRows)
-
-    onRowSelectionChange?.(
-      data.filter((item) => newSelectedRows[getRowId(item)])
-    )
+    onRowSelectionChange?.(data.filter((_, i) => newSelectedRows[i]))
   }
 
   const toggleSelectAll = () => {
     const allSelected = currentPageData.every((row) => selectedRows[getRowId(row)])
     const newSelectedRows = { ...selectedRows }
-
     currentPageData.forEach((row) => {
       newSelectedRows[getRowId(row)] = !allSelected
     })
-
     setSelectedRows(newSelectedRows)
-    onRowSelectionChange?.(data.filter((item) => newSelectedRows[getRowId(item)]))
+    onRowSelectionChange?.(data.filter((_, i) => newSelectedRows[i]))
   }
 
   const allRowsSelected =
@@ -106,15 +98,11 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
                     </TableHead>
                   )
                 }
-
                 return (
                   <TableHead key={index}>
                     {typeof column.header === "function"
                       ? column.header({
-                          column: {
-                            getIsSorted: () => false,
-                            toggleSorting: () => {},
-                          } as any,
+                          column: { getIsSorted: () => false, toggleSorting: () => {} } as any,
                           header: {} as any,
                           table: {} as any,
                         })
@@ -130,7 +118,7 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
                 const rowId = getRowId(row)
                 return (
                   <TableRow
-                    key={rowIndex}
+                    key={rowId}
                     className="cursor-pointer hover:bg-muted/50 h-10"
                     data-state={selectedRows[rowId] ? "selected" : undefined}
                   >
@@ -169,7 +157,6 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
                       if ("accessorKey" in column) {
                         const accessorKey = column.accessorKey as string
                         const value = (row as Record<string, unknown>)[accessorKey]
-
                         return (
                           <TableCell key={colIndex} onClick={() => toggleRowSelection(row)} className="py-1">
                             {typeof column.cell === "function"
@@ -203,14 +190,10 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
 
       <div className="flex flex-col-reverse gap-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <div>
-            {selectedRowsCount} of {data.length} row(s) selected
-          </div>
+          <div>{selectedRowsCount} of {data.length} row(s) selected</div>
           <div className="flex items-center gap-1">
             <div>Page</div>
-            <strong>
-              {currentPage + 1} of {Math.max(1, pageCount)}
-            </strong>
+            <strong>{currentPage + 1} of {Math.max(1, pageCount)}</strong>
           </div>
           <select
             value={pageSize}
@@ -221,52 +204,26 @@ export function DataTable<TData, TValue>({ columns, data, onRowSelectionChange }
             className="h-8 w-[70px] rounded-md border border-input bg-background px-2"
           >
             {[5, 10, 15, 20, 30, 50].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
+              <option key={size} value={size}>{size}</option>
             ))}
           </select>
           <div>per page</div>
         </div>
 
         <div className="flex items-center justify-end space-x-2">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setCurrentPage(0)}
-            disabled={currentPage === 0}
-          >
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(0)} disabled={currentPage === 0}>
             <span className="sr-only">Go to first page</span>
             <span aria-hidden="true">&laquo;</span>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-            disabled={currentPage === 0}
-          >
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0}>
             <ChevronLeft className="h-4 w-4" />
             <span className="sr-only">Go to previous page</span>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setCurrentPage((p) => Math.min(pageCount - 1, p + 1))}
-            disabled={currentPage >= pageCount - 1}
-          >
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage((p) => Math.min(pageCount - 1, p + 1))} disabled={currentPage >= pageCount - 1}>
             <ChevronRight className="h-4 w-4" />
             <span className="sr-only">Go to next page</span>
           </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setCurrentPage(pageCount - 1)}
-            disabled={currentPage >= pageCount - 1}
-          >
+          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(pageCount - 1)} disabled={currentPage >= pageCount - 1}>
             <span className="sr-only">Go to last page</span>
             <span aria-hidden="true">&raquo;</span>
           </Button>

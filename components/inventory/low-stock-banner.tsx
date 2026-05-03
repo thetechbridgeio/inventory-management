@@ -35,7 +35,7 @@ export default function LowStockBanner() {
                                 outOfStock.length > 0 && (
                                     <>
                                         <span className="font-medium">
-                                            {outOfStock.length}
+                                            {outOfStock.length}{" "}
                                         </span>
                                         out of stock •
                                     </>

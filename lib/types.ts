@@ -27,21 +27,21 @@ export interface PurchaseItem {
   timestamp?: string
 }
 
-export interface SalesItem {
-  srNo: number
-  product: string
-  quantity: number
-  unit: string
-  contact: string
-  companyName: string
-  dateOfIssue: string
-  timestamp?: string
-}
+
 
 export interface Supplier {
   supplier: string
   companyName: string
 }
+
+export interface Vendor {
+  vendorName: string
+  email?: string
+  phone?: string
+  note?: string
+}
+
+
 
 export interface StockStatus {
   label: string
@@ -65,15 +65,7 @@ export interface PurchaseFilterState {
   search: string
 }
 
-export interface SalesFilterState {
-  product: string[]
-  company: string[]
-  dateRange: {
-    from: Date | undefined
-    to: Date | undefined
-  }
-  search: string
-}
+
 
 export interface Client {
   id: string
@@ -84,5 +76,5 @@ export interface Client {
   sheetId?: string
   username?: string
   password?: string
+  superAdminEmail?: string
 }
-
