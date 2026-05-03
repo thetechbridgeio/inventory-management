@@ -33,6 +33,7 @@ import { useClientContext } from "@/context/client-context"
 
 // Import the client terminology utilities
 import { getSalesTerm } from "@/lib/client-terminology"
+import { DeleteSelectedButton } from "@/components/helpers/delete-selected-button"
 
 // Define a type for a single sales entry form
 interface SalesEntryForm {
@@ -227,57 +228,6 @@ export default function SalesPage() {
     setSelectedRows(rows)
   }
 
-  // Update the handleDeleteSelected function to pass clientId
-  const handleDeleteSelected = async () => {
-    if (selectedRows.length === 0) return
-
-    try {
-      toast.loading("Deleting selected items...")
-
-      // Call the API to delete the items from Google Sheets
-      const response = await fetch("/api/sheets/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          // Use the exact sheet name as it appears in the Google Sheet
-          sheetName: "Sales",
-          items: selectedRows,
-          clientId: client?.id,
-        }),
-      })
-
-      // Get the response text first for debugging
-      const responseText = await response.text()
-
-      // Parse the JSON (if possible)
-      let result
-      try {
-        result = JSON.parse(responseText)
-      } catch (e) {
-        console.error("Failed to parse response as JSON:", e)
-        result = { error: "Invalid response format" }
-      }
-
-      if (!response.ok) {
-        console.error("Delete API error:", result)
-        throw new Error(result.error || "Failed to delete items")
-      }
-
-      // Update the local state to remove the deleted items
-      const updatedData = data.filter((item) => !selectedRows.some((row) => row.srNo === item.srNo))
-      setData(updatedData)
-      setSelectedRows([])
-
-      toast.dismiss()
-      toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error:any) {
-      console.error("Error deleting items:", error)
-      toast.dismiss()
-      toast.error(error instanceof Error ? error.message : "Failed to delete items")
-    }
-  }
 
   // Replace the handleExportPDF function with this improved version
   const handleExportPDF = () => {
@@ -1216,10 +1166,12 @@ export default function SalesPage() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedRows.length === 0}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected
-          </Button>
+          <DeleteSelectedButton sheetName="Sales"
+            selectedRows={selectedRows}
+            data={data}
+            setData={setData}
+            setSelectedRows={setSelectedRows}
+            clientId={client?.id} />
         </div>
       </div>
 
