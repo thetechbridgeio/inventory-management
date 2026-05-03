@@ -2,7 +2,7 @@
  * Determines the appropriate term for "Purchase" based on client name
  */
 export function getPurchaseTerm(clientName?: string | null): string {
-  if (!clientName) return "Purchase"
+  if (!clientName) return "Incoming"
 
   // Convert to lowercase for case-insensitive comparison
   const normalizedName = clientName.toLowerCase()
@@ -12,14 +12,14 @@ export function getPurchaseTerm(clientName?: string | null): string {
     return "Received"
   }
 
-  return "Purchase"
+  return "Incoming"
 }
 
 /**
  * Determines the appropriate term for "Sales" based on client name
  */
 export function getSalesTerm(clientName?: string | null): string {
-  if (!clientName) return "Sales"
+  if (!clientName) return "Outgoing"
 
   // Convert to lowercase for case-insensitive comparison
   const normalizedName = clientName.toLowerCase()
@@ -29,6 +29,6 @@ export function getSalesTerm(clientName?: string | null): string {
     return "Issue"
   }
 
-  return "Sales"
+  return "Outgoing"
 }
 

@@ -24,7 +24,7 @@ export async function getSheetId(request?: Request): Promise<string> {
     }
   } else {
     // For server components that can use the cookies() API directly
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const clientId = cookieStore.get("clientId")?.value
 
     if (clientId) {
@@ -94,7 +94,7 @@ async function fetchClientData(clientId: string) {
     }
 
     return null
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error fetching client data:", error)
     return null
   }

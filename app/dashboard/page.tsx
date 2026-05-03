@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, AlertTriangle, DollarSign, TrendingUp, TrendingDown, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { InventoryItem, PurchaseItem, SalesItem } from "@/lib/types"
+import type { InventoryItem, PurchaseItem } from "@/lib/types"
 import { getStockStatus } from "@/lib/utils"
 import { Progress } from "@/components/ui/progress"
 import { format, subDays } from "date-fns"
@@ -14,6 +14,7 @@ import { toast } from "sonner"
 
 // Import the client terminology utilities
 import { getPurchaseTerm, getSalesTerm } from "@/lib/client-terminology"
+import { SalesItem } from "@/features/sales/types/sale-entry-form.types"
 
 // Define a type for our time-based metrics
 interface TimeMetrics {
@@ -197,7 +198,7 @@ export default function DashboardPage() {
           // Use empty arrays as fallback if any data is missing
           calculateTimeMetrics(inventoryResult.data || [], purchaseResult.data || [], salesResult.data || [])
         }
-      } catch (error) {
+      } catch (error:any) {
         console.error("Error fetching dashboard data:", error)
         toast.error("Failed to load dashboard data. Please try again later.")
       } finally {
@@ -245,7 +246,7 @@ export default function DashboardPage() {
             if (date >= oneWeekAgo && date <= today) {
               newProductsThisWeek++
             }
-          } catch (error) {
+          } catch (error:any) {
             console.error("Error parsing inventory timestamp:", error)
           }
         }
@@ -284,7 +285,7 @@ export default function DashboardPage() {
           if (date >= twoWeeksAgo && date < oneWeekAgo) {
             lastWeekPurchases++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing purchase timestamp:", error)
         }
       }
@@ -312,7 +313,7 @@ export default function DashboardPage() {
           if (date >= twoWeeksAgo && date < oneWeekAgo) {
             lastWeekPurchases++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing purchase date:", error)
         }
       }
@@ -351,7 +352,7 @@ export default function DashboardPage() {
           if (date >= twoWeeksAgo && date < oneWeekAgo) {
             lastWeekSales++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing sales timestamp:", error)
         }
       }
@@ -379,7 +380,7 @@ export default function DashboardPage() {
           if (date >= twoWeeksAgo && date < oneWeekAgo) {
             lastWeekSales++
           }
-        } catch (error) {
+        } catch (error:any) {
           console.error("Error parsing sales date:", error)
         }
       }
@@ -411,7 +412,7 @@ export default function DashboardPage() {
       today: { purchases: todayPurchases, sales: todaySales },
       yesterday: { purchases: yesterdayPurchases, sales: yesterdaySales },
       thisWeek: { purchases: thisWeekPurchases, sales: thisWeekSales },
-      lastWeek: { lastWeekPurchases, sales: lastWeekSales },
+      lastWeek: { purchases: lastWeekPurchases, sales: lastWeekSales },
       avgPerDay: { purchases: avgPurchasesPerDay, sales: avgSalesPerDay },
       newProductsThisWeek,
     })

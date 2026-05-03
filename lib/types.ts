@@ -9,6 +9,10 @@ export interface InventoryItem {
   stock: number
   pricePerUnit: number
   value: number
+  timestamp?: string
+  location?: string
+  productType: "Raw" | "Finished"
+  openingStock?: number
 }
 
 export interface PurchaseItem {
@@ -20,22 +24,24 @@ export interface PurchaseItem {
   supplier: string
   dateOfReceiving: string
   rackNumber: string
+  timestamp?: string
 }
 
-export interface SalesItem {
-  srNo: number
-  product: string
-  quantity: number
-  unit: string
-  contact: string
-  companyName: string
-  dateOfIssue: string
-}
+
 
 export interface Supplier {
   supplier: string
   companyName: string
 }
+
+export interface Vendor {
+  vendorName: string
+  email?: string
+  phone?: string
+  note?: string
+}
+
+
 
 export interface StockStatus {
   label: string
@@ -46,6 +52,7 @@ export interface FilterState {
   category: string[]
   stockStatus: string
   search: string
+  productType: string[]
 }
 
 export interface PurchaseFilterState {
@@ -58,15 +65,7 @@ export interface PurchaseFilterState {
   search: string
 }
 
-export interface SalesFilterState {
-  product: string[]
-  company: string[]
-  dateRange: {
-    from: Date | undefined
-    to: Date | undefined
-  }
-  search: string
-}
+
 
 export interface Client {
   id: string
@@ -77,5 +76,5 @@ export interface Client {
   sheetId?: string
   username?: string
   password?: string
+  superAdminEmail?: string
 }
-

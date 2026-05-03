@@ -55,7 +55,7 @@ export async function GET() {
     }))
 
     // Get a sample of data from each sheet
-    const sheetsData = {}
+    const sheetsData = {} as any
 
     if (sheetsList) {
       for (const sheet of sheetsList) {
@@ -70,7 +70,7 @@ export async function GET() {
               headers: response.data.values?.[0] || [],
               firstRow: response.data.values?.[1] || [],
             }
-          } catch (error) {
+          } catch (error:any) {
             sheetsData[sheet.title] = { error: "Failed to fetch data" }
           }
         }
@@ -83,7 +83,7 @@ export async function GET() {
       sheets: sheetsList,
       sheetsData,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error testing Google Sheets connection:", error)
     return NextResponse.json(
       {

@@ -20,6 +20,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useClientContext } from "@/context/client-context"
+import InventoryLayout from "./inventory-layout"
+import LowStockBanner from "@/components/inventory/low-stock-banner"
+import { DeleteSelectedButton } from "@/components/helpers/delete-selected-button"
 
 export default function InventoryPage() {
   const { client } = useClientContext()
@@ -31,11 +34,14 @@ export default function InventoryPage() {
     category: [],
     stockStatus: "all",
     search: "",
+    productType: [],
   })
   const [categories, setCategories] = useState<string[]>([])
+  const [productTypes, setProductTypes] = useState<string[]>([])
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [categoryFilters, setCategoryFilters] = useState<Record<string, boolean>>({})
+  const [productTypeFilters, setProductTypeFilters] = useState<Record<string, boolean>>({})
 
   const fetchData = async () => {
     try {
@@ -53,9 +59,7 @@ export default function InventoryPage() {
       const result = await response.json()
 
       if (result.data && Array.isArray(result.data)) {
-        // Map the field names from Google Sheets to our expected field names
         const processedData = result.data.map((item: any, index: number) => {
-          // Create a properly formatted inventory item
           const inventoryItem: InventoryItem = {
             srNo: item.srNo || item["Sr. no"] || index + 1,
             product: item.product || item["Product"] || "Unknown Product",
@@ -67,32 +71,53 @@ export default function InventoryPage() {
             stock: Number(item.stock || item["Stock"] || 0),
             pricePerUnit: Number(item.pricePerUnit || item["Price per Unit"] || 0),
             value: Number(item.value || item["Value"] || 0),
+            timestamp: item.timestamp || item["Timestamp"] || "",
+            location: item.location || item["Location"] || "",
+            productType: item.productType || item["Product Type"] || "Raw",
           }
-
           return inventoryItem
         })
 
         setData(processedData)
 
-        // Extract unique categories (excluding empty or null)
+        // Extract unique categories
         const uniqueCategories = [
           ...new Set(
-            processedData.map((item: InventoryItem) => item.category).filter((category) => category && category !== ""),
+            processedData
+              .map((item: InventoryItem) => item.category)
+              .filter((c: string) => c && c !== ""),
           ),
-        ]
-
+        ] as string[]
         setCategories(uniqueCategories)
 
-        // Initialize category filters
         const initialCategoryFilters: Record<string, boolean> = {}
         uniqueCategories.forEach((category) => {
           initialCategoryFilters[category] = filters.category.includes(category)
         })
         setCategoryFilters(initialCategoryFilters)
+
+        // Extract unique product types
+        const uniqueProductTypes = [
+          ...new Set(
+            processedData
+              .map((item: InventoryItem) => item.productType)
+              .filter((pt: string) => pt && pt !== ""),
+          ),
+        ] as string[]
+        setProductTypes(uniqueProductTypes)
+
+        const initialProductTypeFilters: Record<string, boolean> = {}
+        uniqueProductTypes.forEach((pt) => {
+          initialProductTypeFilters[pt] = filters.productType.includes(pt)
+        })
+        setProductTypeFilters(initialProductTypeFilters)
+
       } else {
         setData([])
         setCategories([])
+        setProductTypes([])
         setCategoryFilters({})
+        setProductTypeFilters({})
         if (result.error) {
           setError(result.error)
         } else {
@@ -114,74 +139,21 @@ export default function InventoryPage() {
   }, [client?.id])
 
   useEffect(() => {
-    // Update filters.category when categoryFilters change
     const selectedCategories = Object.entries(categoryFilters)
       .filter(([_, isSelected]) => isSelected)
       .map(([category]) => category)
-
-    setFilters((prev) => ({
-      ...prev,
-      category: selectedCategories,
-    }))
+    setFilters((prev) => ({ ...prev, category: selectedCategories }))
   }, [categoryFilters])
+
+  useEffect(() => {
+    const selectedTypes = Object.entries(productTypeFilters)
+      .filter(([_, isSelected]) => isSelected)
+      .map(([pt]) => pt)
+    setFilters((prev) => ({ ...prev, productType: selectedTypes }))
+  }, [productTypeFilters])
 
   const handleRowSelectionChange = (rows: InventoryItem[]) => {
     setSelectedRows(rows)
-  }
-
-  // Update the handleDeleteSelected function to pass clientId
-  const handleDeleteSelected = async () => {
-    if (selectedRows.length === 0) return
-
-    try {
-      toast.loading("Deleting selected items...")
-
-      // Call the API to delete the items from Google Sheets
-      const response = await fetch("/api/sheets/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          // Use the exact sheet name as it appears in the Google Sheet
-          sheetName: "Inventory",
-          items: selectedRows.map((row) => ({
-            // Remove srNo entirely from the payload
-            product: row.product,
-          })),
-          clientId: client?.id,
-        }),
-      })
-
-      // Get the response text first for debugging
-      const responseText = await response.text()
-
-      // Parse the JSON (if possible)
-      let result
-      try {
-        result = JSON.parse(responseText)
-      } catch (e) {
-        console.error("Failed to parse response as JSON:", e)
-        result = { error: "Invalid response format" }
-      }
-
-      if (!response.ok) {
-        console.error("Delete API error:", result)
-        throw new Error(result.error || "Failed to delete items")
-      }
-
-      // Update the local state to remove the deleted items
-      const updatedData = data.filter((item) => !selectedRows.some((row) => row.srNo === item.srNo))
-      setData(updatedData)
-      setSelectedRows([])
-
-      toast.dismiss()
-      toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error) {
-      console.error("Error deleting items:", error)
-      toast.dismiss()
-      toast.error(error instanceof Error ? error.message : "Failed to delete items")
-    }
   }
 
   const handleSendLowStockEmail = async () => {
@@ -222,25 +194,20 @@ export default function InventoryPage() {
   }
 
   const handleExportPDF = () => {
-    // Create PDF in landscape orientation
-    const doc = new jsPDF({
-      orientation: "landscape",
-    })
+    const doc = new jsPDF({ orientation: "landscape" })
 
-    // Add title
     doc.setFontSize(18)
     doc.text("Inventory Report", 14, 22)
-
-    // Add date
     doc.setFontSize(11)
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30)
 
-    // Define the columns for the table
     const tableColumn = [
       "Sr. No",
       "Product",
       "Category",
       "Unit",
+      "Location",
+      "Product Type",
       "Min Qty",
       "Max Qty",
       "Reorder Qty",
@@ -250,23 +217,22 @@ export default function InventoryPage() {
       "Value",
     ]
 
-    // Define the rows for the table - use filteredData instead of data
     const tableRows = filteredData.map((item, index) => [
-      index + 1, // Use sequential numbering from the filtered table
+      index + 1,
       item.product,
       item.category,
       item.unit,
+      item.location || "—",
+      item.productType || "Raw",
       item.minimumQuantity,
       item.maximumQuantity,
       item.reorderQuantity,
       item.stock,
       getStockStatus(item),
-      // Format currency values with Rs. prefix instead of ₹ symbol to avoid encoding issues
       `Rs. ${item.pricePerUnit.toLocaleString("en-IN")}`,
       `Rs. ${item.value.toLocaleString("en-IN")}`,
     ])
 
-    // Generate the table with improved styling
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
@@ -275,20 +241,22 @@ export default function InventoryPage() {
       styles: {
         overflow: "linebreak",
         cellWidth: "wrap",
-        fontSize: 9,
+        fontSize: 8,
       },
       columnStyles: {
-        0: { cellWidth: 12 }, // Sr. No
-        1: { cellWidth: 80 }, // Product
-        2: { cellWidth: 25 }, // Category
-        3: { cellWidth: 12 }, // Unit
-        4: { cellWidth: 15 }, // Min Qty
-        5: { cellWidth: 15 }, // Max Qty
-        6: { cellWidth: 17 }, // Reorder Qty
-        7: { cellWidth: 12 }, // Stock
-        8: { cellWidth: 18 }, // Status
-        9: { cellWidth: 30 }, // Price
-        10: { cellWidth: 35 }, // Value
+        0: { cellWidth: 10 },
+        1: { cellWidth: 55 },
+        2: { cellWidth: 22 },
+        3: { cellWidth: 10 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 22 },
+        6: { cellWidth: 13 },
+        7: { cellWidth: 13 },
+        8: { cellWidth: 15 },
+        9: { cellWidth: 10 },
+        10: { cellWidth: 16 },
+        11: { cellWidth: 25 },
+        12: { cellWidth: 28 },
       },
       headStyles: {
         fillColor: [51, 51, 51],
@@ -297,31 +265,24 @@ export default function InventoryPage() {
       },
     })
 
-    // Save the PDF
     doc.save(`inventory-report-${client?.name || "all"}.pdf`)
-
     toast.success("PDF exported successfully")
   }
 
   const handleCategoryFilterChange = (category: string, checked: boolean) => {
-    setCategoryFilters((prev) => ({
-      ...prev,
-      [category]: checked,
-    }))
+    setCategoryFilters((prev) => ({ ...prev, [category]: checked }))
+  }
+
+  const handleProductTypeFilterChange = (pt: string, checked: boolean) => {
+    setProductTypeFilters((prev) => ({ ...prev, [pt]: checked }))
   }
 
   const handleStockStatusChange = (status: string) => {
-    setFilters((prev) => ({
-      ...prev,
-      stockStatus: status,
-    }))
+    setFilters((prev) => ({ ...prev, stockStatus: status }))
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilters((prev) => ({
-      ...prev,
-      search: e.target.value,
-    }))
+    setFilters((prev) => ({ ...prev, search: e.target.value }))
   }
 
   const handleRefresh = () => {
@@ -329,12 +290,14 @@ export default function InventoryPage() {
   }
 
   const filteredData = data.filter((item) => {
-    // Filter by category
     if (filters.category.length > 0 && !filters.category.includes(item.category)) {
       return false
     }
 
-    // Filter by stock status
+    if (filters.productType.length > 0 && !filters.productType.includes(item.productType)) {
+      return false
+    }
+
     if (filters.stockStatus && filters.stockStatus !== "all") {
       const status = getStockStatus(item)
       if (status !== filters.stockStatus) {
@@ -342,7 +305,6 @@ export default function InventoryPage() {
       }
     }
 
-    // Filter by search term
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
       const productStr = String(item.product || "")
@@ -352,6 +314,11 @@ export default function InventoryPage() {
 
     return true
   })
+
+  const activeFilterCount =
+    filters.category.length +
+    filters.productType.length +
+    (filters.stockStatus !== "all" ? 1 : 0)
 
   const stockStatusOptions: StockStatus[] = [
     { label: "All", value: "all" },
@@ -383,7 +350,6 @@ export default function InventoryPage() {
     return <div className="space-y-6">{renderSkeleton()}</div>
   }
 
-  // Add this debug section to the render
   if (error) {
     return (
       <div className="space-y-6">
@@ -394,7 +360,6 @@ export default function InventoryPage() {
             {isRefreshing ? "Refreshing..." : "Retry"}
           </Button>
         </div>
-
         <Card className="shadow-sm border-gray-200 dark:border-gray-800">
           <CardHeader className="pb-3">
             <CardTitle className="text-destructive">Error Loading Data</CardTitle>
@@ -411,150 +376,168 @@ export default function InventoryPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
-          <p className="text-muted-foreground">Manage and track your product inventory</p>
+    <InventoryLayout clientId={client?.id || ""}>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Inventory Management</h1>
+            <p className="text-muted-foreground">Manage and track your product inventory</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="shadow-sm">
+              <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Refreshing..." : "Refresh"}
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF} className="shadow-sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export PDF
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSendLowStockEmail}
+              className="shadow-sm"
+              disabled={!client?.email}
+              title={!client?.email ? "Client email not available" : "Send low stock alert email"}
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Send Low Stock Alert
+            </Button>
+            <DeleteSelectedButton
+              sheetName="Inventory"
+              selectedRows={selectedRows}
+              data={data}
+              setData={setData}
+              setSelectedRows={setSelectedRows}
+              clientId={client?.id}
+            />
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing} className="shadow-sm">
-            <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            {isRefreshing ? "Refreshing..." : "Refresh"}
-          </Button>
-          <Button variant="outline" onClick={handleExportPDF} className="shadow-sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export PDF
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleSendLowStockEmail}
-            className="shadow-sm"
-            disabled={!client?.email}
-            title={!client?.email ? "Client email not available" : "Send low stock alert email"}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Send Low Stock Alert
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteSelected}
-            disabled={selectedRows.length === 0}
-            className="shadow-sm"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected ({selectedRows.length})
-          </Button>
-        </div>
-      </div>
+        <LowStockBanner />
 
-      <Card className="shadow-sm border-gray-200 dark:border-gray-800">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle>Inventory Items</CardTitle>
-            <div className="flex items-center gap-2">
-              <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 shadow-sm">
-                    <Filter className="h-3.5 w-3.5" />
-                    <span>Filters</span>
-                    {(filters.category.length > 0 || filters.stockStatus !== "all") && (
-                      <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
-                        {filters.category.length + (filters.stockStatus !== "all" ? 1 : 0)}
-                      </span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[220px] p-4" align="end">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Stock Status</h4>
-                      <SimpleSelect
-                        value={filters.stockStatus}
-                        onValueChange={handleStockStatusChange}
-                        className="w-full"
-                      >
-                        {stockStatusOptions.map((option) => (
-                          <SimpleSelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SimpleSelectItem>
-                        ))}
-                      </SimpleSelect>
-                    </div>
-                    <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Categories</h4>
-                      <div className="max-h-[150px] overflow-auto space-y-2">
-                        {categories.map((category) => (
-                          <div key={category} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`category-filter-${category}`}
-                              checked={categoryFilters[category] || false}
-                              onCheckedChange={(checked) => handleCategoryFilterChange(category, !!checked)}
-                            />
-                            <Label htmlFor={`category-filter-${category}`} className="text-sm">
-                              {category}
-                            </Label>
-                          </div>
-                        ))}
+        <Card className="shadow-sm border-gray-200 dark:border-gray-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle>Inventory Items</CardTitle>
+              <div className="flex items-center gap-2">
+                <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1 shadow-sm">
+                      <Filter className="h-3.5 w-3.5" />
+                      <span>Filters</span>
+                      {activeFilterCount > 0 && (
+                        <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[220px] p-4" align="end">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Stock Status</h4>
+                        <SimpleSelect
+                          value={filters.stockStatus}
+                          onValueChange={handleStockStatusChange}
+                          className="w-full"
+                        >
+                          {stockStatusOptions.map((option) => (
+                            <SimpleSelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SimpleSelectItem>
+                          ))}
+                        </SimpleSelect>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Categories</h4>
+                        <div className="max-h-[150px] overflow-auto space-y-2">
+                          {categories.map((category) => (
+                            <div key={category} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`category-filter-${category}`}
+                                checked={categoryFilters[category] || false}
+                                onCheckedChange={(checked) => handleCategoryFilterChange(category, !!checked)}
+                              />
+                              <Label htmlFor={`category-filter-${category}`} className="text-sm">
+                                {category}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm">Product Type</h4>
+                        <div className="max-h-[120px] overflow-auto space-y-2">
+                          {productTypes.map((pt) => (
+                            <div key={pt} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`pt-filter-${pt}`}
+                                checked={productTypeFilters[pt] || false}
+                                onCheckedChange={(checked) => handleProductTypeFilterChange(pt, !!checked)}
+                              />
+                              <Label htmlFor={`pt-filter-${pt}`} className="text-sm">
+                                {pt}
+                              </Label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between pt-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const resetCategoryFilters: Record<string, boolean> = {}
+                            categories.forEach((c) => { resetCategoryFilters[c] = false })
+                            setCategoryFilters(resetCategoryFilters)
+
+                            const resetProductTypeFilters: Record<string, boolean> = {}
+                            productTypes.forEach((pt) => { resetProductTypeFilters[pt] = false })
+                            setProductTypeFilters(resetProductTypeFilters)
+
+                            setFilters((prev) => ({ ...prev, stockStatus: "all" }))
+                          }}
+                        >
+                          Reset
+                        </Button>
+                        <Button size="sm" onClick={() => setIsFiltersOpen(false)}>
+                          Apply
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex justify-between pt-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          // Reset category filters
-                          const resetCategoryFilters: Record<string, boolean> = {}
-                          categories.forEach((category) => {
-                            resetCategoryFilters[category] = false
-                          })
-                          setCategoryFilters(resetCategoryFilters)
-
-                          // Reset stock status
-                          setFilters((prev) => ({
-                            ...prev,
-                            stockStatus: "all",
-                          }))
-                        }}
-                      >
-                        Reset
-                      </Button>
-                      <Button size="sm" onClick={() => setIsFiltersOpen(false)}>
-                        Apply
-                      </Button>
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search products..."
-                  className="pl-8 h-8 w-[150px] md:w-[200px] lg:w-[300px] shadow-sm"
-                  value={filters.search}
-                  onChange={handleSearchChange}
-                />
+                  </PopoverContent>
+                </Popover>
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    className="pl-8 h-8 w-[150px] md:w-[200px] lg:w-[300px] shadow-sm"
+                    value={filters.search}
+                    onChange={handleSearchChange}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <DataTable columns={inventoryColumns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
+          </CardHeader>
+          <CardContent>
+            <DataTable columns={inventoryColumns} data={filteredData} onRowSelectionChange={handleRowSelectionChange} />
 
-          {filteredData.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center h-[200px] text-center">
-              <Package className="mx-auto h-12 w-12 opacity-30 mb-2" />
-              <h3 className="font-medium text-lg mb-1">No items found</h3>
-              <p className="text-sm text-muted-foreground">
-                {filters.category.length > 0 || filters.stockStatus !== "all" || filters.search
-                  ? "Try adjusting your filters or search query"
-                  : "Add some inventory items to get started"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            {filteredData.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center h-[200px] text-center">
+                <Package className="mx-auto h-12 w-12 opacity-30 mb-2" />
+                <h3 className="font-medium text-lg mb-1">No items found</h3>
+                <p className="text-sm text-muted-foreground">
+                  {filters.category.length > 0 || filters.productType.length > 0 || filters.stockStatus !== "all" || filters.search
+                    ? "Try adjusting your filters or search query"
+                    : "Add some inventory items to get started"}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </InventoryLayout>
   )
 }
-

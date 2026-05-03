@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       success: true,
       message: `Low stock alert sent to ${clientEmail} for ${lowStockItems.length} items`,
     })
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error sending low stock email:", error)
     return NextResponse.json(
       {

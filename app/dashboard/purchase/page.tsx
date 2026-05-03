@@ -33,6 +33,7 @@ import { useClientContext } from "@/context/client-context"
 
 // Import the client terminology utilities
 import { getPurchaseTerm } from "@/lib/client-terminology"
+import { DeleteSelectedButton } from "@/components/helpers/delete-selected-button"
 
 // Define a type for a single purchase entry form
 interface PurchaseEntryForm {
@@ -99,7 +100,7 @@ export default function PurchasePage() {
           if (!isNaN(dateA) && !isNaN(dateB)) {
             return dateB - dateA // Descending order (newest first)
           }
-        } catch (error) {}
+        } catch (error: any) { }
       }
 
       // Fallback to srNo if dates can't be compared
@@ -177,7 +178,7 @@ export default function PurchasePage() {
         const uniqueProducts = [...new Set(processedInventory.map((item: InventoryItem) => item.product))]
         const initialProductFilters: Record<string, boolean> = {}
         uniqueProducts.forEach((product) => {
-          initialProductFilters[product] = false
+          initialProductFilters[product as string] = false
         })
         setProductFilters(initialProductFilters)
       }
@@ -199,7 +200,7 @@ export default function PurchasePage() {
 
         // Create supplier options for searchable select - use only the supplier field
         const options = processedSuppliers
-          .filter((item) => item.supplier) // Only include items with a supplier value
+          .filter((item: Supplier) => item.supplier) // Only include items with a supplier value
           .map((item: Supplier) => ({
             value: item.supplier,
             label: item.supplier,
@@ -215,7 +216,7 @@ export default function PurchasePage() {
         })
         setSupplierFilters(initialSupplierFilters)
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching data:", error)
       toast.error("Failed to fetch data")
     } finally {
@@ -250,63 +251,6 @@ export default function PurchasePage() {
     setSelectedRows(rows)
   }
 
-  // Update the handleDeleteSelected function to pass clientId
-  const handleDeleteSelected = async () => {
-    if (selectedRows.length === 0) return
-
-    try {
-      toast.loading("Deleting selected items...")
-
-      // Log the items we're trying to delete
-      console.log("Attempting to delete items:", selectedRows)
-
-      // Call the API to delete the items from Google Sheets
-      const response = await fetch("/api/sheets/delete", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          // Use the exact sheet name as it appears in the Google Sheet
-          sheetName: "Purchase",
-          items: selectedRows,
-          clientId: client?.id,
-        }),
-      })
-
-      // Get the response text first for debugging
-      const responseText = await response.text()
-      console.log("Raw response:", responseText)
-
-      // Parse the JSON (if possible)
-      let result
-      try {
-        result = JSON.parse(responseText)
-      } catch (e) {
-        console.error("Failed to parse response as JSON:", e)
-        result = { error: "Invalid response format" }
-      }
-
-      console.log("Parsed result:", result)
-
-      if (!response.ok) {
-        console.error("Delete API error:", result)
-        throw new Error(result.error || "Failed to delete items")
-      }
-
-      // Update the local state to remove the deleted items
-      const updatedData = data.filter((item) => !selectedRows.some((row) => row.srNo === item.srNo))
-      setData(updatedData)
-      setSelectedRows([])
-
-      toast.dismiss()
-      toast.success(`${selectedRows.length} item(s) deleted successfully`)
-    } catch (error) {
-      console.error("Error deleting items:", error)
-      toast.dismiss()
-      toast.error(error instanceof Error ? error.message : "Failed to delete items")
-    }
-  }
 
   const handleExportPDF = () => {
     // Create PDF in landscape orientation
@@ -335,7 +279,7 @@ export default function PurchasePage() {
           if (!isNaN(date.getTime())) {
             dateDisplay = format(date, "MMM d, yyyy")
           }
-        } catch (error) {}
+        } catch (error: any) { }
       }
 
       return [
@@ -520,7 +464,7 @@ export default function PurchasePage() {
               formattedDate = dateStr
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           // Use the original string if possible
           formattedDate = String(entry.dateOfReceiving)
         }
@@ -630,7 +574,7 @@ export default function PurchasePage() {
                 [entry.newSupplier]: false,
               }))
             }
-          } catch (error) {
+          } catch (error: any) {
             // Continue with the purchase even if adding the supplier fails
           }
         }
@@ -655,7 +599,7 @@ export default function PurchasePage() {
       setIsDialogOpen(false)
 
       toast.success(`${formEntries.length} purchase entries added successfully`)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding purchase:", error)
       toast.error(error instanceof Error ? error.message : "Failed to add purchase entries")
     } finally {
@@ -709,7 +653,7 @@ export default function PurchasePage() {
         if (isNaN(itemDate.getTime())) {
           return false
         }
-      } catch (error) {
+      } catch (error: any) {
         return false
       }
 
@@ -1054,12 +998,12 @@ export default function PurchasePage() {
                   filters.supplier.length > 0 ||
                   filters.dateRange.from ||
                   filters.dateRange.to) && (
-                  <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
-                    {filters.product.length +
-                      filters.supplier.length +
-                      (filters.dateRange.from || filters.dateRange.to ? 1 : 0)}
-                  </span>
-                )}
+                    <span className="ml-1 rounded-full bg-primary w-5 h-5 text-[10px] font-medium flex items-center justify-center text-primary-foreground">
+                      {filters.product.length +
+                        filters.supplier.length +
+                        (filters.dateRange.from || filters.dateRange.to ? 1 : 0)}
+                    </span>
+                  )}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-[300px] p-4" align="end">
@@ -1195,10 +1139,12 @@ export default function PurchasePage() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="destructive" onClick={handleDeleteSelected} disabled={selectedRows.length === 0}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Selected
-          </Button>
+          <DeleteSelectedButton sheetName="Purchase"
+            selectedRows={selectedRows}
+            data={data}
+            setData={setData}
+            setSelectedRows={setSelectedRows}
+            clientId={client?.id} />
         </div>
       </div>
 

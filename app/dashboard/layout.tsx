@@ -72,7 +72,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-      <Header clientName={clientName} />
+      <Header  />
       <div className="sticky top-16 z-30 bg-blue-50/80 backdrop-blur supports-[backdrop-filter]:bg-blue-50/60">
         <div className="container mx-auto">
           <nav className="flex justify-center md:justify-start">

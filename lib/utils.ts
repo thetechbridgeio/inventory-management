@@ -35,7 +35,7 @@ export function formatDate(dateString: string): string {
       month: "short",
       day: "numeric",
     })
-  } catch (error) {
+  } catch (error:any) {
     return dateString // Return the original string on error
   }
 }
@@ -124,7 +124,7 @@ export function validateAndFormatDate(dateString: string, fallbackToToday = fals
 
     // Return the date in YYYY-MM-DD format
     return dateObj.toISOString().split("T")[0]
-  } catch (error) {
+  } catch (error:any) {
     return fallbackToToday ? new Date().toISOString().split("T")[0] : null
   }
 }

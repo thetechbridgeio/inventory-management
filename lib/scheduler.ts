@@ -7,6 +7,7 @@ import { subDays } from "date-fns"
 
 // Import the client terminology utilities
 import { getPurchaseTerm, getSalesTerm } from "./client-terminology"
+import { classifyVC } from "./analytics"
 
 // Create auth client
 const auth = new JWT({
@@ -46,13 +47,13 @@ async function sendLowStockEmailsToAllClients() {
     for (const client of clients) {
       try {
         await sendLowStockEmailToClient(client)
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error sending low stock email to client ${client.id} (${client.name}):`, error)
       }
     }
 
     console.log("Completed scheduled low stock email job")
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in scheduled low stock email job:", error)
   }
 }
@@ -72,13 +73,13 @@ async function sendDashboardSummaryEmailsToAllClients() {
     for (const client of clients) {
       try {
         await sendDashboardSummaryEmailToClient(client)
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error sending dashboard summary email to client ${client.id} (${client.name}):`, error)
       }
     }
 
     console.log("Completed scheduled dashboard summary email job")
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in scheduled dashboard summary email job:", error)
   }
 }
@@ -121,7 +122,7 @@ async function sendDashboardSummaryEmailToClient(client: any) {
 
     await transporter.sendMail(mailOptions)
     console.log(`Dashboard summary email sent to ${client.email}`)
-  } catch (error) {
+  } catch (error: any) {
     console.error(`Error generating dashboard summary for client ${client.id}:`, error)
     throw error
   }
@@ -225,7 +226,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
           if (date >= oneWeekAgo && date <= today) {
             newProductsThisWeek++
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Error parsing inventory timestamp:", error)
         }
       }
@@ -259,7 +260,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error parsing purchase timestamp:", error)
       }
     }
@@ -282,7 +283,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekPurchases++
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error parsing purchase date:", error)
       }
     }
@@ -312,7 +313,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error parsing sales timestamp:", error)
       }
     }
@@ -335,7 +336,7 @@ function calculateDashboardMetrics(inventoryItems: any[], purchaseItems: any[], 
         if (date >= twoWeeksAgo && date < oneWeekAgo) {
           lastWeekSales++
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error parsing sales date:", error)
       }
     }
@@ -597,6 +598,7 @@ async function fetchClientInventory(sheetId: string) {
       stock: Number(row[headers.indexOf("stock")] || row[headers.indexOf("Stock")] || 0),
       pricePerUnit: Number(row[headers.indexOf("pricePerUnit")] || row[headers.indexOf("Price per Unit")] || 0),
       value: Number(row[headers.indexOf("value")] || row[headers.indexOf("Value")] || 0),
+      productType: row[headers.indexOf("productType")] || row[headers.indexOf("Product Type")] || "Raw Material",
     }
     return item
   })
@@ -689,6 +691,15 @@ function isTimeToSendEmail(): boolean {
   return istHours === 18 && istMinutes >= 0 && istMinutes < 5
 }
 
+function isFirstDayOfMonthIST(): boolean {
+  const now = new Date()
+
+  // Convert UTC to IST
+  const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000)
+
+  return ist.getDate() === 1 && ist.getHours() === 18
+}
+
 /**
  * Starts the scheduler to check every minute if it's time to send emails
  */
@@ -698,31 +709,36 @@ export function startScheduler() {
     return
   }
 
-  // Store the last run date to avoid sending multiple emails on the same day
   let lastRunDate: string | null = null
 
-  // Check every minute if it's time to send emails
   schedulerInterval = setInterval(async () => {
     try {
-      // Get current date in YYYY-MM-DD format
       const today = new Date().toISOString().split("T")[0]
 
-      // Check if it's time to send emails and we haven't sent them today
       if (isTimeToSendEmail() && lastRunDate !== today) {
-        console.log(`It's 6 PM IST - running scheduled email jobs`)
+        console.log("It's 6 PM IST - running scheduled email jobs")
 
-        // Send both types of emails
-        await Promise.all([sendLowStockEmailsToAllClients(), sendDashboardSummaryEmailsToAllClients()])
+        // Daily jobs
+        await Promise.all([
+          sendLowStockEmailsToAllClients(),
+          sendDashboardSummaryEmailsToAllClients(),
+        ])
+
+        // Monthly job on the 1st day
+        if (isFirstDayOfMonthIST()) {
+          console.log("Running Monthly Inventory Report Job")
+          await sendMonthlyReportEmailsToAllClients()
+        }
 
         lastRunDate = today
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in scheduler check:", error)
     }
-  }, 60000) // Check every minute
+  }, 60000)
 
   schedulerRunning = true
-  console.log("Email scheduler started - will run daily at 6:00 PM IST")
+  console.log("Email scheduler started - runs daily at 6:00 PM IST")
 }
 
 /**
@@ -751,3 +767,204 @@ export async function runDashboardSummaryEmailJob() {
   await sendDashboardSummaryEmailsToAllClients()
 }
 
+
+async function sendMonthlyReportEmailsToAllClients() {
+  console.log("Starting monthly report email job")
+
+  const clients = await fetchAllClients()
+
+  for (const client of clients) {
+    if (!client.email || !client.sheetId) continue
+
+    const inventoryItems = await fetchClientInventory(client.sheetId)
+    const emailHtml = generateMonthlyReportEmailHtml(
+      inventoryItems,
+      client.name
+    )
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: client.email,
+      subject: `Monthly Inventory Report - ${client.name}`,
+      html: emailHtml,
+    })
+
+    console.log(`Monthly report sent to ${client.email}`)
+  }
+}
+
+
+function generateMonthlyReportEmailHtml(
+  items: InventoryItem[],
+  clientName?: string
+): string {
+  const today = new Date().toLocaleDateString("en-IN")
+
+  // Calculate KPIs
+  const totalProducts = items.length
+  let totalOpening = 0
+  let totalClosing = 0
+  let totalConsumption = 0
+
+  const getBadgeColor = (category: string) => {
+    switch (category) {
+      case "High Value – High Volume":
+        return { bg: "#FEE2E2", text: "#B91C1C" } // Red
+      case "High Value – Low Volume":
+        return { bg: "#EDE9FE", text: "#6D28D9" } // Purple
+      case "Low Value – High Volume":
+        return { bg: "#DBEAFE", text: "#1D4ED8" } // Blue
+      case "Low Value – Low Volume":
+        return { bg: "#DCFCE7", text: "#166534" } // Green
+      default:
+        return { bg: "#E5E7EB", text: "#374151" } // Gray
+    }
+  }
+
+  const formatNumber = (num: number) =>
+    num.toLocaleString("en-IN")
+
+  const rows = items
+    .map((item) => {
+      const opening = Number(item.openingStock || 0)
+      const closing = Number(item.stock || 0)
+      const consumption = opening - closing
+      const vcCategory = classifyVC(item)
+
+      totalOpening += opening
+      totalClosing += closing
+      totalConsumption += consumption
+
+      const badge = getBadgeColor(vcCategory)
+
+      return `
+        <tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:10px;">${item.product}</td>
+          <td style="padding:10px;text-align:right;">${formatNumber(opening)}</td>
+          <td style="padding:10px;text-align:right;">${formatNumber(closing)}</td>
+          <td style="padding:10px;text-align:right;color:${
+            consumption < 0 ? "#DC2626" : "#111827"
+          };">
+            ${formatNumber(consumption)}
+          </td>
+          <td style="padding:10px;text-align:center;">
+            <span style="
+              background:${badge.bg};
+              color:${badge.text};
+              padding:4px 10px;
+              border-radius:999px;
+              font-size:12px;
+              font-weight:600;
+              display:inline-block;">
+              ${vcCategory}
+            </span>
+          </td>
+        </tr>
+      `
+    })
+    .join("")
+
+  return `
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>Monthly Inventory Report</title>
+    </head>
+    <body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,Helvetica,sans-serif;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:20px 0;">
+        <tr>
+          <td align="center">
+            <table width="900" cellpadding="0" cellspacing="0"
+              style="background:#ffffff;border-radius:10px;overflow:hidden;
+                     box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+
+              <!-- Header -->
+              <tr>
+                <td style="background:linear-gradient(to right,#2563EB,#1E3A8A);
+                           color:#ffffff;padding:20px;text-align:center;">
+                  <h2 style="margin:0;">Monthly Inventory Report</h2>
+                  <p style="margin:5px 0 0 0;font-size:14px;">
+                    ${clientName || "Valued Client"}
+                  </p>
+                  <p style="margin:2px 0 0 0;font-size:12px;">
+                    Generated on ${today}
+                  </p>
+                </td>
+              </tr>
+
+              <!-- KPI Cards -->
+              <tr>
+                <td style="padding:20px;">
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="background:#EFF6FF;padding:15px;border-radius:8px;">
+                        <p style="margin:0;font-size:12px;color:#1E40AF;">Total Products</p>
+                        <h3 style="margin:5px 0;color:#1E3A8A;">${formatNumber(totalProducts)}</h3>
+                      </td>
+                      <td width="10"></td>
+                      <td align="center" style="background:#ECFDF5;padding:15px;border-radius:8px;">
+                        <p style="margin:0;font-size:12px;color:#047857;">Opening Stock</p>
+                        <h3 style="margin:5px 0;color:#065F46;">${formatNumber(totalOpening)}</h3>
+                      </td>
+                      <td width="10"></td>
+                      <td align="center" style="background:#FEF3C7;padding:15px;border-radius:8px;">
+                        <p style="margin:0;font-size:12px;color:#B45309;">Closing Stock</p>
+                        <h3 style="margin:5px 0;color:#92400E;">${formatNumber(totalClosing)}</h3>
+                      </td>
+                      <td width="10"></td>
+                      <td align="center" style="background:#FEE2E2;padding:15px;border-radius:8px;">
+                        <p style="margin:0;font-size:12px;color:#B91C1C;">Total Consumption</p>
+                        <h3 style="margin:5px 0;color:#7F1D1D;">
+                          ${formatNumber(totalConsumption)}
+                        </h3>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Table -->
+              <tr>
+                <td style="padding:0 20px 20px 20px;">
+                  <table width="100%" cellpadding="0" cellspacing="0"
+                         style="border-collapse:collapse;font-size:14px;">
+                    <thead>
+                      <tr style="background:#F9FAFB;text-align:left;border-bottom:2px solid #E5E7EB;">
+                        <th style="padding:12px;">Product</th>
+                        <th style="padding:12px;text-align:right;">Opening Stock</th>
+                        <th style="padding:12px;text-align:right;">Closing Stock</th>
+                        <th style="padding:12px;text-align:right;">Consumption</th>
+                        <th style="padding:12px;text-align:center;">VC Category</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${rows}
+                    </tbody>
+                  </table>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="background:#F9FAFB;padding:15px;text-align:center;
+                           font-size:12px;color:#6B7280;">
+                  This is an automated message from your
+                  <strong>Inventory Management System</strong>.
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+  </html>
+  `
+}
+
+
+export async function runMonthlyReportEmailJob() {
+  console.log("Manually triggering monthly report job")
+  await sendMonthlyReportEmailsToAllClients()
+}

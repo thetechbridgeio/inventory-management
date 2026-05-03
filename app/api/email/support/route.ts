@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     // Send the email
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // Send to yourself
+      to: [process.env.EMAIL_USER!, "businesscoachakhill@gmail.com"], // Send to yourself
       subject: "Client query: Inventory Management",
       text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\nMessage: ${message}`,
       html: `
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
       success: true,
       message: "Support email sent successfully",
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error sending support email:", error)
     return NextResponse.json(
       {

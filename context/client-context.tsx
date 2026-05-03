@@ -28,7 +28,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
     if (storedClient) {
       try {
         setClient(JSON.parse(storedClient))
-      } catch (error) {
+      } catch (error:any) {
         console.error("Failed to parse client from localStorage:", error)
       }
     }
@@ -56,7 +56,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       }
 
       return []
-    } catch (error) {
+    } catch (error:any) {
       console.error("Error fetching clients:", error)
       return []
     }

@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { SalesItem } from "@/lib/types"
+import type { SalesItem } from "@/features/sales/types/sale-entry-form.types" 
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,7 +72,7 @@ export const salesColumns: ColumnDef<SalesItem>[] = [
         } else {
           return <div>{dateString}</div>
         }
-      } catch (error) {
+      } catch (error:any) {
         return <div>{dateString}</div>
       }
     },
