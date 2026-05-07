@@ -1139,7 +1139,7 @@ export default function PurchasePage() {
               </div>
             </PopoverContent>
           </Popover>
-          <DeleteSelectedButton sheetName="Purchase"
+          <DeleteSelectedButton sheetName="Purchase" 
             selectedRows={selectedRows}
             data={data}
             setData={setData}
