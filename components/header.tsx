@@ -47,11 +47,9 @@ export default function Header() {
             <span className="sr-only">Toggle menu</span>
           </Button>
 
-          <Image
+          <img
             src={client?.logoUrl || "/images/default-logo.png"}
             alt="Client Logo"
-            width={40}
-            height={40}
             className="h-10 w-auto"
           />
 
