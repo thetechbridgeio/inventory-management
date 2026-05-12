@@ -1,0 +1,10 @@
+[functions]
+  directory = "netlify/functions"
+
+[[scheduled.functions]]
+  name = "daily-low-stock"
+  cron = "0 9 * * *"
+
+[[scheduled.functions]]
+  name = "monthly-vc-analysis"
+  cron = "0 8 1 * *"
