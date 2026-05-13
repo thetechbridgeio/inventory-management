@@ -11,6 +11,10 @@ import { getStockStatus } from "@/features/dashboard/services/stock.service"
 
 import { Inventory } from "@/features/inventory/types/inventory.types"
 import { useInventory } from "../hooks/use-inventory"
+import { buildLowStockRequestPayload } from "../services/build-low-stock-request-payload"
+import { createLowStockRequest } from "../services/create-low-stock-req.service"
+import { useAuth } from "@/features/auth/context/auth.context"
+import { DEFAULT_COMPANY_LOGO_PDF } from "../constants/logo"
 
 interface LowStockModalProps {
   open: boolean
@@ -21,6 +25,7 @@ type RestockMap = Record<string, number>
 
 export default function LowStockModal({ open, onClose }: LowStockModalProps) {
   const { inventory } = useInventory()
+  const { client } = useAuth()
 
   const { lowStockProducts, negativeStockProducts } = useMemo(
     () => getStockStatus(inventory),
@@ -57,22 +62,27 @@ export default function LowStockModal({ open, onClose }: LowStockModalProps) {
   }
 
   const handleRestock = async () => {
-    const payload = allProducts.map((item) => ({
-      product: item.product,
-      quantity: restockValues[item.product] || 1,
-      currentStock: item.stock,
-      minimumQuantity: item.minimumQuantity,
-      reorderQuantity: item.reorderQuantity,
-      unit: item.unit,
-      category: item.category,
-    }))
+    try {
+      const payload = buildLowStockRequestPayload({
+        products: allProducts,
+        restockValues,
+      })
 
-    console.log("🚀 Restock Request Payload:", payload)
+      await createLowStockRequest({
+        requestId: crypto.randomUUID(),
 
-    // TODO:
-    // await createPurchaseOrder(payload)
+        generatedBy: "Inventory Management System",
 
-    onClose()
+        company: {
+          name: client?.companyName || "Unknown",
+        },
+        items: payload,
+      })
+
+      onClose()
+    } catch (error) {
+      console.error("Failed to create restock request", error)
+    }
   }
 
   const renderProductCard = (

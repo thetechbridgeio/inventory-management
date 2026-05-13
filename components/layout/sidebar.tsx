@@ -25,12 +25,12 @@ const operationalItems = [
     icon: Boxes,
   },
   {
-    title: "Purchases",
+    title: "Incomings",
     href: "/purchases",
     icon: ShoppingCart,
   },
   {
-    title: "Sales",
+    title: "Outgoings",
     href: "/sales",
     icon: PackageSearch,
   },
