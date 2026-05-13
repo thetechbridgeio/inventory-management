@@ -32,6 +32,7 @@ import { PurchaseSearchInput } from "./purchase-search-input"
 import { usePurchasesContext } from "../../context/purchase-provider"
 import { Purchase } from "../../types/purchase.types"
 import { ExportPurchasesPDFButton } from "./export-purchase-pdf-button"
+import { formatSafeDate } from "@/lib/format-date-safely"
 
 const ITEMS_PER_PAGE = 10
 
@@ -150,7 +151,7 @@ export function PurchasesTable() {
 
               <TableHead>Supplier</TableHead>
 
-              <TableHead>Rack</TableHead>
+              {/* <TableHead>Rack</TableHead> */}
 
               <TableHead>Date Received</TableHead>
             </TableRow>
@@ -190,10 +191,10 @@ export function PurchasesTable() {
 
                     <TableCell className="py-3.5">{item.supplier}</TableCell>
 
-                    <TableCell className="py-3.5">{item.rackNumber}</TableCell>
+                    {/* <TableCell className="py-3.5">{item.rackNumber}</TableCell> */}
 
                     <TableCell className="py-3.5">
-                      {format(new Date(item.dateOfReceiving), "dd MMM yyyy")}
+                      {formatSafeDate(item.dateOfReceiving)}
                     </TableCell>
                   </TableRow>
                 )
@@ -204,30 +205,109 @@ export function PurchasesTable() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {paginatedPurchases.length} of {filteredPurchases.length}{" "}
-            purchases
-          </p>
+        <div className="mt-4 rounded-xl border bg-background/60 px-4 py-3 backdrop-blur">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-1 text-center lg:text-left">
+              <p className="text-sm font-medium text-foreground">
+                Showing{" "}
+                <span className="font-semibold">
+                  {Math.min(
+                    (page - 1) * ITEMS_PER_PAGE + 1,
+                    filteredPurchases.length
+                  )}
+                </span>{" "}
+                -
+                <span className="font-semibold">
+                  {" "}
+                  {Math.min(page * ITEMS_PER_PAGE, filteredPurchases.length)}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold">
+                  {filteredPurchases.length}
+                </span>{" "}
+                purchases
+              </p>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page === 1}
-              onClick={() => setPage((prev) => prev - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+              <p className="text-xs text-muted-foreground">
+                Page {page} of {totalPages}
+              </p>
+            </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => prev + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 rounded-lg"
+                disabled={page === 1}
+                onClick={() => setPage((prev) => prev - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const pages: (number | string)[] = []
+
+                  const startPage = Math.max(1, page - 1)
+                  const endPage = Math.min(totalPages, page + 1)
+
+                  if (startPage > 1) {
+                    pages.push(1)
+
+                    if (startPage > 2) {
+                      pages.push("...")
+                    }
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i)
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push("...")
+                    }
+
+                    pages.push(totalPages)
+                  }
+
+                  return pages.map((item, index) =>
+                    item === "..." ? (
+                      <div
+                        key={`ellipsis-${index}`}
+                        className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground"
+                      >
+                        ...
+                      </div>
+                    ) : (
+                      <Button
+                        key={item}
+                        variant={item === page ? "default" : "outline"}
+                        size="sm"
+                        className={`h-9 min-w-[38px] shrink-0 rounded-lg transition-all ${
+                          item === page
+                            ? "pointer-events-none shadow-sm"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setPage(Number(item))}
+                      >
+                        {item}
+                      </Button>
+                    )
+                  )
+                })()}
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-9 w-9 shrink-0 rounded-lg"
+                disabled={page === totalPages}
+                onClick={() => setPage((prev) => prev + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

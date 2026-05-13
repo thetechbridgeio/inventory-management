@@ -184,7 +184,7 @@ export function InventoryTable() {
 
               <TableHead className="py-4 font-semibold">Location</TableHead>
 
-              <TableHead className="py-4 font-semibold">Product Type</TableHead>
+              <TableHead className="py-4 font-semibold">Category</TableHead>
 
               <TableHead className="py-4 font-semibold">Stock</TableHead>
 
@@ -198,12 +198,12 @@ export function InventoryTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedInventory.map((item: Inventory) => {
+            {paginatedInventory.map((item: Inventory, index: number) => {
               const status = getInventoryStatus(item)
 
               return (
                 <TableRow
-                  key={`${item.product}-${item.timestamp}`}
+                  key={index}
                   className="border-b transition-colors hover:bg-muted/40"
                 >
                   <TableCell className="w-[50px]">
@@ -219,9 +219,21 @@ export function InventoryTable() {
                         {item.product}
                       </span>
 
-                      <span className="text-xs text-muted-foreground">
-                        {item.category}
-                      </span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full px-3 py-1 mt-1 font-medium",
+                          getProductTypeBadgeClass(item.productType)
+                        )}
+                      >
+                        {item.productType?.trim()
+                          ? item.productType.toLowerCase() === "raw"
+                            ? "Raw"
+                            : item.productType.toLowerCase() === "finished"
+                              ? "Finished"
+                              : "Unknown"
+                          : "Unknown"}
+                      </Badge>
                     </div>
                   </TableCell>
 
@@ -233,17 +245,7 @@ export function InventoryTable() {
                     {item.location || "-"}
                   </TableCell>
 
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full px-3 py-1 font-medium",
-                        getProductTypeBadgeClass(item.productType)
-                      )}
-                    >
-                      {item.productType}
-                    </Badge>
-                  </TableCell>
+                  <TableCell>{item.category}</TableCell>
 
                   <TableCell>
                     <div className="flex flex-col">
@@ -285,49 +287,102 @@ export function InventoryTable() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {paginatedInventory.length} of {inventory.length} items
-          </p>
+        <div className="mt-4 rounded-2xl border bg-background/60 px-4 py-3 backdrop-blur">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-1 text-center lg:text-left">
+              <p className="text-sm font-medium text-foreground">
+                Showing{" "}
+                <span className="font-semibold">
+                  {Math.min((page - 1) * ITEMS_PER_PAGE + 1, inventory.length)}
+                </span>
+                {" - "}
+                <span className="font-semibold">
+                  {Math.min(page * ITEMS_PER_PAGE, inventory.length)}
+                </span>{" "}
+                of <span className="font-semibold">{inventory.length}</span>{" "}
+                items
+              </p>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page === 1}
-              onClick={() => setPage((prev) => prev - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({
-                length: totalPages,
-              }).map((_, index) => {
-                const currentPage = index + 1
-
-                return (
-                  <Button
-                    key={currentPage}
-                    variant={currentPage === page ? "default" : "outline"}
-                    size="sm"
-                    className="h-9 min-w-[36px]"
-                    onClick={() => setPage(currentPage)}
-                  >
-                    {currentPage}
-                  </Button>
-                )
-              })}
+              <p className="text-xs text-muted-foreground">
+                Page {page} of {totalPages}
+              </p>
             </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => prev + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page === 1}
+                onClick={() => setPage((prev) => prev - 1)}
+                className="h-9 w-9 shrink-0 rounded-xl"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {(() => {
+                  const pages: (number | string)[] = []
+
+                  const startPage = Math.max(1, page - 1)
+                  const endPage = Math.min(totalPages, page + 1)
+
+                  if (startPage > 1) {
+                    pages.push(1)
+
+                    if (startPage > 2) {
+                      pages.push("...")
+                    }
+                  }
+
+                  for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i)
+                  }
+
+                  if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                      pages.push("...")
+                    }
+
+                    pages.push(totalPages)
+                  }
+
+                  return pages.map((item, index) =>
+                    item === "..." ? (
+                      <div
+                        key={`ellipsis-${index}`}
+                        className="flex h-9 w-9 items-center justify-center text-sm text-muted-foreground"
+                      >
+                        ...
+                      </div>
+                    ) : (
+                      <Button
+                        key={item}
+                        variant={item === page ? "default" : "outline"}
+                        size="sm"
+                        className={`h-9 min-w-[38px] shrink-0 rounded-xl transition-all ${
+                          item === page
+                            ? "pointer-events-none shadow-sm"
+                            : "hover:bg-muted"
+                        }`}
+                        onClick={() => setPage(Number(item))}
+                      >
+                        {item}
+                      </Button>
+                    )
+                  )
+                })()}
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                disabled={page === totalPages}
+                onClick={() => setPage((prev) => prev + 1)}
+                className="h-9 w-9 shrink-0 rounded-xl"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       )}

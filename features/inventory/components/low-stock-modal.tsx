@@ -75,12 +75,16 @@ export default function LowStockModal({ open, onClose }: LowStockModalProps) {
     onClose()
   }
 
-  const renderProductCard = (item: Inventory, type: "negative" | "low") => {
+  const renderProductCard = (
+    item: Inventory,
+    type: "negative" | "low",
+    index: number
+  ) => {
     const quantity = restockValues[item.product] || 1
 
     return (
       <div
-        key={item.product}
+        key={index}
         className="flex flex-col gap-4 rounded-2xl border border-border bg-muted/20 p-4 transition-all hover:bg-muted/40 md:flex-row md:items-center md:justify-between"
       >
         {/* Left */}
@@ -200,8 +204,8 @@ export default function LowStockModal({ open, onClose }: LowStockModalProps) {
               </div>
 
               <div className="space-y-3">
-                {negativeStockProducts.map((item) =>
-                  renderProductCard(item, "negative")
+                {negativeStockProducts.map((item, index) =>
+                  renderProductCard(item, "negative", index)
                 )}
               </div>
             </section>
@@ -225,7 +229,9 @@ export default function LowStockModal({ open, onClose }: LowStockModalProps) {
               </div>
 
               <div className="space-y-3">
-                {lowStockProducts.map((item) => renderProductCard(item, "low"))}
+                {lowStockProducts.map((item, index) =>
+                  renderProductCard(item, "low", index)
+                )}
               </div>
             </section>
           )}

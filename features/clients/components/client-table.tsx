@@ -175,7 +175,7 @@ export function ClientTable() {
 
                   {/* Actions */}
                   <TableCell className="px-6 py-5 text-right flex justify-end gap-3 items-center">
-                    {/* <SelectClientButton client={client} /> */}
+                    {client.isActive && <SelectClientButton client={client} />}
                     <DeleteClientButton client={client} />
                   </TableCell>
                 </TableRow>
