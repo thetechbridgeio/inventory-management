@@ -15,9 +15,7 @@ export default function DashboardPage() {
           <PurchaseProvider>
             <SuppliersProvider>
               <div className="mb-6">
-                <h1 className="text-2xl font-bold tracking-tight">
-                  Analytics and Reports
-                </h1>
+                <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
                 <p className="text-muted-foreground">
                   Get insights into your inventory, sales, and purchases with
                   our comprehensive analytics dashboard

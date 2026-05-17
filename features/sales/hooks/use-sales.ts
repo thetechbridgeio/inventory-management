@@ -74,7 +74,7 @@ export function useSales(): UseSalesReturn {
       setSales(data)
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to fetch sales"
+        err instanceof Error ? err.message : "Failed to fetch Outgoings"
 
       setError(message)
 
@@ -108,14 +108,14 @@ export function useSales(): UseSalesReturn {
           sheetId: client.sheetId,
         })
 
-        toast.success("Sales item added successfully")
+        toast.success("Outgoing item added successfully")
 
         await refreshSales()
 
         return true
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to add sales item"
+          err instanceof Error ? err.message : "Failed to add outgoings item"
 
         setError(message)
 

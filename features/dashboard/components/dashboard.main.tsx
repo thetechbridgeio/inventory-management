@@ -7,7 +7,8 @@ import { InventoryCategoryChart } from "./inventory-category"
 import { SalesOverviewChart } from "./sales-overview-chart"
 import { StockStatusSection } from "./stock-status-section"
 import { SupplierOverviewCard } from "./suppplier-overview.card"
-import SlowMovingStockCard from "./slow-moving-stock-card"
+import SlowMovingStockCard from "./moving-stock-card"
+import InventoryClassificationCards from "./moving-stock.main"
 
 const DashbaordComponent = () => {
   const { inventory } = useInventoryContext()
@@ -24,12 +25,12 @@ const DashbaordComponent = () => {
 
       <StockStatusSection inventory={inventory} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* <div className="grid gap-6 lg:grid-cols-3">
         <SalesOverviewChart sales={sales} inventory={inventory} />
 
         <InventoryCategoryChart inventory={inventory} />
-      </div>
-      <SlowMovingStockCard />
+      </div> */}
+      <InventoryClassificationCards />
 
       {/* <SupplierOverviewCard suppliers={suppliers} /> */}
     </div>

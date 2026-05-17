@@ -13,7 +13,7 @@ const SalesPage = () => {
           <div className="flex justify-between items-center gap-6 mb-6">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Sale Management
+                Outgoing Management
               </h1>
               <p className="mt-2 text-muted-foreground">
                 Manage and track your sales/outgoings

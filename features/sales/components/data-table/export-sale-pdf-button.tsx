@@ -33,9 +33,9 @@ export function ExportSalesPDFButton({ data }: Props) {
     ])
 
     createPDF({
-      title: "Sales Report",
+      title: "Outgoing Report",
 
-      fileName: "sales-report.pdf",
+      fileName: "Outgoing-report.pdf",
 
       headers: [
         "Sr",

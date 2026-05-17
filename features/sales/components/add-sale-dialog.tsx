@@ -138,7 +138,7 @@ export function AddSalesButton() {
       <DialogTrigger asChild>
         <Button className="h-11 rounded-xl">
           <ShoppingCart className="mr-2 h-4 w-4" />
-          Add Sale
+          Add Outgoing
         </Button>
       </DialogTrigger>
 
@@ -326,7 +326,7 @@ export function AddSalesButton() {
               <h3 className="text-lg font-semibold">Issue Details</h3>
 
               <p className="text-sm text-muted-foreground">
-                Configure the sale issue date.
+                Configure the Outgoing issue date.
               </p>
             </div>
 
@@ -389,7 +389,7 @@ export function AddSalesButton() {
               {creating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Sale...
+                  Creating Outgoing...
                 </>
               ) : (
                 <>

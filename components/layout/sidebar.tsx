@@ -35,7 +35,7 @@ const operationalItems = [
     icon: PackageSearch,
   },
   {
-    title: "Analytics & Reports",
+    title: "Dashboard",
     href: "/report",
     icon: BarChart3,
   },
@@ -168,7 +168,7 @@ export function Sidebar() {
               <span className="text-xs text-muted-foreground">Powered by</span>
 
               <span className="text-sm font-semibold tracking-tight">
-                Business Coach Akhil
+                Business Coach Akhill M
               </span>
             </div>
           </div>

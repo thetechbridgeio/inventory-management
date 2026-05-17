@@ -1,9 +1,10 @@
 import { Inventory } from "@/features/inventory/types/inventory.types"
 import { SalesItem } from "@/features/sales/types/sales.types"
 
-const THRESHOLD_DAYS = 90
+const FAST_DAYS = 30
+const SLOW_DAYS = 90
 
-export function getSlowMovingStock({
+export function getInventoryClassification({
   sales,
   inventory,
 }: {
@@ -13,13 +14,15 @@ export function getSlowMovingStock({
   const now = Date.now()
 
   /**
-   * Store latest sale timestamp per product
+   * Latest sale tracking
    */
   const latestSaleMap = new Map<string, number>()
 
   /**
-   * Build latest sale lookup
+   * Sales frequency tracking
    */
+  const salesCountMap = new Map<string, number>()
+
   sales.forEach((sale) => {
     if (!sale.product) return
 
@@ -29,52 +32,105 @@ export function getSlowMovingStock({
 
     const saleTime = new Date(rawDate).getTime()
 
-    /**
-     * Ignore invalid dates
-     */
     if (Number.isNaN(saleTime)) return
 
-    const existingSaleTime = latestSaleMap.get(sale.product)
-
     /**
-     * Keep latest timestamp only
+     * Store latest sale
      */
-    if (!existingSaleTime || saleTime > existingSaleTime) {
+    const existingLatest = latestSaleMap.get(sale.product)
+
+    if (!existingLatest || saleTime > existingLatest) {
       latestSaleMap.set(sale.product, saleTime)
     }
+
+    /**
+     * Increment sales count
+     */
+    salesCountMap.set(sale.product, (salesCountMap.get(sale.product) || 0) + 1)
   })
 
-  /**
-   * Filter slow moving products
-   */
-  const slowMovingProducts = inventory.filter((item) => {
+  const fastMovingHighValue: Inventory[] = []
+
+  const mediumMovingMediumValue: Inventory[] = []
+
+  const slowMovingLowValue: Inventory[] = []
+
+  const deadStock: Inventory[] = []
+
+  inventory.forEach((item) => {
     /**
-     * Ignore products with no stock
+     * Ignore empty stock
      */
-    if (item.stock <= 0) {
-      return false
-    }
+    if (item.stock <= 0) return
 
     const latestSaleTime = latestSaleMap.get(item.product)
 
+    const salesCount = salesCountMap.get(item.product) || 0
+
     /**
-     * No sales found
-     * => slow moving
+     * Never sold
      */
     if (!latestSaleTime) {
-      return true
+      deadStock.push(item)
+      return
     }
 
     const daysSinceLastSale = Math.floor(
       (now - latestSaleTime) / (1000 * 60 * 60 * 24)
     )
 
-    return daysSinceLastSale >= THRESHOLD_DAYS
+    /**
+     * FAST MOVING + HIGH VALUE
+     */
+    if (
+      daysSinceLastSale <= FAST_DAYS &&
+      item.value >= 10000 &&
+      salesCount >= 10
+    ) {
+      fastMovingHighValue.push(item)
+      return
+    }
+
+    /**
+     * MEDIUM MOVING + MEDIUM VALUE
+     */
+    if (
+      daysSinceLastSale > FAST_DAYS &&
+      daysSinceLastSale < SLOW_DAYS &&
+      item.value >= 3000
+    ) {
+      mediumMovingMediumValue.push(item)
+      return
+    }
+
+    /**
+     * DEAD STOCK
+     */
+    if (daysSinceLastSale >= SLOW_DAYS) {
+      deadStock.push(item)
+      return
+    }
+
+    /**
+     * Remaining products
+     */
+    slowMovingLowValue.push(item)
   })
 
   return {
-    slowMovingProducts,
+    fastMovingHighValue,
+    mediumMovingMediumValue,
+    slowMovingLowValue,
+    deadStock,
 
-    totalSlowMovingProducts: slowMovingProducts.length,
+    totals: {
+      fastMovingHighValue: fastMovingHighValue.length,
+
+      mediumMovingMediumValue: mediumMovingMediumValue.length,
+
+      slowMovingLowValue: slowMovingLowValue.length,
+
+      deadStock: deadStock.length,
+    },
   }
 }

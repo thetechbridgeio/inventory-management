@@ -149,13 +149,13 @@ export function AddPurchaseButton() {
       <DialogTrigger asChild>
         <Button className="h-11 rounded-xl">
           <PackagePlus className="mr-2 h-4 w-4" />
-          Add Purchase
+          Add Incoming
         </Button>
       </DialogTrigger>
 
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-3xl sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">Add Purchase</DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Add Incoming</DialogTitle>
 
           <DialogDescription>
             Record incoming inventory purchases, supplier details, and receiving
@@ -446,12 +446,12 @@ export function AddPurchaseButton() {
               {creating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Purchase...
+                  Creating Incoming...
                 </>
               ) : (
                 <>
                   <Plus className="mr-2 h-4 w-4" />
-                  Create Purchase
+                  Create Incoming
                 </>
               )}
             </Button>

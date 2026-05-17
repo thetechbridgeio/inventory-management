@@ -174,7 +174,7 @@ export function SalesTable() {
                 <TableCell colSpan={7} className="h-60">
                   <div className="flex h-full flex-col items-center justify-center gap-2">
                     <p className="text-sm font-medium text-foreground">
-                      No sales records found
+                      No Outgoing records found
                     </p>
 
                     <p className="text-xs text-muted-foreground">
@@ -272,7 +272,7 @@ export function SalesTable() {
                   {Math.min(page * ITEMS_PER_PAGE, filteredSales.length)}
                 </span>{" "}
                 of <span className="font-semibold">{filteredSales.length}</span>{" "}
-                sales records
+                Outgoings records
               </p>
 
               <p className="text-xs text-muted-foreground">

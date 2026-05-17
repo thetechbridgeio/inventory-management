@@ -13,7 +13,9 @@ export function Header() {
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border/50 bg-white/95 px-6 backdrop-blur">
       {/* Left */}
       <div>
-        <h1 className="text-xl font-bold tracking-tight">Inventory Manager</h1>
+        <h1 className="text-xl font-bold tracking-tight">
+          Inventory Management System
+        </h1>
       </div>
 
       {/* Right */}
