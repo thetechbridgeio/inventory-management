@@ -59,17 +59,22 @@ export function SalesFilterDropdown({
   onFiltersChange,
 }: Props) {
   const products = useMemo(() => {
-    return Array.from(new Set(sales.map((item) => item.product.trim()))).sort(
-      (a, b) => a.localeCompare(b)
-    )
+    return Array.from(
+      new Set(
+        sales.map((item) => String(item.product ?? "").trim()).filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b))
   }, [sales])
 
   const companies = useMemo(() => {
     return Array.from(
-      new Set(sales.map((item) => item.companyName.trim()))
+      new Set(
+        sales
+          .map((item) => String(item.companyName ?? "").trim())
+          .filter(Boolean)
+      )
     ).sort((a, b) => a.localeCompare(b))
   }, [sales])
-
   const totalFilters =
     filters.products.length +
     filters.companies.length +
