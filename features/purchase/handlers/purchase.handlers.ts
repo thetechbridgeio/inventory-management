@@ -22,8 +22,10 @@ export function normalizePurchase(purchase: Purchase): Purchase {
 }
 
 export function purchasesMatch(purchaseA: Purchase, purchaseB: Purchase) {
-  normalize(purchaseA.product) === normalize(purchaseB.product) &&
+  return (
+    normalize(purchaseA.product) === normalize(purchaseB.product) &&
     normalize(purchaseA.poNumber) === normalize(purchaseB.poNumber)
+  )
 }
 
 export function purchaseExists(
