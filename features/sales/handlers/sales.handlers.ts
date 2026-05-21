@@ -1,3 +1,4 @@
+import { normalize } from "@/lib/normalize"
 import { SalesItem } from "../types/sales.types"
 
 export function normalizeSalesItem(salesItem: SalesItem): SalesItem {
@@ -18,12 +19,10 @@ export function normalizeSalesItem(salesItem: SalesItem): SalesItem {
   }
 }
 
-export function salesItemsMatch(salesA: SalesItem, salesB: SalesItem) {
+export function salesItemsMatch(salesA: SalesItem, salesB: SalesItem): boolean {
   return (
-    salesA.product.trim().toLowerCase() ===
-      salesB.product.trim().toLowerCase() &&
-    salesA.companyName.trim().toLowerCase() ===
-      salesB.companyName.trim().toLowerCase() &&
+    normalize(salesA.product) === normalize(salesB.product) &&
+    normalize(salesA.companyName) === normalize(salesB.companyName) &&
     salesA.dateOfIssue === salesB.dateOfIssue
   )
 }

@@ -1,3 +1,4 @@
+import { normalize } from "@/lib/normalize"
 import { Purchase } from "../types/purchase.types"
 
 export function normalizePurchase(purchase: Purchase): Purchase {
@@ -21,12 +22,8 @@ export function normalizePurchase(purchase: Purchase): Purchase {
 }
 
 export function purchasesMatch(purchaseA: Purchase, purchaseB: Purchase) {
-  return (
-    purchaseA.product.trim().toLowerCase() ===
-      purchaseB.product.trim().toLowerCase() &&
-    purchaseA.poNumber.trim().toLowerCase() ===
-      purchaseB.poNumber.trim().toLowerCase()
-  )
+  normalize(purchaseA.product) === normalize(purchaseB.product) &&
+    normalize(purchaseA.poNumber) === normalize(purchaseB.poNumber)
 }
 
 export function purchaseExists(

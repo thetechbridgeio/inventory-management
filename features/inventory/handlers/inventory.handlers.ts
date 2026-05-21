@@ -1,3 +1,4 @@
+import { normalize } from "@/lib/normalize"
 import { Inventory } from "../types/inventory.types"
 
 export function normalizeInventory(inventory: Inventory): Inventory {
@@ -34,12 +35,13 @@ export function normalizeInventory(inventory: Inventory): Inventory {
   }
 }
 
-export function inventoriesMatch(inventoryA: Inventory, inventoryB: Inventory) {
+export function inventoriesMatch(
+  inventoryA: Inventory,
+  inventoryB: Inventory
+): boolean {
   return (
-    inventoryA.product.trim().toLowerCase() ===
-      inventoryB.product.trim().toLowerCase() &&
-    inventoryA.category.trim().toLowerCase() ===
-      inventoryB.category.trim().toLowerCase()
+    normalize(inventoryA.product) === normalize(inventoryB.product) &&
+    normalize(inventoryA.category) === normalize(inventoryB.category)
   )
 }
 
