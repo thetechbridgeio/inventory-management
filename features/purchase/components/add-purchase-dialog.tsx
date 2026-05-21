@@ -89,31 +89,45 @@ export function AddPurchaseButton() {
   const selectedProduct = watch("product")
 
   const selectedInventory = useMemo(() => {
-    return inventory.find((item) => item.product === selectedProduct)
+    if (!selectedProduct) return null
+
+    return (
+      inventory.find(
+        (item) => item?.product?.trim() === selectedProduct?.trim()
+      ) ?? null
+    )
   }, [inventory, selectedProduct])
 
   const productOptions = useMemo(() => {
     return Array.from(
-      new Map(inventory.map((item) => [item.product, item])).values()
+      new Map(
+        inventory
+          .filter((item) => item?.product?.trim())
+          .map((item) => [item.product.trim(), item])
+      ).values()
     )
   }, [inventory])
 
   const supplierOptions = useMemo(() => {
     return Array.from(
       new Map(
-        suppliers.map((supplier) => [supplier.companyName, supplier])
+        suppliers
+          .filter((supplier) => supplier?.companyName?.trim())
+          .map((supplier) => [supplier.companyName.trim(), supplier])
       ).values()
     )
   }, [suppliers])
 
   const handleProductChange = (value: string) => {
-    const matchedInventory = inventory.find((item) => item.product === value)
+    if (!value?.trim()) return
 
-    setValue("product", value)
+    const matchedInventory = inventory.find(
+      (item) => item?.product?.trim() === value.trim()
+    )
 
-    if (matchedInventory?.unit) {
-      setValue("unit", matchedInventory.unit)
-    }
+    setValue("product", value.trim())
+
+    setValue("unit", matchedInventory?.unit?.trim() || "")
   }
 
   const onSubmit = async (data: PurchaseFormData) => {
@@ -196,7 +210,7 @@ export function AddPurchaseButton() {
                     {productOptions.map((item) => (
                       <SelectItem
                         key={item.product}
-                        value={item.product}
+                        value={item.product || "Unknown Product"}
                         className="py-3"
                       >
                         <div className="flex w-full min-w-0 flex-col">
@@ -323,8 +337,12 @@ export function AddPurchaseButton() {
                 <Label>Supplier</Label>
 
                 <Select
-                  value={watch("supplier")}
-                  onValueChange={(value) => setValue("supplier", value)}
+                  value={watch("supplier") || ""}
+                  onValueChange={(value) => {
+                    if (!value?.trim()) return
+
+                    setValue("supplier", value.trim())
+                  }}
                 >
                   <SelectTrigger className="h-11 w-full rounded-xl">
                     <SelectValue placeholder="Select supplier" />
@@ -334,7 +352,7 @@ export function AddPurchaseButton() {
                     {supplierOptions.map((supplier) => (
                       <SelectItem
                         key={supplier.companyName}
-                        value={supplier.companyName}
+                        value={supplier.companyName || "Unknown Supplier Name"}
                         className="py-3"
                       >
                         <div className="flex w-full min-w-0 flex-col">
