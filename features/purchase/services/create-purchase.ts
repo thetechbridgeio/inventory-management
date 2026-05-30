@@ -24,9 +24,9 @@ export async function createPurchaseService({
 
   const alreadyExists = purchaseExists(existingPurchases, normalizedPurchase)
 
-  if (alreadyExists) {
-    throw new Error("Purchase already exists")
-  }
+  // if (alreadyExists) {
+  //   throw new Error("Purchase already exists")
+  // }
 
   const response = await fetch("/api/sheets", {
     method: "POST",

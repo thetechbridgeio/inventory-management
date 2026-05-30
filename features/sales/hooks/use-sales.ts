@@ -12,6 +12,8 @@ import { fetchSales } from "../services/fetch-sales"
 import { createSales } from "../services/create-sales"
 import { updateSales } from "../services/update-sales"
 import { deleteSales } from "../services/delete-sales"
+import { Inventory } from "@/features/inventory/types/inventory.types"
+import { useInventoryContext } from "@/features/inventory/context/inventory-provider"
 
 type UseSalesReturn = {
   sales: SalesItem[]
@@ -25,7 +27,10 @@ type UseSalesReturn = {
 
   refreshSales: () => Promise<void>
 
-  createSales: (salesItem: SalesItem) => Promise<boolean>
+  createSales: (
+    salesItem: SalesItem,
+    inventoryData: Inventory
+  ) => Promise<boolean>
 
   updateSales: (
     originalSales: SalesItem,
@@ -37,6 +42,7 @@ type UseSalesReturn = {
 
 export function useSales(): UseSalesReturn {
   const { client, initialized } = useAuth()
+  const { updateInventory } = useInventoryContext()
 
   const [sales, setSales] = useState<SalesItem[]>([])
 
@@ -85,7 +91,10 @@ export function useSales(): UseSalesReturn {
   }, [initialized, client?.sheetId])
 
   const handleCreateSales = useCallback(
-    async (salesItem: SalesItem): Promise<boolean> => {
+    async (
+      salesItem: SalesItem,
+      inventoryData: Inventory
+    ): Promise<boolean> => {
       if (!initialized) {
         toast.error("Client still loading")
 
@@ -102,11 +111,18 @@ export function useSales(): UseSalesReturn {
         setCreating(true)
         setError(null)
 
+        const updateInventoryPayload = {
+          ...inventoryData,
+          stock: inventoryData.stock - salesItem.quantity,
+        }
+
         await createSales({
           sales,
           salesItem,
           sheetId: client.sheetId,
         })
+
+        await updateInventory(inventoryData, updateInventoryPayload)
 
         toast.success("Outgoing item added successfully")
 

@@ -18,7 +18,7 @@ export function getStockStatus(inventory: Inventory[]) {
       return
     }
 
-    if (stock <= item.minimumQuantity) {
+    if (stock < item.minimumQuantity && stock > 0) {
       lowStock++
       lowStockProducts.push(item)
       return

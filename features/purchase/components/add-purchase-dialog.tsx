@@ -140,7 +140,7 @@ export function AddPurchaseButton() {
         dateOfReceiving: new Date(data.dateOfReceiving).toISOString(),
       }
 
-      const success = await createPurchase(payload)
+      const success = await createPurchase(payload, selectedInventory!)
 
       if (!success) {
         return
