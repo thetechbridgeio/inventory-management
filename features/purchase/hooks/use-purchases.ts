@@ -14,6 +14,8 @@ import { updatePurchaseService } from "../services/update-purchase"
 
 import { deletePurchaseService } from "../services/delete-purchase"
 import { useAuth } from "@/features/auth/context/auth.context"
+import { useInventoryContext } from "@/features/inventory/context/inventory-provider"
+import { Inventory } from "@/features/inventory/types/inventory.types"
 
 type UsePurchasesReturn = {
   purchases: Purchase[]
@@ -27,7 +29,10 @@ type UsePurchasesReturn = {
 
   refreshPurchases: () => Promise<void>
 
-  createPurchase: (purchase: Purchase) => Promise<boolean>
+  createPurchase: (
+    purchase: Purchase,
+    inventoryData: Inventory
+  ) => Promise<boolean>
 
   updatePurchase: (
     originalPurchase: Purchase,
@@ -39,6 +44,7 @@ type UsePurchasesReturn = {
 
 export function usePurchases(): UsePurchasesReturn {
   const { client, initialized } = useAuth()
+  const { updateInventory } = useInventoryContext()
 
   const [purchases, setPurchases] = useState<Purchase[]>([])
 
@@ -75,7 +81,7 @@ export function usePurchases(): UsePurchasesReturn {
   }, [client?.sheetId])
 
   const createPurchase = useCallback(
-    async (purchase: Purchase): Promise<boolean> => {
+    async (purchase: Purchase, inventoryData: Inventory): Promise<boolean> => {
       if (!initialized) {
         toast.error("Client still loading")
 
@@ -92,13 +98,18 @@ export function usePurchases(): UsePurchasesReturn {
         setCreating(true)
         setError(null)
 
+        const updatedInventoryPayload = {
+          ...inventoryData,
+          stock: inventoryData.stock + purchase.quantity,
+        }
+
         await createPurchaseService({
           purchase,
-
           existingPurchases: purchases,
-
           sheetId: client.sheetId,
         })
+
+        await updateInventory(inventoryData, updatedInventoryPayload)
 
         toast.success("Purchase added successfully")
 

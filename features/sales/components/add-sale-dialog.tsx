@@ -115,7 +115,7 @@ export function AddSalesButton() {
         dateOfIssue: new Date(data.dateOfIssue).toISOString(),
       }
 
-      const success = await createSales(payload)
+      const success = await createSales(payload, selectedInventory!)
 
       if (!success) {
         return
