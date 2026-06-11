@@ -89,14 +89,12 @@ export function PurchaseTableTools({
         <PurchaseExportButton filters={exportFilters} />
 
         <DropdownMenu>
-         <DropdownMenuTrigger asChild>
-  <button
-    onClick={() => console.log("clicked")}
-    className="border px-4 py-2"
-  >
-    Filters
-  </button>
-</DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filters
+            </Button>
+          </DropdownMenuTrigger>
 
           <DropdownMenuContent
             align="end"
