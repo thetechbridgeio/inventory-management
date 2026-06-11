@@ -1,0 +1,38 @@
+import { z } from "zod";
+
+export const SaleItemSchema = z.object({
+  productId: z.uuid("Product is required"),
+
+  quantity: z.coerce
+    .number({
+      error: "Quantity is required",
+    })
+    .int()
+    .min(1, "Quantity must be at least 1"),
+
+  sellingPrice: z.coerce
+    .number({
+      error: "Selling price is required",
+    })
+    .positive("Selling price must be greater than 0"),
+});
+
+export const CreateSaleFormSchema = z
+  .object({
+    saleDate: z.string().min(1, "Sale date is required"),
+
+    remarks: z.string().trim().max(1000, "Remarks is too long").nullable().optional(),
+
+    items: z.array(SaleItemSchema).min(1, "At least one item is required"),
+  })
+  .refine(
+    (data) => {
+      const productIds = data.items.map((item) => item.productId);
+
+      return new Set(productIds).size === productIds.length;
+    },
+    {
+      path: ["items"],
+      message: "Duplicate products are not allowed",
+    },
+  );

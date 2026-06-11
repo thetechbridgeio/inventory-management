@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "features/suppliers/service/get-supplier-by-id.service.ts"  ],
   "exclude": ["node_modules"]
 }
