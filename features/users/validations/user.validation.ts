@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ROLES } from "../constants/user-role";
+import { ROLES } from "../../auth/constants/user-role";
 
 export const onboardingUserSchema = z
   .object({

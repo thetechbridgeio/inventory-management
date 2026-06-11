@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+
 import "./globals.css";
+
 import { QueryProvider } from "@/lib/query-provider";
+import { AuthProvider } from "@/features/auth/providers/use-auth.provider";
+
 import { Toaster } from "sonner";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
@@ -21,8 +25,11 @@ export default function RootLayout({
     <html lang="en" className={`${inter.className} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <QueryProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
+          <AuthProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </AuthProvider>
         </QueryProvider>
+
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>

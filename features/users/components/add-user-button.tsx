@@ -24,7 +24,7 @@ import { onboardingUserSchema } from "../validations/user.validation";
 import { CreateUserType, OnboardUserType } from "../types/user.type";
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFSelect } from "@/components/react-hook-form-fields/rhf-select";
-import { ROLE_LABELS, ROLES } from "../constants/user-role";
+import { ROLE_LABELS, ROLES } from "../../auth/constants/user-role";
 
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);

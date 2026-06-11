@@ -21,7 +21,8 @@ import {
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "../contexts/auth.context";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../providers/use-auth.provider";
 
 // import { ForgotPasswordDialog } from "./forgot-password-dialog"
 
@@ -33,6 +34,7 @@ interface LoginFormData {
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
+  const router = useRouter()
 
   const [loading, setLoading] = useState(false);
 
@@ -52,7 +54,7 @@ export function LoginForm() {
 
       await login(data);
 
-      // router.push("/dashboard");
+      router.push("/inventory");
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/pagination";
-import { ROLES } from "../constants/user-role";
+import { ROLES } from "../../auth/constants/user-role";
 
 export function parseUserQueryParams(searchParams: URLSearchParams) {
   const page = Number(searchParams.get("page")) || DEFAULT_PAGE;

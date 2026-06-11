@@ -1,6 +1,6 @@
 import z from "zod";
 import { onboardingUserSchema } from "../validations/user.validation";
-import { UserRole } from "../constants/user-role";
+import { UserRole } from "../../auth/constants/user-role";
 
 export type OnboardUserType = z.infer<typeof onboardingUserSchema>;
 

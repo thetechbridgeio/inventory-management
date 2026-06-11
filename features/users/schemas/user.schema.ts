@@ -1,6 +1,6 @@
 import { companies } from "@/features/company/schemas/company.schema";
 import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { ROLES, UserRole } from "../constants/user-role";
+import { ROLES, UserRole } from "../../auth/constants/user-role";
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey(),

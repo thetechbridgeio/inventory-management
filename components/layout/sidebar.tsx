@@ -16,60 +16,100 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { useCurrentUser } from "@/features/auth/providers/use-auth.provider";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { ROLE_LABELS, ROLES } from "@/features/auth/constants/user-role";
+import { Badge } from "../ui/badge";
+import { ACCESS } from "@/features/auth/constants/access";
 
 const operationalItems = [
   {
     title: "Inventory",
     href: "/inventory",
     icon: Boxes,
+    access: "inventory",
   },
   {
     title: "Incomings",
     href: "/purchases",
     icon: ShoppingCart,
+    access: "purchases",
   },
   {
     title: "Outgoings",
     href: "/sales",
     icon: PackageSearch,
+    access: "sales",
   },
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: BarChart3,
+    access: "dashboard",
   },
-];
+] as const;
 
 const managementItems = [
   {
     title: "Suppliers",
     href: "/suppliers",
     icon: PackagePlus,
+    access: "suppliers",
   },
   {
     title: "Company",
     href: "/company",
     icon: Building2,
+    access: "company",
   },
   {
     title: "Users",
     href: "/users",
     icon: Building2,
+    access: "users",
   },
   {
     title: "Support Center",
     href: "/support",
     icon: Headset,
+    access: "support",
   },
-];
+] as const;
+
+const roleConfig = {
+  [ROLES.SUPER_ADMIN]: {
+    label: ROLE_LABELS.SUPER_ADMIN,
+    className:
+      "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-50",
+  },
+
+  [ROLES.PURCHASE_ADMIN]: {
+    label: ROLE_LABELS.PURCHASE_ADMIN,
+    className: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50",
+  },
+
+  [ROLES.STORE_ADMIN]: {
+    label: ROLE_LABELS.STORE_ADMIN,
+    className:
+      "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+  },
+};
 
 export function Sidebar() {
   const pathname = usePathname();
 
-  const user = useCurrentUser();
+  const { user } = useAuth();
 
-  console.log(user)
+  if (!user) return null;
+
+  const roleBadge = roleConfig[user.role];
+
+  const visibleOperationalItems = operationalItems.filter((item) =>
+  ACCESS[item.access].includes(user.role),
+);
+
+const visibleManagementItems = managementItems.filter((item) =>
+  ACCESS[item.access].includes(user.role),
+);
 
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-72 flex-col border-r bg-background">
@@ -94,6 +134,12 @@ export function Sidebar() {
           </h2>
 
           <p className="mt-1 text-xs text-muted-foreground">{user.name}</p>
+          <Badge
+            variant="outline"
+            className={cn("mt-2 font-medium", roleBadge.className)}
+          >
+            {roleBadge.label}
+          </Badge>
         </div>
       </div>
 
@@ -104,7 +150,7 @@ export function Sidebar() {
           </p>
 
           <nav className="space-y-2">
-            {operationalItems.map((item) => {
+            {visibleOperationalItems.map((item) => {
               const Icon = item.icon;
 
               const isActive =
@@ -135,7 +181,7 @@ export function Sidebar() {
           </p>
 
           <nav className="space-y-2">
-            {managementItems.map((item) => {
+            {visibleManagementItems.map((item) => {
               const Icon = item.icon;
 
               const isActive =

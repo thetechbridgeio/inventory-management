@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ROLES } from "../../constants/user-role";
+import { ROLES } from "../../../auth/constants/user-role";
 
 type Props = {
   filters: {

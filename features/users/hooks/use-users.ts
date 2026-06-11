@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { UserRole } from "../constants/user-role";
+import { UserRole } from "../../auth/constants/user-role";
 
 type GetUsersParams = {
   page?: number;

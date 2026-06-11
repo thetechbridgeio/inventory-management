@@ -1,64 +1,111 @@
 "use client";
 
-import { createContext, ReactNode, useContext } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+} from "react";
+
+import { createClient } from "@/lib/supabase/client";
 
 import { useMe } from "@/features/auth/hooks/use-me";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Building2, Loader2 } from "lucide-react";
+import { UserRole } from "../constants/user-role";
 
-type CurrentUser = {
+export type CurrentUser = {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   companyId: string;
   companyName: string;
   companyLogo: string | null;
 };
 
-const AuthContext = createContext<CurrentUser | null>(null);
+type LoginData = {
+  email: string;
+  password: string;
+};
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { data: user, isLoading, error } = useMe();
+type AuthContextType = {
+  user: CurrentUser | null;
+  isLoading: boolean;
+  isAuthenticated: boolean;
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center">
-          <img src="/logo.png" alt="Logo" className="h-14 animate-pulse" />
-          <div className="mt-3 flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Loading your data...</span>
-          </div>
-        </div>
-      </div>
-    );
+  login: (data: LoginData) => Promise<void>;
+  logout: () => Promise<void>;
+
+  hasRole: (...roles: string[]) => boolean;
+};
+
+const AuthContext =
+  createContext<AuthContextType | null>(null);
+
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const supabase = createClient();
+
+  const { data, isLoading } = useMe();
+
+  const user = data?.data ?? null;
+
+  async function login(data: LoginData) {
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+    if (error) {
+      throw error;
+    }
   }
 
-  if (error || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="max-w-sm text-center">
-          <h2 className="font-semibold">Unable to load user information</h2>
+  async function logout() {
+    const { error } =
+      await supabase.auth.signOut();
 
-          <p className="mt-2 text-sm text-muted-foreground">
-            Please refresh the page or sign in again.
-          </p>
-        </div>
-      </div>
-    );
+    if (error) {
+      throw error;
+    }
   }
+
+  function hasRole(...roles: string[]) {
+    if (!user) {
+      return false;
+    }
+
+    return roles.includes(user.role);
+  }
+
   return (
-    <AuthContext.Provider value={user.data}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: !!user,
+
+        login,
+        logout,
+
+        hasRole,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
 }
 
-export function useCurrentUser() {
-  const user = useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
 
-  if (!user) {
-    throw new Error("useCurrentUser must be used within AuthProvider");
+  if (!context) {
+    throw new Error(
+      "useAuth must be used within AuthProvider"
+    );
   }
 
-  return user;
+  return context;
 }

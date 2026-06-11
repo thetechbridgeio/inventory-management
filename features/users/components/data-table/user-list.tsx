@@ -12,7 +12,7 @@ import { useUsers } from "../../hooks/use-users";
 import { UserTable } from "./user-table";
 import { userColumns } from "./user-columns";
 import { UserTableTools } from "./user-table-tools";
-import { UserRole } from "../../constants/user-role";
+import { UserRole } from "../../../auth/constants/user-role";
 
 export function UserList() {
   const [filters, setFilters] = useQueryStates({

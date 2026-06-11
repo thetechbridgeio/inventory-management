@@ -2,7 +2,7 @@ import "server-only";
 
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { ROLES } from "../constants/user-role";
+import { ROLES } from "../../auth/constants/user-role";
 import { users } from "../schemas/user.schema";
 
 export async function deleteUser(

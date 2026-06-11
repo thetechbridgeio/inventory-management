@@ -6,7 +6,7 @@ import { db } from "@/db";
 
 import { users } from "../schemas/user.schema";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/pagination";
-import { UserRole } from "../constants/user-role";
+import { UserRole } from "../../auth/constants/user-role";
 
 type GetUsersParams = {
   companyId: string;

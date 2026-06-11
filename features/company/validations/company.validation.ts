@@ -1,4 +1,4 @@
-import { ROLES } from "@/features/users/constants/user-role";
+import { ROLES } from "@/features/auth/constants/user-role";
 import { onboardingUserSchema } from "@/features/users/validations/user.validation";
 import { z } from "zod";
 
