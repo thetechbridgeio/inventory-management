@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ReactNode } from "react";
+
 import { PurchaseExportButton } from "../purchase-pdf-button";
 import { GetPurchasesParams } from "../../types/purchase.type";
 
@@ -21,7 +21,7 @@ type PurchaseTableToolsProps = {
 
   suppliers: {
     id: string;
-    name: string;
+    companyName: string;
   }[];
 
   selectedSupplierIds: string[];
@@ -36,9 +36,13 @@ type PurchaseTableToolsProps = {
   sortBy?: "supplier" | "grandTotal";
   sortOrder?: "asc" | "desc";
 
-  onSortByChange: (value?: "supplier" | "grandTotal") => void;
+  onSortByChange: (
+    value?: "supplier" | "grandTotal",
+  ) => void;
 
-  onSortOrderChange: (value?: "asc" | "desc") => void;
+  onSortOrderChange: (
+    value?: "asc" | "desc",
+  ) => void;
 
   exportFilters: GetPurchasesParams;
 };
@@ -73,7 +77,9 @@ export function PurchaseTableTools({
 
         <Input
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) =>
+            onSearchChange(e.target.value)
+          }
           placeholder="Search purchase # or supplier..."
           className="pl-9"
         />
@@ -83,14 +89,103 @@ export function PurchaseTableTools({
         <PurchaseExportButton filters={exportFilters} />
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              Filters
-            </Button>
-          </DropdownMenuTrigger>
+         <DropdownMenuTrigger asChild>
+  <button
+    onClick={() => console.log("clicked")}
+    className="border px-4 py-2"
+  >
+    Filters
+  </button>
+</DropdownMenuTrigger>
 
-          {/* existing content */}
+          <DropdownMenuContent
+            align="end"
+            className="w-[420px] space-y-6 p-4"
+          >
+            <SupplierFilterSection
+              suppliers={suppliers}
+              selected={selectedSupplierIds}
+              onChange={onSupplierChange}
+            />
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">
+                Date Range
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="date"
+                  value={startDate ?? ""}
+                  onChange={(e) =>
+                    onStartDateChange(
+                      e.target.value || undefined,
+                    )
+                  }
+                />
+
+                <Input
+                  type="date"
+                  value={endDate ?? ""}
+                  onChange={(e) =>
+                    onEndDateChange(
+                      e.target.value || undefined,
+                    )
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">
+                Sort By
+              </h4>
+
+              <select
+                value={sortBy ?? ""}
+                onChange={(e) =>
+                  onSortByChange(
+                    (e.target.value ||
+                      undefined) as
+                      | "supplier"
+                      | "grandTotal"
+                      | undefined,
+                  )
+                }
+                className="w-full rounded-md border p-2 text-sm"
+              >
+                <option value="">None</option>
+                <option value="supplier">
+                  Supplier
+                </option>
+                <option value="grandTotal">
+                  Grand Total
+                </option>
+              </select>
+
+              <select
+                value={sortOrder ?? ""}
+                onChange={(e) =>
+                  onSortOrderChange(
+                    (e.target.value ||
+                      undefined) as
+                      | "asc"
+                      | "desc"
+                      | undefined,
+                  )
+                }
+                className="w-full rounded-md border p-2 text-sm"
+              >
+                <option value="">None</option>
+                <option value="asc">
+                  Ascending
+                </option>
+                <option value="desc">
+                  Descending
+                </option>
+              </select>
+            </div>
+          </DropdownMenuContent>
         </DropdownMenu>
 
         <Button
@@ -115,7 +210,7 @@ export function PurchaseTableTools({
 type SupplierFilterSectionProps = {
   suppliers: {
     id: string;
-    name: string;
+    companyName: string;
   }[];
   selected: string[];
   onChange: (values: string[]) => void;
@@ -128,23 +223,39 @@ function SupplierFilterSection({
 }: SupplierFilterSectionProps) {
   return (
     <div>
-      <h4 className="mb-3 text-sm font-semibold">Suppliers</h4>
+      <h4 className="mb-3 text-sm font-semibold">
+        Suppliers
+      </h4>
 
       <div className="max-h-48 space-y-2 overflow-y-auto">
         {suppliers.map((supplier) => (
-          <div key={supplier.id} className="flex items-center gap-2">
+          <div
+            key={supplier.id}
+            className="flex items-center gap-2"
+          >
             <Checkbox
-              checked={selected.includes(supplier.id)}
+              checked={selected.includes(
+                supplier.id,
+              )}
               onCheckedChange={(checked) => {
                 if (checked) {
-                  onChange([...selected, supplier.id]);
+                  onChange([
+                    ...selected,
+                    supplier.id,
+                  ]);
                 } else {
-                  onChange(selected.filter((id) => id !== supplier.id));
+                  onChange(
+                    selected.filter(
+                      (id) => id !== supplier.id,
+                    ),
+                  );
                 }
               }}
             />
 
-            <label className="text-sm">{supplier.name}</label>
+            <label className="text-sm">
+              {supplier.companyName}
+            </label>
           </div>
         ))}
       </div>
