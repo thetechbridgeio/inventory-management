@@ -7,7 +7,7 @@ export function usePurchaseFilters() {
   return useQuery({
     queryKey: ["purchase-filters"],
     queryFn: async () => {
-      const { data } = await axios.get("/api/purchase/filters");
+      const { data } = await axios.get("/api/purchases/filters");
       return data.data;
     },
     staleTime: 1000 * 60 * 5,
