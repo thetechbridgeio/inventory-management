@@ -4,7 +4,7 @@ import { PRODUCT_CATEGORIES } from "./product-category";
 export const CREATE_PRODUCT_DEFAULT_VALUES: CreateProductFormType = {
   name: "",
   description: "",
-  category: PRODUCT_CATEGORIES.SPARE,
+  category: "",
   unit: "",
   minOrderQty: 0,
   maxOrderQty: 0,

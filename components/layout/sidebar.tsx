@@ -119,9 +119,7 @@ const visibleManagementItems = managementItems.filter((item) =>
             <img
               src={user.companyLogo}
               alt={user.companyName}
-              width={64}
-              height={64}
-              className="object-contain"
+              className="object-contain h-16"
             />
           ) : (
             <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-muted">

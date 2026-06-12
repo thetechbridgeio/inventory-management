@@ -11,15 +11,14 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ProductCategory } from "../../constants/product-category";
 
 type ProductTableToolsProps = {
   search: string;
   onSearchChange: (value: string) => void;
 
-  categories: ProductCategory[];
-  selectedCategories: ProductCategory[];
-  onCategoryChange: (values: ProductCategory[]) => void;
+  categories: string[];
+  selectedCategories: string[];
+  onCategoryChange: (values: string[]) => void;
 
   locations: string[];
   selectedLocations: string[];

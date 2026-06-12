@@ -1,7 +1,4 @@
-import {
-  PRODUCT_CATEGORIES,
-  ProductCategory,
-} from "@/features/product/constants/product-category";
+
 import { createProduct } from "@/features/product/service/create-product.service";
 import { getProducts } from "@/features/product/service/get-products.service";
 import { CreateProductFormSchema } from "@/features/product/validations/product.validation";
@@ -19,18 +16,29 @@ export const POST = createRouteHandler(async (request) => {
 export const GET = createRouteHandler(async (request) => {
   const { searchParams } = new URL(request.url);
 
-  const page = Number(searchParams.get("page")) || undefined; 
-  const search = searchParams.get("search") || undefined;
-  const categories = searchParams
-    .get("categories")
-    ?.split(",")
-    .filter((category): category is ProductCategory =>
-      Object.values(PRODUCT_CATEGORIES).includes(category as ProductCategory),
-    );
+  const page = Number(searchParams.get("page")) || undefined;
+  const search = searchParams.get("search")?.trim() || undefined;
+
+  const categories =
+    searchParams
+      .get("categories")
+      ?.split(",")
+      .map((v) => v.trim())
+      .filter(Boolean) || undefined;
+
   const locations =
-    searchParams.get("locations")?.split(",").filter(Boolean) || undefined;
+    searchParams
+      .get("locations")
+      ?.split(",")
+      .map((v) => v.trim())
+      .filter(Boolean) || undefined;
+
   const units =
-    searchParams.get("units")?.split(",").filter(Boolean) || undefined;
+    searchParams
+      .get("units")
+      ?.split(",")
+      .map((v) => v.trim())
+      .filter(Boolean) || undefined;
 
   const { companyId } = await getCurrentUser();
 

@@ -49,48 +49,7 @@ export const productColumns: ColumnDef<ProductRow>[] = [
     cell: ({ row }) => {
       const category = row.original.category;
 
-      if (category === "RAW") {
-        return (
-          <Badge
-            className="
-            border-blue-200
-            bg-blue-100
-            text-blue-700
-            hover:bg-blue-100
-          "
-          >
-            Raw Material
-          </Badge>
-        );
-      }
-
-      if (category === "FINISHED") {
-        return (
-          <Badge
-            className="
-            border-emerald-200
-            bg-emerald-100
-            text-emerald-700
-            hover:bg-emerald-100
-          "
-          >
-            Finished Product
-          </Badge>
-        );
-      }
-
-      return (
-        <Badge
-          className="
-          border-purple-200
-          bg-purple-100
-          text-purple-700
-          hover:bg-purple-100
-        "
-        >
-          Spare Part
-        </Badge>
-      );
+      return <Badge variant="outline">{category || "Uncategorized"}</Badge>;
     },
   },
   {
@@ -115,48 +74,28 @@ export const productColumns: ColumnDef<ProductRow>[] = [
     header: "Status",
     cell: ({ row }) => {
       const stock = row.original.currentStock;
-      const minOrderQty = row.original.minOrderQty;
+      const minOrderQty = row.original.minOrderQty ?? 0;
+      const maxOrderQty = row.original.maxOrderQty ?? Infinity;
 
-      if (stock <= 0) {
+      if (stock <= minOrderQty) {
         return (
-          <Badge
-            className="
-        border-red-200
-        bg-red-100
-        text-red-700
-        hover:bg-red-100
-      "
-          >
-            Out of Stock
+          <Badge className="bg-red-100 text-red-700 border border-red-200">
+            Low
           </Badge>
         );
       }
 
-      if (stock <= minOrderQty) {
+      if (stock >= maxOrderQty) {
         return (
-          <Badge
-            className="
-        border-amber-200
-        bg-amber-100
-        text-amber-700
-        hover:bg-amber-100
-      "
-          >
-            Low Stock
+          <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
+            Excess
           </Badge>
         );
       }
 
       return (
-        <Badge
-          className="
-      border-green-200
-      bg-green-100
-      text-green-700
-      hover:bg-green-100
-    "
-        >
-          Healthy
+        <Badge className="bg-green-100 text-green-700 border border-green-200">
+          Normal
         </Badge>
       );
     },

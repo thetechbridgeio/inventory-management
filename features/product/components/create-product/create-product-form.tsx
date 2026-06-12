@@ -99,16 +99,11 @@ export function CreateProductForm() {
                   helperText="Enter a unique and descriptive product name."
                 />
 
-                <RHFSelect<CreateProductFormType>
+                <RHFInput<CreateProductFormType>
                   name="category"
                   label="Category"
-                  options={Object.entries(PRODUCT_CATEGORY_LABELS).map(
-                    ([value, label]) => ({
-                      value,
-                      label,
-                    }),
-                  )}
-                  helperText="Select the type of inventory item."
+                  placeholder="e.g. Raw Material, Electronics, Hardware"
+                  helperText="Enter the product category."
                 />
 
                 <RHFInput<CreateProductFormType>

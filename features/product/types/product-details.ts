@@ -1,5 +1,3 @@
-import { ProductCategory } from "../constants/product-category";
-
 export type ProductDetails = {
   id: string;
   companyId: string;
@@ -7,7 +5,7 @@ export type ProductDetails = {
   name: string;
   description: string | null;
 
-  category: ProductCategory;
+  category: string;
   unit: string;
 
   minOrderQty: number;

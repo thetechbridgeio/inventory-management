@@ -91,77 +91,88 @@ export function StockMovementCard({
           Stock movement
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-6">
-          {/* Donut chart */}
-          <div className="relative shrink-0" style={{ width: 140, height: 140 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={data}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={44}
-                  outerRadius={64}
-                  paddingAngle={3}
-                  dataKey="value"
-                  strokeWidth={0}
-                >
-                  {data.map((entry) => {
-                    const seg = SEGMENTS.find((s) => s.key === entry.key)!;
-                    return <Cell key={entry.key} fill={seg.color} />;
-                  })}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Center label */}
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-lg font-semibold leading-none">
-                {totalProducts.toLocaleString()}
-              </span>
-              <span className="mt-1 text-[10px] text-muted-foreground">products</span>
-            </div>
-          </div>
+     <CardContent>
+  <div className="space-y-5">
+    {/* Chart + Stats */}
+    <div className="flex items-center justify-center gap-8">
+      {/* Donut chart */}
+      <div
+        className="relative shrink-0"
+        style={{ width: 130, height: 130 }}
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={50}
+              outerRadius={65}
+              paddingAngle={3}
+              dataKey="value"
+              strokeWidth={0}
+            >
+              {data.map((entry) => {
+                const seg = SEGMENTS.find((s) => s.key === entry.key)!;
+                return <Cell key={entry.key} fill={seg.color} />;
+              })}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
 
-          {/* Legend rows */}
-          <div className="flex flex-1 flex-col gap-3">
-            {data.map((entry) => {
-              const seg = SEGMENTS.find((s) => s.key === entry.key)!;
-              return (
-                <div key={entry.key} className="flex items-center gap-3">
-                  <div
-                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                    style={{ background: seg.color }}
-                  />
-                  <span className="w-28 text-sm text-muted-foreground">
-                    {seg.label}
-                  </span>
-                  <div className="flex flex-1 items-center gap-2">
-                    {/* progress bar */}
-                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full"
-                        style={{
-                          width: `${entry.percentage}%`,
-                          background: seg.color,
-                          opacity: 0.85,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <Badge variant="outline" className={`text-xs ${seg.badgeClass}`}>
-                    {entry.count.toLocaleString()}
-                  </Badge>
-                  <span className="w-10 text-right text-sm font-medium text-foreground">
-                    {entry.percentage.toFixed(1)}%
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-bold">
+            {totalProducts.toLocaleString()}
+          </span>
+          <span className="text-[10px] text-muted-foreground">
+            Products
+          </span>
         </div>
-      </CardContent>
+      </div>
+
+      {/* Stats */}
+      <div className="space-y-4">
+        {data.map((entry) => {
+          const seg = SEGMENTS.find((s) => s.key === entry.key)!;
+
+          return (
+            <div
+              key={entry.key}
+              className="flex items-center justify-end gap-3"
+            >
+              <Badge
+                variant="outline"
+                className={`text-xs ${seg.badgeClass}`}
+              >
+                {entry.count.toLocaleString()}
+              </Badge>
+
+              <span className="text-sm font-semibold">
+                {entry.percentage.toFixed(1)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* Bottom Legend */}
+    <div className="flex flex-col gap-2 border-t pt-3">
+      {SEGMENTS.map((seg) => (
+        <div key={seg.key} className="flex items-center gap-2">
+          <div
+            className="h-3 w-3 rounded-full"
+            style={{ backgroundColor: seg.color }}
+          />
+          <span className="text-sm text-muted-foreground">
+            {seg.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</CardContent>
     </Card>
   );
 }

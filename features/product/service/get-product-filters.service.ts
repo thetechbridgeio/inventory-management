@@ -18,23 +18,34 @@ export async function getProductFilters(
     where: eq(products.companyId, companyId),
   });
 
+
   const categories = [
-    ...new Set(rows.map((row) => row.category)),
+    ...new Set(
+      rows.map((row) => {
+        const category = row.category?.trim();
+        return category || "No Category";
+      }),
+    ),
   ].sort();
+
+  console.log(categories)
 
   const locations = [
     ...new Set(
-      rows
-        .map((row) => row.location)
-        .filter(
-          (location): location is string =>
-            Boolean(location),
-        ),
+      rows.map((row) => {
+        const location = row.location?.trim();
+        return location || "No Location";
+      }),
     ),
   ].sort();
 
   const units = [
-    ...new Set(rows.map((row) => row.unit)),
+    ...new Set(
+      rows.map((row) => {
+        const unit = row.unit?.trim();
+        return unit || "No Unit";
+      }),
+    ),
   ].sort();
 
   return {

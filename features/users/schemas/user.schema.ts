@@ -3,7 +3,7 @@ import { boolean, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { ROLES, UserRole } from "../../auth/constants/user-role";
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").defaultRandom().primaryKey(),
   companyId: uuid("company_id")
     .references(() => companies.id)
     .notNull(),

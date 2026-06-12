@@ -14,11 +14,7 @@ export const CreateProductFormSchema = z
       .trim()
       .max(1000, "Description is too long")
       .optional(),
-    category: z.enum([
-      PRODUCT_CATEGORIES.RAW,
-      PRODUCT_CATEGORIES.FINISHED,
-      PRODUCT_CATEGORIES.SPARE,
-    ]),
+    category: z.string().min(1, "Category is required"),
     unit: z
       .string()
       .trim()

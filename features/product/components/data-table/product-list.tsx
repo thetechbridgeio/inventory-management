@@ -8,12 +8,11 @@ import { ProductTableTools } from "./product-table-tools";
 import { ProductPagination } from "./product-pagination";
 import { useProductFilters } from "../../hooks/use-product-filters";
 import { useProducts } from "../../hooks/use-products";
-import { ProductCategory } from "../../constants/product-category";
 
 export function ProductList() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [locations, setLocations] = useState<string[]>([]);
   const [units, setUnits] = useState<string[]>([]);
 

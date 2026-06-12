@@ -1,9 +1,7 @@
-import { ProductCategory } from "../product/constants/product-category";
-
 export type DashboardProduct = {
   id: string;
   name: string;
-  category: ProductCategory;
+  category: string;
   currentStock: number;
   location: string | null;
 };

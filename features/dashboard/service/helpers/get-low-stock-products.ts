@@ -10,14 +10,22 @@ export async function getLowStockProducts(companyId: string) {
       name: products.name,
       category: products.category,
       currentStock: products.currentStock,
+      minOrderQty: products.minOrderQty,
       location: products.location,
     })
     .from(products)
     .where(
       and(
         eq(products.companyId, companyId),
-        gt(products.reorderQty, 0),
-        sql`${products.currentStock} <= ${products.reorderQty}`,
+
+        // Low stock threshold configured
+        gt(products.minOrderQty, 0),
+
+        // Not out of stock
+        gt(products.currentStock, 0),
+
+        // Current stock has fallen below min level
+        sql`${products.currentStock} <= ${products.minOrderQty}`,
       ),
     )
     .orderBy(products.currentStock);
