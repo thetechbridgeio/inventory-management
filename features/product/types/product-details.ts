@@ -5,7 +5,7 @@ export type ProductDetails = {
   name: string;
   description: string | null;
 
-  category: string;
+  category: string | null;
   unit: string;
 
   minOrderQty: number;
