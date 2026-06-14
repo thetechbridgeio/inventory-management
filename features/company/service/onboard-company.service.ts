@@ -3,14 +3,14 @@ import "server-only";
 import { db } from "@/db";
 import { users } from "@/features/users/schemas/user.schema";
 import { createAuthUser } from "@/features/users/service/create-auth-user.service";
-import { OnboardCompanyType } from "../types/company.type";
+import { OnboardCompanyServiceType } from "../types/company.type";
 import { createCompany } from "./create-company.service";
 import { companies } from "../schemas/company.schema";
 import { eq } from "drizzle-orm";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export async function onboardCompany(
-  data: OnboardCompanyType,
+  data: OnboardCompanyServiceType,
 ) {
   const authUserIds: string[] = [];
   const company = await createCompany(data.company);

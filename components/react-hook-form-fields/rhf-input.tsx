@@ -9,8 +9,8 @@ type RHFInputProps<T extends FieldValues> = {
   placeholder?: string;
   helperText?: string;
   type?: React.HTMLInputTypeAttribute;
-  value?: string;
   disabled?: boolean;
+  required?: boolean;
 };
 
 export function RHFInput<T extends FieldValues>({
@@ -20,31 +20,47 @@ export function RHFInput<T extends FieldValues>({
   helperText,
   disabled = false,
   type = "text",
+  required = false,
 }: RHFInputProps<T>) {
   const {
     register,
     formState: { errors },
   } = useFormContext<T>();
 
-  const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
+  const error = name
+    .split(".")
+    .reduce<any>((obj, key) => obj?.[key], errors);
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>{label}</Label>
+      <Label
+        htmlFor={name}
+        className="flex items-center gap-1"
+      >
+        {label}
+        {required && (
+          <span className="text-destructive">*</span>
+        )}
+      </Label>
 
       <Input
         id={name}
         type={type}
         placeholder={placeholder}
         disabled={disabled}
+        aria-required={required}
         {...register(name)}
       />
 
       {error?.message ? (
-        <p className="text-sm text-destructive">{String(error.message)}</p>
+        <p className="text-sm text-destructive">
+          {String(error.message)}
+        </p>
       ) : (
         helperText && (
-          <p className="text-sm text-muted-foreground">{helperText}</p>
+          <p className="text-sm text-muted-foreground">
+            {helperText}
+          </p>
         )
       )}
     </div>
