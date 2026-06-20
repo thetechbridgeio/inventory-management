@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { PRODUCT_CATEGORIES } from "../constants/product-category";
 import { requiredNumber } from "@/lib/require-number";
 
 export const CreateProductFormSchema = z
@@ -25,6 +24,10 @@ export const CreateProductFormSchema = z
     reorderQty: requiredNumber("Reorder quantity"),
     openingStock: requiredNumber("Opening stock"),
     location: z.string().trim().max(255, "Location is too long").optional(),
+    image: z
+  .instanceof(File)
+  .optional()
+  .or(z.null()),
     supplierIds: z
       .array(z.string().uuid())
       .min(1, "At least one supplier is required"),

@@ -15,7 +15,6 @@ import { useSuppliers } from "@/features/suppliers/hooks/use-get-suppliers";
 import { Supplier } from "@/features/suppliers/types/suppliers.type";
 
 import { CREATE_PRODUCT_DEFAULT_VALUES } from "../../constants/form-default";
-import { PRODUCT_CATEGORY_LABELS } from "../../constants/product-category";
 
 import { useCreateProduct } from "../../hooks/use-create-product";
 
@@ -25,6 +24,8 @@ import {
 } from "../../types/product.types";
 
 import { CreateProductFormSchema } from "../../validations/product.validation";
+import { ImagePlus } from "lucide-react";
+import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
 export function CreateProductForm() {
   const { mutateAsync, isPending } = useCreateProduct();
@@ -37,7 +38,7 @@ export function CreateProductForm() {
     resolver: zodResolver(CreateProductFormSchema),
     defaultValues: CREATE_PRODUCT_DEFAULT_VALUES,
     mode: "onTouched",
-  });
+  });;
 
   async function onSubmit(values: CreateProductFormInput) {
     try {
@@ -175,6 +176,17 @@ export function CreateProductForm() {
                 />
               </div>
             </section>
+
+            <ImageUpload
+              label="Product Image"
+              description="Upload a product image"
+              value={form.watch("image")}
+              onChange={(file) =>
+                form.setValue("image", file, {
+                  shouldValidate: true,
+                })
+              }
+            />
 
             {/* Suppliers */}
             <section>

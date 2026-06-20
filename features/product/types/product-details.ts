@@ -1,6 +1,7 @@
 export type ProductDetails = {
   id: string;
   companyId: string;
+  image: string | null;
 
   name: string;
   description: string | null;

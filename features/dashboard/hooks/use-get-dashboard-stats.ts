@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { DashboardStats } from "../types";
 
-export function useDashbaordStats() {
+export function useDashboardStats() {
   return useQuery({
-    queryKey: ["dashbaord"],
+    queryKey: ["dashboard"],
 
     queryFn: async () => {
       const response = await axios.get("/api/dashboard");

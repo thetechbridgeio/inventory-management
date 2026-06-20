@@ -38,7 +38,6 @@ export const saleColumns: ColumnDef<SaleRow>[] = [
     header: "Sale Date",
     cell: ({ row }) => format(new Date(row.original.saleDate), "dd MMM yyyy"),
   },
-
   {
     accessorKey: "itemsCount",
     header: () => <div className="text-center">Items</div>,

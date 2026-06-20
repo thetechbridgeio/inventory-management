@@ -57,6 +57,34 @@
       "when": 1781245004153,
       "tag": "0007_massive_roland_deschain",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781886868132,
+      "tag": "0008_smooth_thunderbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781985769834,
+      "tag": "0009_clammy_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781985901784,
+      "tag": "0010_zippy_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781986455204,
+      "tag": "0011_first_veda",
+      "breakpoints": true
     }
   ]
 }

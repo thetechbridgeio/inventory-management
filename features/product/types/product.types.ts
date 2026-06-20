@@ -13,6 +13,7 @@ export type CreateProductType = {
   description?: string | null;
   category: string;
   unit: string;
+  image?:string;
   minOrderQty: number;
   maxOrderQty: number;
   reorderQty: number;

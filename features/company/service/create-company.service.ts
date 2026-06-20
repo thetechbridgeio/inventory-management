@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@/db";
 
 import { companies } from "../schemas/company.schema";
-import { CreateCompanyFormType, CreateCompanyType } from "../types/company.type";
+import { CreateCompanyType } from "../types/company.type";
 
 export async function createCompany(
   data: CreateCompanyType

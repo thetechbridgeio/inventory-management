@@ -10,6 +10,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { ProductPicker } from "@/features/product/components/product-picker";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
 export function SaleForm() {
   const form = useFormContext<CreateSaleFormType>();
@@ -39,6 +40,12 @@ export function SaleForm() {
             type="date"
             label="Outgoing Date"
             helperText="Date when the outgoing was made."
+            required
+          />
+          <RHFInput
+            name="soldTo"
+            label="Customer Name"
+            helperText="Enter the customer, company, or person the items were sold to."
           />
         </div>
 
@@ -47,6 +54,17 @@ export function SaleForm() {
           label="Remarks"
           placeholder="Additional notes..."
           helperText="Optional notes for this outgoing."
+        />
+
+        <ImageUpload
+          label="Outgoing Image"
+          description="Upload a Outgoing image"
+          value={form.watch("image")}
+          onChange={(file) =>
+            form.setValue("image", file, {
+              shouldValidate: true,
+            })
+          }
         />
       </section>
 

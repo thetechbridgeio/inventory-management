@@ -45,7 +45,7 @@ export function ViewProductDialog({
 }: ViewProductDialogProps) {
   const { data, isLoading, isError, error } = useProduct(productId);
 
-  console.log(data)
+  console.log(data);
 
   return (
     <Dialog>
@@ -96,47 +96,71 @@ export function ViewProductDialog({
           <>
             <ScrollArea className="flex-1 min-h-0">
               <div className="space-y-5 p-5">
-                {/* Summary */}
-                <div className="flex items-start justify-between rounded-xl border bg-muted/40 p-5">
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                        Product Name
-                      </p>
+                <div className="space-y-5">
+                  <div
+                    className={
+                      data.image ? "grid gap-5 lg:grid-cols-[1fr_320px]" : ""
+                    }
+                  >
+                    <div className="space-y-5">
+                      <div className="flex items-start justify-between rounded-xl border bg-muted/40 p-5">
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                              Product Name
+                            </p>
 
-                      <h2 className="text-xl font-bold tracking-tight">
-                        {data.name}
-                      </h2>
+                            <h2 className="text-xl font-bold tracking-tight">
+                              {data.name}
+                            </h2>
+                          </div>
+
+                          <Badge variant="secondary">{data.category}</Badge>
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                            Current Stock
+                          </p>
+
+                          <p className="text-2xl font-bold">
+                            {data.currentStock}
+                          </p>
+
+                          <p className="text-xs text-muted-foreground">
+                            {data.unit}
+                          </p>
+                        </div>
+                      </div>
+
+                      {data.description && (
+                        <Card className="rounded-xl shadow-none">
+                          <CardContent className="p-4">
+                            <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                              Description
+                            </p>
+
+                            <p className="text-sm leading-relaxed text-muted-foreground">
+                              {data.description}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
 
-                    <Badge variant="secondary">{data.category}</Badge>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                      Current Stock
-                    </p>
-
-                    <p className="text-2xl font-bold">{data.currentStock}</p>
-
-                    <p className="text-xs text-muted-foreground">{data.unit}</p>
+                    {data.image && (
+                      <Card className="overflow-hidden rounded-xl">
+                        <CardContent className="p-0">
+                          <img
+                            src={data.image}
+                            alt={data.name}
+                            className="h-full w-full object-contain"
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 </div>
-
-                {/* Description */}
-                {data.description && (
-                  <Card className="rounded-xl shadow-none">
-                    <CardContent className="p-4">
-                      <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                        Description
-                      </p>
-
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {data.description}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Inventory + Ordering */}
                 <div className="grid gap-4 md:grid-cols-2">

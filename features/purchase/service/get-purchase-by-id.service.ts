@@ -17,6 +17,7 @@ export async function getPurchaseById(purchaseId: string, companyId: string) {
       purchaseDate: true,
       supplierId: true,
       remarks: true,
+      image: true,
       grandTotal: true,
       createdAt: true,
     },
@@ -59,6 +60,7 @@ export async function getPurchaseById(purchaseId: string, companyId: string) {
     supplierId: purchase.supplierId,
     supplierName: purchase.supplier.companyName,
     remarks: purchase.remarks,
+    image: purchase.image,
     grandTotal: purchase.grandTotal,
     createdAt: purchase.createdAt,
     items: purchase.items.map((item) => ({

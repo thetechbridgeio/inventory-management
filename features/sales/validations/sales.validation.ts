@@ -21,7 +21,20 @@ export const CreateSaleFormSchema = z
   .object({
     saleDate: z.string().min(1, "Sale date is required"),
 
-    remarks: z.string().trim().max(1000, "Remarks is too long").nullable().optional(),
+    remarks: z
+      .string()
+      .trim()
+      .max(1000, "Remarks is too long")
+      .nullable()
+      .optional(),
+    image: z.instanceof(File).optional().or(z.null()),
+
+    soldTo: z
+      .string()
+      .trim()
+      .max(500, "field value is too long")
+      .nullable()
+      .optional(),
 
     items: z.array(SaleItemSchema).min(1, "At least one item is required"),
   })

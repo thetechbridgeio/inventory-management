@@ -9,6 +9,8 @@ export type CreateSaleItemFormType = z.infer<typeof SaleItemSchema>;
 export type CreateSaleFormType = {
   saleDate: string;
   remarks?: string | null;
+  image?: File | null;
+  soldTo?: string | null;
   items: CreateSaleItemFormType[];
 };
 
@@ -16,6 +18,8 @@ export type CreateSaleType = {
   companyId: string;
   saleNumber: string;
   saleDate: string;
+  image?: string;
+  soldTo?: string | null;
   remarks: string | null;
   grandTotal: string;
   createdBy: string;

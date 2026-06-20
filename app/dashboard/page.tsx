@@ -5,11 +5,11 @@ import { ProductCard } from "@/features/dashboard/components/cards/product-card"
 import { ProductStatCard } from "@/features/dashboard/components/cards/ProductStatCard";
 import { StockMovementCard } from "@/features/dashboard/components/cards/StockMovementCard";
 import { ThisMonthCard } from "@/features/dashboard/components/cards/ThisMonthCard";
-import { useDashbaordStats } from "@/features/dashboard/hooks/use-get-dashboard-stats";
+import { useDashboardStats } from "@/features/dashboard/hooks/use-get-dashboard-stats";
 import { Loader2 } from "lucide-react";
 
-const DashbaordPage = () => {
-  const { data, isPending, error } = useDashbaordStats();
+const DashboardPage = () => {
+  const { data, isPending, error } = useDashboardStats();
 
   console.log(data);
 
@@ -51,7 +51,7 @@ const DashbaordPage = () => {
     <DashboardLayout>
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashbaord</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="mt-2 text-muted-foreground">
             Get preview of your current inventory
           </p>
@@ -131,4 +131,4 @@ const DashbaordPage = () => {
   );
 };
 
-export default DashbaordPage;
+export default DashboardPage;

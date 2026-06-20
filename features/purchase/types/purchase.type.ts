@@ -1,6 +1,5 @@
 import z from "zod";
 import {
-  CreatePurchaseFormSchema,
   PurchaseItemSchema,
 } from "../validations/purchase.validation";
 
@@ -10,8 +9,9 @@ export type CreatePurchaseFormType = {
   supplierId: string;
   purchaseDate: string;
   remarks?: string;
-  items: CreatePurchaseItemType[]
-}
+  image?: File | null;
+  items: CreatePurchaseItemType[];
+};
 
 export type PurchaseItemType = {
   purchaseId: string;
@@ -27,6 +27,7 @@ export type CreatePurchaseType = {
   purchaseNumber: string;
   grandTotal: string;
   purchaseDate: string;
+  image?: string;
   remarks: string | null;
   createdBy: string;
 };
@@ -35,7 +36,7 @@ export type GetPurchasesParams = {
   page?: number;
   startDate?: string;
   endDate?: string;
-  search?: string
+  search?: string;
   supplierIds?: string[];
   sortBy?: "supplier" | "grandTotal";
   sortOrder?: "asc" | "desc";

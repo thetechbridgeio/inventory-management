@@ -14,6 +14,7 @@ export async function getSaleById(saleId: string, companyId: string) {
       saleNumber: true,
       saleDate: true,
       remarks: true,
+      image:true,
       grandTotal: true,
       createdAt: true,
     },
@@ -51,6 +52,7 @@ export async function getSaleById(saleId: string, companyId: string) {
     saleDate: sale.saleDate,
     remarks: sale.remarks,
     grandTotal: sale.grandTotal,
+    image: sale.image,
     createdAt: sale.createdAt,
     items: sale.items.map((item) => ({
       id: item.id,

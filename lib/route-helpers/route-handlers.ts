@@ -1,7 +1,4 @@
-// lib/route-handler.ts
-
 import { NextRequest, NextResponse } from "next/server";
-
 import { AppError } from "./errors";
 
 export function createRouteHandler<T>(
@@ -29,6 +26,18 @@ export function createRouteHandler<T>(
           },
           {
             status: error.statusCode,
+          },
+        );
+      }
+
+      if (error instanceof Error) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: error.message,
+          },
+          {
+            status: 500,
           },
         );
       }

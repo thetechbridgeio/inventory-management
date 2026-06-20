@@ -21,6 +21,7 @@ type RHFSelectProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   helperText?: string;
+  required?: boolean
   options: Option[];
 };
 
@@ -29,6 +30,7 @@ export function RHFSelect<T extends FieldValues>({
   label,
   placeholder,
   helperText,
+  required = false,
   options,
 }: RHFSelectProps<T>) {
   const {
@@ -40,7 +42,9 @@ export function RHFSelect<T extends FieldValues>({
 
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label>{label}{required && (
+          <span className="text-destructive">*</span>
+        )}</Label>
 
       <Controller
         control={control}

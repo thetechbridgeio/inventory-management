@@ -12,53 +12,85 @@ import {
   PurchaseItemType,
 } from "../types/purchase.type";
 import { generatePurchaseNumber } from "./generate-purchase-number.service";
+import {
+  rollbackUploadedFiles,
+  uploadImage,
+} from "@/lib/storage/upload-image.service";
 
 export async function createPurchase(
   data: CreatePurchaseFormType,
   companyId: string,
   userId: string,
 ) {
-  return db.transaction(async (tx) => {
-    const purchaseNumber = await generatePurchaseNumber(tx, companyId);
+  const IMAGE_FOLDER_NAME = `${companyId}/INCOMINGS`;
 
-    const grandTotal = data.items.reduce(
-      (sum, item) => sum + item.quantity * item.purchasePrice,
-      0,
-    );
+  const transactionContext = {
+    uploadedFiles: [],
+  };
 
-    const purchaseData: CreatePurchaseType = {
-      companyId,
-      supplierId: data.supplierId,
-      purchaseNumber,
-      grandTotal: grandTotal.toFixed(2),
-      purchaseDate: data.purchaseDate,
-      remarks: data.remarks?.trim() || null,
-      createdBy: userId,
-    };
+  try {
+    return await db.transaction(async (tx) => {
+      const purchaseNumber = await generatePurchaseNumber(tx, companyId);
 
-    const [purchase] = await tx
-      .insert(purchases)
-      .values(purchaseData)
-      .returning();
+      const grandTotal = data.items.reduce(
+        (sum, item) => sum + item.quantity * item.purchasePrice,
+        0,
+      );
 
-    const purchaseItemValues: PurchaseItemType[] = data.items.map((item) => ({
-      purchaseId: purchase.id,
-      productId: item.productId,
-      quantity: item.quantity,
-      purchasePrice: item.purchasePrice.toFixed(2),
-      lineTotal: (item.quantity * item.purchasePrice).toFixed(2),
-    }));
+      let imageUrl: string | undefined;
 
-    await tx.insert(purchaseItems).values(purchaseItemValues);
+      if (data.image instanceof File) {
+        const uploadedImage = await uploadImage({
+          file: data.image,
+          folder: IMAGE_FOLDER_NAME,
+          transactionContext,
+        });
 
-    for (const item of data.items) {
-      await tx
-        .update(products)
-        .set({
-          currentStock: sql`${products.currentStock} + ${item.quantity}`,
-        })
-        .where(eq(products.id, item.productId));
-    }
-    return purchase;
-  });
+        imageUrl = uploadedImage.publicUrl;
+      }
+
+      const purchaseData: CreatePurchaseType = {
+        companyId,
+        supplierId: data.supplierId,
+        purchaseNumber,
+        grandTotal: grandTotal.toFixed(2),
+        purchaseDate: data.purchaseDate,
+        remarks: data.remarks?.trim() || null,
+        image: imageUrl,
+        createdBy: userId,
+      };
+
+      const [purchase] = await tx
+        .insert(purchases)
+        .values(purchaseData)
+        .returning();
+
+      await tx.insert(purchaseItems).values(
+        data.items.map((item) => ({
+          purchaseId: purchase.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          purchasePrice: item.purchasePrice.toFixed(2),
+          lineTotal: (item.quantity * item.purchasePrice).toFixed(2),
+        })),
+      );
+
+      await Promise.all(
+        data.items.map((item) =>
+          tx
+            .update(products)
+            .set({
+              currentStock: sql`${products.currentStock} + ${item.quantity}`,
+            })
+            .where(eq(products.id, item.productId)),
+        ),
+      );
+
+      return purchase;
+    });
+  } catch (error) {
+    await rollbackUploadedFiles(transactionContext);
+
+    throw error;
+  }
 }

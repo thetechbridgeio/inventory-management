@@ -48,7 +48,7 @@ export async function getSales(
     .where(whereClause)
     .groupBy(sales.id)
     .orderBy(
-      sortOrder === "asc" ? asc(sales.grandTotal) : desc(sales.grandTotal),
+      sortOrder === "asc" ? asc(sales.createdAt) : desc(sales.createdAt),
     )
     .limit(DEFAULT_PAGE_SIZE)
     .offset((page - 1) * DEFAULT_PAGE_SIZE);

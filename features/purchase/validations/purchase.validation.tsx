@@ -20,6 +20,7 @@ export const CreatePurchaseFormSchema = z
     supplierId: z.uuid("Supplier is required"),
     purchaseDate: z.string().min(1, "Purchase date is required"),
     remarks: z.string().trim().max(1000, "Remarks is too long").optional(),
+    image: z.instanceof(File).optional().or(z.null()),
     items: z.array(PurchaseItemSchema).min(1, "At least one item is required"),
   })
   .refine(

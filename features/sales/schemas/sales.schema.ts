@@ -21,11 +21,10 @@ export const sales = pgTable(
       .notNull(),
 
     saleNumber: text("sale_number").notNull(),
-
+    soldTo: text("sold_to"),
     saleDate: date("sale_date").notNull(),
-
     remarks: text("remarks"),
-
+    image: text("image"),
     grandTotal: numeric("grand_total", {
       precision: 12,
       scale: 2,

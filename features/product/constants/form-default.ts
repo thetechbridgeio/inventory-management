@@ -1,5 +1,4 @@
 import { CreateProductFormType } from "../types/product.types";
-import { PRODUCT_CATEGORIES } from "./product-category";
 
 export const CREATE_PRODUCT_DEFAULT_VALUES: CreateProductFormType = {
   name: "",
@@ -11,5 +10,6 @@ export const CREATE_PRODUCT_DEFAULT_VALUES: CreateProductFormType = {
   reorderQty: 0,
   openingStock: 0,
   location: "",
+  image: undefined,
   supplierIds: [],
 };

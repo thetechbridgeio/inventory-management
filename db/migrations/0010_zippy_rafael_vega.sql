@@ -1,0 +1,1 @@
+ALTER TABLE "sales" ADD COLUMN "image" text;

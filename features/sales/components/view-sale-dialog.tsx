@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-  AlertCircle,
-  Eye,
-  Loader2,
-  Package,
-  Receipt,
-} from "lucide-react";
+import { AlertCircle, Eye, Loader2, Package, Receipt } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,10 +31,7 @@ type ViewSaleDialogProps = {
   children?: React.ReactNode;
 };
 
-export function ViewSaleDialog({
-  saleId,
-  children,
-}: ViewSaleDialogProps) {
+export function ViewSaleDialog({ saleId, children }: ViewSaleDialogProps) {
   const { data, isLoading, isError, error } = useSale(saleId);
 
   return (
@@ -91,75 +82,89 @@ export function ViewSaleDialog({
         ) : (
           <>
             <ScrollArea className="flex-1 min-h-0">
-              <div className="space-y-5 p-5">
-                {/* Summary */}
-                <div className="flex items-center justify-between rounded-xl border bg-muted/40 p-5">
-                  <div>
-                    <p className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                      Sale Number
-                    </p>
+              <div className="p-5 space-y-5">
+                <div
+                  className={
+                    data.image
+                      ? "grid gap-5 lg:grid-cols-[1fr_320px] "
+                      : ""
+                  }
+                >
+                  <div className="space-y-5">
+                    {/* Summary */}
+                    <div className="flex items-center justify-between rounded-xl border bg-muted/40 p-5">
+                      <div>
+                        <p className="mb-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                          Sale Number
+                        </p>
 
-                    <h2 className="text-xl font-bold tracking-tight">
-                      {data.saleNumber}
-                    </h2>
+                        <h2 className="text-xl font-bold tracking-tight">
+                          {data.saleNumber}
+                        </h2>
+                      </div>
+
+                      <Badge variant="secondary" className="px-3 py-1 text-xs">
+                        {data.items.length} Items
+                      </Badge>
+                    </div>
+
+                    {/* Sale Info */}
+                    <Card className="rounded-xl shadow-none">
+                      <CardContent className="space-y-4 p-4">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Receipt className="h-3.5 w-3.5" />
+
+                          <span className="text-xs font-medium uppercase tracking-wide">
+                            Sale Information
+                          </span>
+                        </div>
+
+                        <Separator />
+
+                        <div
+                          className={
+                            data.image
+                              ? "grid gap-5 lg:grid-cols-[1fr_320px]"
+                              : ""
+                          }
+                        >
+                          <div className="space-y-5">
+                            <div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Sale Date
+                              </p>
+
+                              <p className="text-sm font-medium">
+                                {data.saleDate}
+                              </p>
+                            </div>
+                            {data.remarks && (
+                              <div>
+                                <p className="text-[11px] text-muted-foreground">
+                                  Remarks
+                                </p>
+                                <p className="text-sm font-medium">
+                                  {data.remarks}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-
-                  <Badge variant="secondary" className="px-3 py-1 text-xs">
-                    {data.items.length} Items
-                  </Badge>
+                  {data.image && (
+                    <Card className="overflow-hidden rounded-xl">
+                      <CardContent className="p-0">
+                        <img
+                          src={data.image}
+                          alt={data.name}
+                          className="h-full w-full object-contain"
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-
-                {/* Sale Info */}
-                <Card className="rounded-xl shadow-none">
-                  <CardContent className="space-y-4 p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Receipt className="h-3.5 w-3.5" />
-
-                      <span className="text-xs font-medium uppercase tracking-wide">
-                        Sale Information
-                      </span>
-                    </div>
-
-                    <Separator />
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">
-                          Sale Date
-                        </p>
-
-                        <p className="text-sm font-medium">
-                          {data.saleDate}
-                        </p>
-                      </div>
-
-                      <div>
-                        <p className="text-[11px] text-muted-foreground">
-                          Created At
-                        </p>
-
-                        <p className="text-sm font-medium">
-                          {new Date(data.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Remarks */}
-                {data.remarks && (
-                  <Card className="rounded-xl shadow-none">
-                    <CardContent className="p-4">
-                      <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                        Remarks
-                      </p>
-
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {data.remarks}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Products */}
                 <Card className="overflow-hidden rounded-xl shadow-none">
@@ -178,9 +183,7 @@ export function ViewSaleDialog({
                         <TableHead className="text-xs">Category</TableHead>
                         <TableHead className="text-xs">Qty</TableHead>
                         <TableHead className="text-xs">Unit</TableHead>
-                        <TableHead className="text-xs">
-                          Selling Price
-                        </TableHead>
+                        <TableHead className="text-xs">Selling Price</TableHead>
                         <TableHead className="text-right text-xs">
                           Line Total
                         </TableHead>
@@ -188,7 +191,7 @@ export function ViewSaleDialog({
                     </TableHeader>
 
                     <TableBody>
-                      {data.items.map((item:any) => (
+                      {data.items.map((item: any) => (
                         <TableRow key={item.id}>
                           <TableCell className="py-3">
                             <p className="text-sm font-medium">
@@ -209,17 +212,11 @@ export function ViewSaleDialog({
                           </TableCell>
 
                           <TableCell className="py-3 text-sm">
-                            ₹
-                            {Number(item.sellingPrice).toLocaleString(
-                              "en-IN"
-                            )}
+                            ₹{Number(item.sellingPrice).toLocaleString("en-IN")}
                           </TableCell>
 
                           <TableCell className="py-3 text-right text-sm font-semibold">
-                            ₹
-                            {Number(item.lineTotal).toLocaleString(
-                              "en-IN"
-                            )}
+                            ₹{Number(item.lineTotal).toLocaleString("en-IN")}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -244,8 +241,7 @@ export function ViewSaleDialog({
                 </div>
 
                 <p className="text-2xl font-bold tracking-tight">
-                  ₹
-                  {Number(data.grandTotal).toLocaleString("en-IN")}
+                  ₹{Number(data.grandTotal).toLocaleString("en-IN")}
                 </p>
               </div>
             </div>

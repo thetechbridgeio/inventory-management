@@ -15,6 +15,7 @@ import { Supplier } from "@/features/suppliers/types/suppliers.type";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProductPicker } from "@/features/product/components/product-picker";
+import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
 export function PurchaseForm() {
   const form = useFormContext<CreatePurchaseFormType>();
@@ -58,6 +59,7 @@ export function PurchaseForm() {
             placeholder="Select supplier"
             options={supplierOptions}
             helperText="Choose the supplier for this purchase."
+            required
           />
 
           <RHFInput
@@ -65,6 +67,7 @@ export function PurchaseForm() {
             type="date"
             label="Purchase Date"
             helperText="Date when the purchase was made."
+            required
           />
         </div>
 
@@ -73,6 +76,16 @@ export function PurchaseForm() {
           label="Remarks"
           placeholder="Additional notes..."
           helperText="Optional notes for this purchase."
+        />
+        <ImageUpload
+          label="Incoming Image"
+          description="Upload a image of incomings"
+          value={form.watch("image")}
+          onChange={(file) =>
+            form.setValue("image", file, {
+              shouldValidate: true,
+            })
+          }
         />
       </section>
 

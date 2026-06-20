@@ -44,6 +44,8 @@ export function ViewPurchaseDialog({
 }: ViewPurchaseDialogProps) {
   const { data, isLoading, isError, error } = usePurchase(purchaseId);
 
+  console.log(data);
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -108,40 +110,11 @@ export function ViewPurchaseDialog({
                 </div>
 
                 {/* Info Cards */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Card className="rounded-xl shadow-none">
-                    <CardContent className="space-y-4 p-4">
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Truck className="h-3.5 w-3.5" />
-                        <span className="text-xs font-medium uppercase tracking-wide">
-                          Supplier
-                        </span>
-                      </div>
-
-                      <Separator />
-
-                      <div className="space-y-3">
-                        <div>
-                          <p className="text-[11px] text-muted-foreground">
-                            Name
-                          </p>
-                          <p className="text-sm font-medium">
-                            {data.supplierName}
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-[11px] text-muted-foreground">
-                            ID
-                          </p>
-                          <p className="font-mono text-xs text-muted-foreground">
-                            {data.supplierId}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
+                <div
+                  className={
+                    data.image ? "grid gap-5 lg:grid-cols-[1fr_320px]" : ""
+                  }
+                >
                   <Card className="rounded-xl shadow-none">
                     <CardContent className="space-y-4 p-4">
                       <div className="flex items-center gap-2 text-muted-foreground">
@@ -162,34 +135,41 @@ export function ViewPurchaseDialog({
                             {data.purchaseDate}
                           </p>
                         </div>
-
                         <div>
-                          <p className="text-[11px] text-muted-foreground">
-                            Created At
-                          </p>
-                          <p className="text-sm font-medium">
-                            {new Date(data.createdAt).toLocaleString()}
-                          </p>
+                          <div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Supplier Name
+                            </p>
+                            <p className="text-sm font-medium">
+                              {data.supplierName}
+                            </p>
+                          </div>
                         </div>
+                        {data.remarks && (
+                          <div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Remarks
+                            </p>
+                            <p className="text-sm font-medium">
+                              {data.remarks}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
+                  {data.image && (
+                    <Card className="overflow-hidden rounded-xl">
+                      <CardContent className="p-0">
+                        <img
+                          src={data.image}
+                          alt={data.name}
+                          className="h-full w-full object-contain"
+                        />
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-
-                {/* Remarks */}
-                {data.remarks && (
-                  <Card className="rounded-xl shadow-none">
-                    <CardContent className="p-4">
-                      <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                        Remarks
-                      </p>
-
-                      <p className="text-sm leading-relaxed text-muted-foreground">
-                        {data.remarks}
-                      </p>
-                    </CardContent>
-                  </Card>
-                )}
 
                 {/* Products */}
                 <Card className="overflow-hidden rounded-xl shadow-none">

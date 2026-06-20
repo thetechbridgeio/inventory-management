@@ -9,7 +9,6 @@ import { CreatePurchaseFormSchema } from "@/features/purchase/validations/purcha
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -25,11 +24,11 @@ const AddPurchasePage = () => {
   const onSubmit = (data: CreatePurchaseFormType) => {
     mutate(data, {
       onSuccess: () => {
-        toast.success("Ingoing created successfully");
+        toast.success("Incoming created successfully");
         createPurchaseForm.reset();
       },
       onError: () => {
-        toast.error("Failed to create Ingoing");
+        toast.error("Failed to create Incoming");
       },
     });
   };
@@ -43,8 +42,7 @@ const AddPurchasePage = () => {
             </h1>
 
             <p className="mt-2 text-muted-foreground">
-             inventory procurement and operational
-              management.
+              inventory procurement and operational management.
             </p>
           </div>
           <Button asChild>
