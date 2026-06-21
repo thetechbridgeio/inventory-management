@@ -8,7 +8,6 @@ import { SupplierTableTools } from "./supplier-table-tools";
 import { SupplierPagination } from "./supplier-pagination";
 import { useSuppliers } from "../../hooks/use-get-suppliers";
 
-
 export function SupplierList() {
   const [page, setPage] = useState(1);
 
@@ -23,7 +22,7 @@ export function SupplierList() {
     isActive,
   });
 
-  console.log(data)
+  console.log(data.total);
 
   useEffect(() => {
     setPage(1);
@@ -47,14 +46,12 @@ export function SupplierList() {
         }}
       />
 
-      <SupplierTable
-        data={data?.data ?? []}
-        isLoading={isLoading}
-      />
+      <SupplierTable data={data?.data ?? []} isLoading={isLoading} />
 
       <SupplierPagination
-        page={data?.pagination?.page ?? 1}
-        totalPages={data?.pagination?.totalPages ?? 1}
+        total={data?.total ?? 0}
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
         onPageChange={setPage}
       />
     </div>

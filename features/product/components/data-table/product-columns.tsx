@@ -9,10 +9,11 @@ import {
   DropdownMenu,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { DeleteProductDialog } from "../delete-product-dialog";
 import { ViewProductDialog } from "../view-product-dialog";
 import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
+import Link from "next/link";
 
 export type ProductRow = {
   id: string;
@@ -126,6 +127,15 @@ export const productColumns: ColumnDef<ProductRow>[] = [
                 View
               </DropdownMenuItem>
             </ViewProductDialog>
+            {/* <DropdownMenuItem>
+              <Link
+                className="flex p-0.5"
+                href={`/inventory/update/${product.id}`}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Update
+              </Link>
+            </DropdownMenuItem> */}
             <AddSupplierToProductDialog productId={product.id}>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <Plus className="mr-2 h-4 w-4" />

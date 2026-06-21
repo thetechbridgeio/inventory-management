@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProductPicker } from "@/features/product/components/product-picker";
 import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
+import { SupplierPicker } from "@/features/suppliers/components/supplier-pircker";
 
 export function PurchaseForm() {
   const form = useFormContext<CreatePurchaseFormType>();
@@ -53,13 +54,20 @@ export function PurchaseForm() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <RHFSelect
+          <Controller
+            control={form.control}
             name="supplierId"
-            label="Supplier"
-            placeholder="Select supplier"
-            options={supplierOptions}
-            helperText="Choose the supplier for this purchase."
-            required
+            render={({ field }) => (
+              <SupplierPicker
+                value={field.value}
+                onChange={(supplier) => {
+                  field.onChange(supplier.id);
+                }}
+                onClear={() => {
+                  field.onChange("");
+                }}
+              />
+            )}
           />
 
           <RHFInput

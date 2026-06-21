@@ -45,8 +45,6 @@ export function ViewProductDialog({
 }: ViewProductDialogProps) {
   const { data, isLoading, isError, error } = useProduct(productId);
 
-  console.log(data);
-
   return (
     <Dialog>
       <DialogTrigger asChild>
