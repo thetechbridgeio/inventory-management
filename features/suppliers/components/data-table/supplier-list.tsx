@@ -22,7 +22,6 @@ export function SupplierList() {
     isActive,
   });
 
-  console.log(data.total);
 
   useEffect(() => {
     setPage(1);
