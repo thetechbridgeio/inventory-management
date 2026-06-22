@@ -21,9 +21,7 @@ export function RHFTextarea<T extends FieldValues>({
     formState: { errors },
   } = useFormContext<T>();
 
-  const error = name
-    .split(".")
-    .reduce<any>((obj, key) => obj?.[key], errors);
+  const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
 
   return (
     <div className="space-y-2">
@@ -32,18 +30,17 @@ export function RHFTextarea<T extends FieldValues>({
       <Textarea
         id={name}
         placeholder={placeholder}
-        {...register(name)}
+        {...register(name, {
+          setValueAs: (value: string) =>
+            value.trim() === "" ? undefined : value,
+        })}
       />
 
       {error?.message ? (
-        <p className="text-sm text-destructive">
-          {String(error.message)}
-        </p>
+        <p className="text-sm text-destructive">{String(error.message)}</p>
       ) : (
         helperText && (
-          <p className="text-sm text-muted-foreground">
-            {helperText}
-          </p>
+          <p className="text-sm text-muted-foreground">{helperText}</p>
         )
       )}
     </div>

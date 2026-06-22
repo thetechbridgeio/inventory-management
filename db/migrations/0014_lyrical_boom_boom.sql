@@ -1,0 +1,1 @@
+ALTER TABLE "suppliers" ADD CONSTRAINT "suppliers_company_id_company_name_unique" UNIQUE("company_id","company_name");

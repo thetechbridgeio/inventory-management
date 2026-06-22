@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFMultiSelect } from "@/components/react-hook-form-fields/rhf-multiselect";
-import { RHFSelect } from "@/components/react-hook-form-fields/rhf-select";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
 
 import { useSuppliers } from "@/features/suppliers/hooks/use-get-suppliers";
@@ -18,40 +17,30 @@ import { CREATE_PRODUCT_DEFAULT_VALUES } from "../../constants/form-default";
 
 import { useCreateProduct } from "../../hooks/use-create-product";
 
-import {
-  CreateProductFormInput,
-  CreateProductFormType,
-} from "../../types/product.types";
+import { CreateProductFormType } from "../../types/product.types";
 
 import { CreateProductFormSchema } from "../../validations/product.validation";
-import { ImagePlus } from "lucide-react";
 import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
 export function CreateProductForm() {
   const { mutateAsync, isPending } = useCreateProduct();
 
   const { data: suppliersData, isPending: isSupplierPending } = useSuppliers();
+  
 
   const suppliers = suppliersData ?? [];
 
-  const form = useForm<CreateProductFormInput>({
+  const form = useForm<CreateProductFormType>({
     resolver: zodResolver(CreateProductFormSchema),
     defaultValues: CREATE_PRODUCT_DEFAULT_VALUES,
     mode: "onTouched",
-  });;
+  });
 
-  async function onSubmit(values: CreateProductFormInput) {
+  async function onSubmit(values: CreateProductFormType) {
     try {
-      await mutateAsync(values as CreateProductFormType);
-
-      toast.success("Product created successfully");
-
+      await mutateAsync(values);
       form.reset();
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to create product",
-      );
-    }
+    } catch (error) {}
   }
 
   const isLoading = isPending || isSupplierPending;
@@ -96,28 +85,28 @@ export function CreateProductForm() {
                 <RHFInput<CreateProductFormType>
                   name="name"
                   label="Product Name"
-                  placeholder="e.g. Steel Rod 10mm"
+                  placeholder="Enter product name"
                   helperText="Enter a unique and descriptive product name."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="category"
                   label="Category"
-                  placeholder="e.g. Raw Material, Electronics, Hardware"
-                  helperText="Enter the product category."
+                  placeholder="Enter the product category."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="unit"
                   label="Unit"
                   placeholder="PCS, KG, BOX"
-                  helperText="Measurement unit used for stock tracking."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="location"
                   label="Storage Location"
-                  placeholder="Warehouse A - Rack 12"
                   helperText="Where this product is stored."
                 />
               </div>
@@ -126,8 +115,7 @@ export function CreateProductForm() {
                 <RHFTextarea<CreateProductFormType>
                   name="description"
                   label="Description"
-                  placeholder="Enter product specifications, dimensions, material details, etc."
-                  helperText="Optional notes or additional information."
+                  placeholder="Add a product description..."
                 />
               </div>
             </section>
@@ -147,32 +135,32 @@ export function CreateProductForm() {
                   name="openingStock"
                   label="Opening Stock"
                   type="number"
-                  placeholder="100"
                   helperText="Initial quantity available in inventory."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="reorderQty"
                   label="Reorder Quantity"
                   type="number"
-                  placeholder="20"
                   helperText="Low stock threshold for replenishment."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="minOrderQty"
                   label="Minimum Order Quantity"
                   type="number"
-                  placeholder="10"
                   helperText="Smallest quantity typically purchased."
+                  required
                 />
 
                 <RHFInput<CreateProductFormType>
                   name="maxOrderQty"
                   label="Maximum Order Quantity"
                   type="number"
-                  placeholder="500"
                   helperText="Largest quantity expected in a single purchase."
+                  required
                 />
               </div>
             </section>

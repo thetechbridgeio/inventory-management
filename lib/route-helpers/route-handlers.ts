@@ -1,56 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { AppError } from "./errors";
+import { NextRequest } from "next/server";
+import { handleApiError } from "../errors/handle-api-error";
+import { apiResponse } from "./api-response";
 
-export function createRouteHandler<T>(
-  handler: (request: NextRequest) => Promise<T>,
-) {
+export function routeHandler<T>(handler: (request: NextRequest) => Promise<T>) {
   return async (request: NextRequest) => {
     try {
-      const result = await handler(request);
+      const data = await handler(request);
 
-      return NextResponse.json(
-        {
-          success: true,
-          data: result,
-        },
-        { status: 200 },
-      );
+      return apiResponse(data);
     } catch (error) {
-      console.error(error);
-
-      if (error instanceof AppError) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: error.message,
-          },
-          {
-            status: error.statusCode,
-          },
-        );
-      }
-
-      if (error instanceof Error) {
-        return NextResponse.json(
-          {
-            success: false,
-            message: error.message,
-          },
-          {
-            status: 500,
-          },
-        );
-      }
-
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Internal Server Error",
-        },
-        {
-          status: 500,
-        },
-      );
+      return handleApiError(error);
     }
   };
 }

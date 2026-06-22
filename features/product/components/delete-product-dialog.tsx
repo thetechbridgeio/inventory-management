@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { useDeleteProduct } from "../hooks/use-delete-product";
+import { useState } from "react";
 
 type DeleteProductDialogProps = {
   productId: string;
@@ -30,21 +31,17 @@ export function DeleteProductDialog({
   children,
 }: DeleteProductDialogProps) {
   const { mutateAsync, isPending } = useDeleteProduct();
+  const [open, setOpen] = useState(false);
 
   async function handleDelete() {
     try {
       await mutateAsync(productId);
-
-      toast.success("Product deleted successfully");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to delete product",
-      );
-    }
+      setOpen(false);
+    } catch {}
   }
 
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         {children ?? (
           <Button
@@ -66,9 +63,7 @@ export function DeleteProductDialog({
           <AlertDialogTitle>Delete Product</AlertDialogTitle>
 
           <AlertDialogDescription className="space-y-2">
-            <span className="block">
-              This action cannot be undone.
-            </span>
+            <span className="block">This action cannot be undone.</span>
 
             <span className="block">
               Product{" "}
@@ -85,9 +80,7 @@ export function DeleteProductDialog({
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 
           <AlertDialogAction
             disabled={isPending}

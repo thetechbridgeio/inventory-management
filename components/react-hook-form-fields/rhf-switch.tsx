@@ -1,9 +1,4 @@
-import {
-  Controller,
-  FieldValues,
-  Path,
-  useFormContext,
-} from "react-hook-form";
+import { Controller, FieldValues, Path, useFormContext } from "react-hook-form";
 
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -24,9 +19,7 @@ export function RHFSwitch<T extends FieldValues>({
     formState: { errors },
   } = useFormContext<T>();
 
-  const error = name
-    .split(".")
-    .reduce<any>((obj, key) => obj?.[key], errors);
+  const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
 
   return (
     <div className="space-y-2">
@@ -39,14 +32,12 @@ export function RHFSwitch<T extends FieldValues>({
               <Label>{label}</Label>
 
               {helperText && (
-                <p className="text-sm text-muted-foreground">
-                  {helperText}
-                </p>
+                <p className="text-sm text-muted-foreground">{helperText}</p>
               )}
             </div>
 
             <Switch
-              checked={field.value}
+              checked={field.value ?? false}
               onCheckedChange={field.onChange}
             />
           </div>
@@ -54,9 +45,7 @@ export function RHFSwitch<T extends FieldValues>({
       />
 
       {error?.message && (
-        <p className="text-sm text-destructive">
-          {String(error.message)}
-        </p>
+        <p className="text-sm text-destructive">{String(error.message)}</p>
       )}
     </div>
   );

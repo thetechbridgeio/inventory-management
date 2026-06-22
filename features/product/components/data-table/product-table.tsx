@@ -15,14 +15,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { productColumns, ProductRow } from "./product-columns";
+import { productColumns } from "./product-columns";
 import { Loader2 } from "lucide-react";
+import { Product } from "../../types/product.types";
 
 export function ProductTable({
   data,
   isLoading,
 }: {
-  data: ProductRow[];
+  data: Product[];
   isLoading: boolean;
 }) {
   const table = useReactTable({

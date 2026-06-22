@@ -13,15 +13,11 @@ export function SupplierList() {
 
   const [search, setSearch] = useState("");
   const [isActive, setIsActive] = useState<boolean | null>(null);
-
   const [debouncedSearch] = useDebounce(search, 500);
-
   const { data, isLoading } = useSuppliers({
     page,
     search: debouncedSearch,
-    isActive,
   });
-
 
   useEffect(() => {
     setPage(1);

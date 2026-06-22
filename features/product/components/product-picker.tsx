@@ -40,14 +40,14 @@ export function ProductPicker({
   });
 
   const products = useMemo(() => {
-    return (data?.items ?? []).filter((product: Product) => {
+    return (data?.data ?? []).filter((product: Product) => {
       if (product.id === value) {
         return true;
       }
 
       return !selectedProductIds.includes(product.id);
     });
-  }, [data?.items, selectedProductIds, value]);
+  }, [data?.data, selectedProductIds, value]);
 
   const selectedProduct = useMemo(() => {
     if (!value) {
@@ -56,9 +56,9 @@ export function ProductPicker({
 
     return (
       products.find((product: Product) => product.id === value) ??
-      data?.items?.find((product: Product) => product.id === value)
+      data?.data?.find((product: Product) => product.id === value)
     );
-  }, [value, products, data?.items]);
+  }, [value, products, data?.data]);
 
   if (selectedProduct) {
     return (

@@ -3,7 +3,12 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-import { GetProductsParams } from "../types/product.types";
+import {
+  GetProductsParams,
+  GetProductsResponse,
+} from "../types/product.types";
+import { ApiSuccessResponse } from "@/lib/common-types";
+import { handleApiError } from "@/lib/errors/handle-api-error";
 
 export function useProducts({
   page,
@@ -24,24 +29,30 @@ export function useProducts({
       },
     ],
 
-    queryFn: async () => {
-      const response = await axios.get("/api/product", {
-        params: {
-          page,
-          search: search ?? undefined,
-          categories: categories?.length
-            ? categories.join(",")
-            : undefined,
-          locations: locations?.length
-            ? locations.join(",")
-            : undefined,
-          units: units?.length
-            ? units.join(",")
-            : undefined,
-        },
-      });
+    queryFn: async (): Promise<GetProductsResponse | undefined> => {
+      try {
+        const { data } = await axios.get<
+          ApiSuccessResponse<GetProductsResponse>
+        >("/api/product", {
+          params: {
+            page,
+            search: search ?? undefined,
+            categories: categories?.length
+              ? categories.join(",")
+              : undefined,
+            locations: locations?.length
+              ? locations.join(",")
+              : undefined,
+            units: units?.length
+              ? units.join(",")
+              : undefined,
+          },
+        });
 
-      return response.data.data;
+        return data.data;
+      } catch (error) {
+        handleApiError(error);
+      }
     },
   });
 }

@@ -18,10 +18,10 @@ export const products = pgTable(
       .notNull(),
     name: text("name").notNull(),
     description: text("description"),
-    category: text("category"),
+    category: text("category").notNull(),
     unit: text("unit").notNull(),
     minOrderQty: integer("min_order_qty").default(0).notNull(),
-    maxOrderQty: integer("max_order_qty"),
+    maxOrderQty: integer("max_order_qty").default(1).notNull(),
     reorderQty: integer("reorder_qty").default(0).notNull(),
     openingStock: integer("opening_stock").default(0).notNull(),
     currentStock: integer("current_stock").default(0).notNull(),
@@ -32,7 +32,6 @@ export const products = pgTable(
   },
   (table) => ({
     companyIdx: index("products_company_idx").on(table.companyId),
-
     companyNameIdx: index("products_company_name_idx").on(
       table.companyId,
       table.name,

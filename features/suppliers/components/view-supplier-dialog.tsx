@@ -40,8 +40,6 @@ export function ViewSupplierDialog({
 }: ViewSupplierDialogProps) {
   const { data: supplier, isLoading } = useSupplier(supplierId);
 
-  console.log("supplier", supplier);
-
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -54,7 +52,7 @@ export function ViewSupplierDialog({
           maxHeight: "70vh",
         }}
       >
-        <DialogHeader className="border-b px-6 py-4">
+        <DialogHeader className="border-b px-4 py-3">
           <DialogTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-blue-600" />
             Supplier Details
@@ -62,7 +60,7 @@ export function ViewSupplierDialog({
         </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0">
-          <div className="p-6">
+          <div className="p-3">
             {isLoading ? (
               <div className="py-10 text-center text-muted-foreground">
                 Loading supplier details...

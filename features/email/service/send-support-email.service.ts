@@ -1,7 +1,6 @@
 import { supportEmailTemplate } from "./suppot-email-template";
 import { transporter } from "./transporter";
 
-
 export interface SendSupportEmailProps {
   name: string;
   email: string;
@@ -15,8 +14,7 @@ export const sendSupportEmail = async ({
   subject,
   message,
 }: SendSupportEmailProps) => {
-  const supportEmail =
-    process.env.SUPPORT_EMAIL || process.env.EMAIL_USER;
+  const supportEmail = process.env.SUPPORT_EMAIL || process.env.EMAIL_USER;
 
   if (!supportEmail) {
     throw new Error("SUPPORT_EMAIL or EMAIL_USER is not configured");
@@ -38,9 +36,7 @@ export const sendSupportEmail = async ({
 
     to: supportEmail,
 
-    cc: process.env.SUPPORT_CC
-      ? process.env.SUPPORT_CC.split(",")
-      : undefined,
+    cc: process.env.SUPPORT_CC ? process.env.SUPPORT_CC.split(",") : undefined,
 
     replyTo: email,
 

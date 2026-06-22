@@ -32,17 +32,7 @@ export function DeleteSupplierDialog({
   const { mutateAsync, isPending } = useDeleteSupplier();
 
   async function handleDelete() {
-    try {
-      await mutateAsync(supplierId);
-
-      toast.success("Supplier deleted successfully");
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to delete supplier",
-      );
-    }
+    await mutateAsync(supplierId);
   }
 
   return (
@@ -65,14 +55,10 @@ export function DeleteSupplierDialog({
 
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Delete Supplier
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete Supplier</AlertDialogTitle>
 
           <AlertDialogDescription className="space-y-2">
-            <span className="block">
-              This action cannot be undone.
-            </span>
+            <span className="block">This action cannot be undone.</span>
 
             <span className="block">
               Supplier{" "}
@@ -83,16 +69,13 @@ export function DeleteSupplierDialog({
             </span>
 
             <span className="block">
-              Existing purchases and supplier history
-              will be preserved.
+              Existing purchases and supplier history will be preserved.
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
 
           <AlertDialogAction
             disabled={isPending}

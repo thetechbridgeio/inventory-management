@@ -1,6 +1,6 @@
 export function buildFormData<
   T extends Record<string, unknown> & {
-    image?: File | null;
+    image?: File | string | null;
   },
 >(data: T): FormData {
   const formData = new FormData();

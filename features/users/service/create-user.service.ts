@@ -1,11 +1,16 @@
 import "server-only";
 
 import { db } from "@/db";
+
 import { users } from "@/features/users/schemas/user.schema";
 import { createAuthUser } from "@/features/users/service/create-auth-user.service";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 
 import { CreateUserType } from "../types/user.type";
+
+import { supabaseAdmin } from "@/lib/supabase/admin";
+
+import { ExternalServiceError } from "@/lib/errors/external-service-error";
+import { mapDatabaseError } from "@/lib/errors/map-database-error";
 
 export async function createUser(
   data: CreateUserType,
@@ -36,11 +41,22 @@ export async function createUser(
     return user;
   } catch (error) {
     if (authUserId) {
-      await supabaseAdmin.auth.admin.deleteUser(
-        authUserId,
-      );
+      try {
+        await supabaseAdmin.auth.admin.deleteUser(
+          authUserId,
+        );
+      } catch (rollbackError) {
+        console.error(
+          "Failed to rollback auth user:",
+          rollbackError,
+        );
+      }
     }
 
-    throw error;
+    if (error instanceof ExternalServiceError) {
+      throw error;
+    }
+
+    mapDatabaseError(error);
   }
 }

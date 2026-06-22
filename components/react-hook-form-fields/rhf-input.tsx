@@ -27,20 +27,24 @@ export function RHFInput<T extends FieldValues>({
     formState: { errors },
   } = useFormContext<T>();
 
-  const error = name
-    .split(".")
-    .reduce<any>((obj, key) => obj?.[key], errors);
+  const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
+
+  const registerOptions =
+    type === "number"
+      ? {
+          setValueAs: (value: string) =>
+            value === "" ? undefined : Number(value),
+        }
+      : {
+          setValueAs: (value: string) =>
+            value.trim() === "" ? undefined : value,
+        };
 
   return (
     <div className="space-y-2">
-      <Label
-        htmlFor={name}
-        className="flex items-center gap-1"
-      >
+      <Label htmlFor={name} className="flex items-center gap-1">
         {label}
-        {required && (
-          <span className="text-destructive">*</span>
-        )}
+        {required && <span className="text-destructive">*</span>}
       </Label>
 
       <Input
@@ -49,18 +53,14 @@ export function RHFInput<T extends FieldValues>({
         placeholder={placeholder}
         disabled={disabled}
         aria-required={required}
-        {...register(name)}
+        {...register(name, registerOptions)}
       />
 
       {error?.message ? (
-        <p className="text-sm text-destructive">
-          {String(error.message)}
-        </p>
+        <p className="text-sm text-destructive">{String(error.message)}</p>
       ) : (
         helperText && (
-          <p className="text-sm text-muted-foreground">
-            {helperText}
-          </p>
+          <p className="text-sm text-muted-foreground">{helperText}</p>
         )
       )}
     </div>

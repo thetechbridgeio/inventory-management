@@ -35,12 +35,6 @@ export function PurchaseForm() {
       0,
     ) ?? 0;
 
-  const supplierOptions =
-    suppliersData?.data?.map((supplier: Supplier) => ({
-      label: supplier.companyName,
-      value: supplier.id,
-    })) ?? [];
-
   return (
     <div className="space-y-8">
       {/* Purchase Details */}

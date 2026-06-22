@@ -3,51 +3,38 @@ import z from "zod";
 import {
   CreateProductFormSchema,
   UpdateProductFormSchema,
+  CreateProductDTOSchema,
+  UpdateProductDTOSchema,
 } from "../validations/product.validation";
-
 import { products } from "../schemas/product.schema";
+import { PaginatedResponse } from "@/lib/common-types";
+
+export type CreateProductFormType = z.infer<typeof CreateProductFormSchema>;
+
+export type UpdateProductFormType = z.infer<typeof UpdateProductFormSchema>;
+
+export type CreateProductDTO = z.infer<typeof CreateProductDTOSchema>;
+
+export type UpdateProductDTO = z.infer<typeof UpdateProductDTOSchema>;
 
 export type Product = typeof products.$inferSelect;
 
-/* ---------- FORM TYPES ---------- */
+export type GetProductsResponse = PaginatedResponse<Product>;
 
-export type CreateProductFormType = z.infer<
-  typeof CreateProductFormSchema
->;
-
-export type CreateProductFormInput = z.input<
-  typeof CreateProductFormSchema
->;
-
-export type UpdateProductFormType = z.infer<
-  typeof UpdateProductFormSchema
->;
-
-export type UpdateProductFormInput = z.input<
-  typeof UpdateProductFormSchema
->;
-
-/* ---------- DB INSERT TYPES ---------- */
-
-export type CreateProductType = {
-  companyId: string;
-  name: string;
-  description?: string | null;
-  category: string;
-  unit: string;
-  image?: string | null;
-  minOrderQty: number;
-  maxOrderQty: number;
-  reorderQty: number;
-  openingStock: number;
-  currentStock: number;
-  location?: string | null;
+export type ProductSupplier = {
+  id: string;
+  companyName: string;
+  contactPersonName: string | null;
+  email: string | null;
+  phone: string | null;
+  estimatedDeliveryPeriod: number | null;
+  paymentTerm: string | null;
+  isActive: boolean;
 };
 
-export type UpdateProductType = Omit<
-  CreateProductType,
-  "companyId" | "openingStock" | "currentStock"
->;
+export type ProductDetails = Product & {
+  suppliers: ProductSupplier[];
+};
 
 /* ---------- QUERY TYPES ---------- */
 

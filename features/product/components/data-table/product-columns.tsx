@@ -14,21 +14,9 @@ import { DeleteProductDialog } from "../delete-product-dialog";
 import { ViewProductDialog } from "../view-product-dialog";
 import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
 import Link from "next/link";
+import { Product } from "../../types/product.types";
 
-export type ProductRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  category: string;
-  unit: string;
-  currentStock: number;
-  minOrderQty: number;
-  maxOrderQty: number | null;
-  reorderQty: number;
-  location: string | null;
-};
-
-export const productColumns: ColumnDef<ProductRow>[] = [
+export const productColumns: ColumnDef<Product>[] = [
   {
     accessorKey: "name",
     header: "Product",
@@ -127,7 +115,7 @@ export const productColumns: ColumnDef<ProductRow>[] = [
                 View
               </DropdownMenuItem>
             </ViewProductDialog>
-            {/* <DropdownMenuItem>
+            <DropdownMenuItem>
               <Link
                 className="flex p-0.5"
                 href={`/inventory/update/${product.id}`}
@@ -135,7 +123,7 @@ export const productColumns: ColumnDef<ProductRow>[] = [
                 <Pencil className="mr-2 h-4 w-4" />
                 Update
               </Link>
-            </DropdownMenuItem> */}
+            </DropdownMenuItem>
             <AddSupplierToProductDialog productId={product.id}>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <Plus className="mr-2 h-4 w-4" />

@@ -1,7 +1,7 @@
 import { deleteSale } from "@/features/sales/service/delete-sale.service";
 import { getSaleById } from "@/features/sales/service/get-sale-by-id.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
-import { createRouteHandler } from "@/lib/route-helpers/route-handlers";
+import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import { NextRequest } from "next/server";
 
 type RouteContext = {
@@ -13,7 +13,7 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   const { saleId } = await context.params;
 
-  return createRouteHandler(async () => {
+  return routeHandler(async () => {
     const { companyId } = await getCurrentUser();
 
     return getSaleById(saleId, companyId);
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { saleId } = await context.params;
 
-  return createRouteHandler(async () => {
+  return routeHandler(async () => {
     const { companyId } = await getCurrentUser();
 
     return deleteSale(saleId, companyId);

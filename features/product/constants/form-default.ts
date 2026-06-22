@@ -1,15 +1,13 @@
-import { CreateProductFormType } from "../types/product.types";
-
-export const CREATE_PRODUCT_DEFAULT_VALUES: CreateProductFormType = {
+export const CREATE_PRODUCT_DEFAULT_VALUES = {
   name: "",
-  description: "",
+  description: undefined,
   category: "",
   unit: "",
-  minOrderQty: 0,
-  maxOrderQty: 0,
-  reorderQty: 0,
-  openingStock: 0,
-  location: "",
+  minOrderQty: undefined,
+  maxOrderQty: undefined,
+  reorderQty: undefined,
+  openingStock: undefined,
+  location: undefined,
   image: undefined,
   supplierIds: [],
 };

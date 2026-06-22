@@ -20,7 +20,6 @@ export function ProductList() {
 
   const { data: filters } = useProductFilters();
 
-  console.log(filters);
 
   const { data, isLoading } = useProducts({
     page,
@@ -29,6 +28,7 @@ export function ProductList() {
     locations,
     units,
   });
+
 
   useEffect(() => {
     setPage(1);
@@ -51,11 +51,11 @@ export function ProductList() {
         onUnitChange={setUnits}
       />
 
-      <ProductTable data={data?.items ?? []} isLoading={isLoading}/>
+      <ProductTable data={data?.data ?? []} isLoading={isLoading}/>
 
       <ProductPagination
-        page={data?.pagination?.page ?? 1}
-        totalPages={data?.pagination?.totalPages ?? 1}
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
         onPageChange={setPage}
       />
     </div>

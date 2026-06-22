@@ -1,4 +1,9 @@
-import { Controller, FieldValues, Path, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  FieldValues,
+  Path,
+  useFormContext,
+} from "react-hook-form";
 
 import { Label } from "@/components/ui/label";
 
@@ -21,7 +26,7 @@ type RHFSelectProps<T extends FieldValues> = {
   label: string;
   placeholder?: string;
   helperText?: string;
-  required?: boolean
+  required?: boolean;
   options: Option[];
 };
 
@@ -38,20 +43,39 @@ export function RHFSelect<T extends FieldValues>({
     formState: { errors },
   } = useFormContext<T>();
 
-  const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
+  const error = name
+    .split(".")
+    .reduce<any>((obj, key) => obj?.[key], errors);
 
   return (
     <div className="space-y-2">
-      <Label>{label}{required && (
+      <Label
+        htmlFor={name}
+        className="flex items-center gap-1"
+      >
+        {label}
+
+        {required && (
           <span className="text-destructive">*</span>
-        )}</Label>
+        )}
+      </Label>
 
       <Controller
         control={control}
         name={name}
         render={({ field }) => (
-          <Select value={field.value} onValueChange={field.onChange}>
-            <SelectTrigger className="w-full">
+          <Select
+            value={field.value ?? undefined}
+            onValueChange={(value) =>
+              field.onChange(
+                value.trim() === "" ? undefined : value,
+              )
+            }
+          >
+            <SelectTrigger
+              id={name}
+              className="w-full"
+            >
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
 
@@ -71,10 +95,14 @@ export function RHFSelect<T extends FieldValues>({
       />
 
       {error?.message ? (
-        <p className="text-sm text-destructive">{String(error.message)}</p>
+        <p className="text-sm text-destructive">
+          {String(error.message)}
+        </p>
       ) : (
         helperText && (
-          <p className="text-sm text-muted-foreground">{helperText}</p>
+          <p className="text-sm text-muted-foreground">
+            {helperText}
+          </p>
         )
       )}
     </div>

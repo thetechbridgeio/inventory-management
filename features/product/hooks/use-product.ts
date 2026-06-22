@@ -1,16 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
+import { ProductDetails } from "../types/product.types";
+import { ApiSuccessResponse } from "@/lib/common-types";
+
 export function useProduct(productId: string) {
-  return useQuery({
+  return useQuery<ProductDetails>({
     queryKey: ["product", productId],
 
     queryFn: async () => {
-      const { data } = await axios.get(`/api/product/${productId}`);
+      const response = await axios.get<ApiSuccessResponse<ProductDetails>>(
+        `/api/product/${productId}`
+      );
 
-      return data.data;
+      return response.data.data;
     },
 
-    enabled: !!productId,
+    enabled: Boolean(productId),
   });
 }

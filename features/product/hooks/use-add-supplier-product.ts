@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "sonner";
+
+import { getApiErrorMessage } from "@/lib/api-error";
 
 type AddSupplierToProductInput = {
   productId: string;
@@ -13,21 +16,26 @@ export function useAddSupplierToProduct() {
     mutationFn: async ({
       productId,
       supplierId,
-    }: AddSupplierToProductInput) => {
-      const { data } = await axios.post(
-        `/api/product/${productId}/supplier`,
-        {
-          supplierId,
-        },
-      );
+    }: AddSupplierToProductInput) =>
+      (
+        await axios.post(
+          `/api/product/${productId}/supplier`,
+          {
+            supplierId,
+          },
+        )
+      ).data,
 
-      return data;
-    },
+    onSuccess: async (_, variables) => {
+      toast.success("Supplier added successfully");
 
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
+      await queryClient.invalidateQueries({
         queryKey: ["product", variables.productId],
       });
+    },
+
+    onError: (error) => {
+      toast.error(getApiErrorMessage(error));
     },
   });
 }

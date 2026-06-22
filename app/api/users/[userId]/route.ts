@@ -1,7 +1,6 @@
 import { deleteUser } from "@/features/users/service/delete-user-soft.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
-import { createRouteHandler } from "@/lib/route-helpers/route-handlers";
-
+import { routeHandler } from "@/lib/route-helpers/route-handlers";
 
 type Props = {
   params: Promise<{
@@ -15,7 +14,7 @@ export async function DELETE(
 ) {
   const { userId } = await params;
 
-  return createRouteHandler(async () => {
+  return routeHandler(async () => {
     const {companyId} = await getCurrentUser();
 
     return deleteUser(

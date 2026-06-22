@@ -1,34 +1,12 @@
-// lib/errors.ts
-
 export class AppError extends Error {
-  constructor(
-    message: string,
-    public statusCode = 400,
-  ) {
+  public readonly statusCode: number;
+
+  constructor(message: string, statusCode: number = 500) {
     super(message);
-  }
-}
+    this.name = "AppError";
+    this.statusCode = statusCode;
 
-export class NotFoundError extends AppError {
-  constructor(message = "Resource not found") {
-    super(message, 404);
-  }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(message = "Unauthorized") {
-    super(message, 401);
-  }
-}
-
-export class ValidationError extends AppError {
-  constructor(message = "Validation failed") {
-    super(message, 422);
-  }
-}
-
-export class ConflictError extends AppError {
-  constructor(message = "Conflict") {
-    super(message, 409);
+    // Maintains correct stack trace (only relevant on V8/Node)
+    Object.setPrototypeOf(this, AppError.prototype);
   }
 }

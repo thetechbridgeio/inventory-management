@@ -1,38 +1,31 @@
 "use client";
-import { CREATE_SUPPLIER_FORM_DEFAULT } from "@/features/suppliers/default/form.default";
-import { CreateSupplierForm } from "@/features/suppliers/components/add-supplier/add-supplier-form";
-import { CreateSupplierFormType } from "@/features/suppliers/types/suppliers.type";
-import { supplierSchema } from "@/features/suppliers/validations/suppliers.validation";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FormProvider, useForm } from "react-hook-form";
-
-import { Button } from "@/components/ui/button";
-import { useCreateSupplier } from "@/features/suppliers/hooks/use-create-supplier";
-import { toast } from "sonner";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 
-const CreateSupplierPage = () => {
-  const createSupplierForm = useForm<CreateSupplierFormType>({
-    resolver: zodResolver(supplierSchema),
+import { Button } from "@/components/ui/button";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+
+import { CREATE_SUPPLIER_FORM_DEFAULT } from "@/features/suppliers/default/form.default";
+import { CreateSupplierForm } from "@/features/suppliers/components/add-supplier/add-supplier-form";
+import { useCreateSupplier } from "@/features/suppliers/hooks/use-create-supplier";
+import { CreateSupplierFormType } from "@/features/suppliers/types/suppliers.type";
+import { CreateSupplierFormSchema } from "@/features/suppliers/validations/suppliers.validation";
+
+export default function CreateSupplierPage() {
+  const form = useForm<CreateSupplierFormType>({
+    resolver: zodResolver(CreateSupplierFormSchema),
     defaultValues: CREATE_SUPPLIER_FORM_DEFAULT,
     mode: "onTouched",
   });
 
-  const { mutate, isPending } = useCreateSupplier();
+  const { mutateAsync, isPending } = useCreateSupplier();
 
-  const onSubmit = (data: CreateSupplierFormType) => {
-    mutate(data, {
-      onSuccess: () => {
-        toast.success("Supplier created successfully");
-        createSupplierForm.reset();
-      },
-      onError: () => {
-        toast.error("Failed to create supplier");
-      },
-    });
+  const onSubmit = async (data: CreateSupplierFormType) => {
+    await mutateAsync(data);
   };
 
   return (
@@ -59,11 +52,8 @@ const CreateSupplierPage = () => {
         </div>
 
         <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <FormProvider {...createSupplierForm}>
-            <form
-              onSubmit={createSupplierForm.handleSubmit(onSubmit)}
-              className="space-y-8"
-            >
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <CreateSupplierForm />
 
               <div className="flex items-center justify-between border-t pt-6">
@@ -77,7 +67,7 @@ const CreateSupplierPage = () => {
                   </p>
                 </div>
 
-                <Button type="submit" disabled={isPending} size="lg">
+                <Button type="submit" size="lg" disabled={isPending}>
                   {isPending ? "Creating Supplier..." : "Create Supplier"}
                 </Button>
               </div>
@@ -87,6 +77,4 @@ const CreateSupplierPage = () => {
       </div>
     </DashboardLayout>
   );
-};
-
-export default CreateSupplierPage;
+}

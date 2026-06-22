@@ -1,6 +1,7 @@
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
-import { CreateSupplierFormType } from "../../types/suppliers.type";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
+
+import { CreateSupplierFormType } from "../../types/suppliers.type";
 
 export function CreateSupplierForm() {
   return (
@@ -8,36 +9,47 @@ export function CreateSupplierForm() {
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Supplier Information</h3>
+
           <p className="text-sm text-muted-foreground">
-            Basic company and compliance information.
+            Basic company, compliance, and supplier profile information.
           </p>
         </div>
 
-        <RHFInput<CreateSupplierFormType>
-          name="companyName"
-          label="Company Name"
-          placeholder="ABC Electronics Pvt Ltd"
-          helperText="Legal or trading name of the supplier."
-        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <RHFInput<CreateSupplierFormType>
+            name="companyName"
+            label="Company Name"
+            placeholder="Enter company name"
+            helperText="Legal or trading name of the supplier."
+            required
+          />
 
-        <RHFInput<CreateSupplierFormType>
-          name="gst"
-          label="GST Number"
-          placeholder="19ABCDE1234F1Z5"
-          helperText="Tax registration number if available."
-        />
+          <RHFInput<CreateSupplierFormType>
+            name="gst"
+            label="GST Number"
+            placeholder="Enter GST Number"
+            helperText="Tax registration number, if applicable."
+          />
+        </div>
 
         <RHFTextarea<CreateSupplierFormType>
           name="address"
           label="Business Address"
-          placeholder="12 Park Street, Kolkata, West Bengal"
-          helperText="Registered office or primary operating address."
+          placeholder="Enter Address"
+        />
+
+        <RHFTextarea<CreateSupplierFormType>
+          name="description"
+          label="Description"
+          placeholder="Add a description"
+          helperText="Additional notes, brand, bank details etc."
         />
       </section>
 
       <section className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">Contact Information</h3>
+
           <p className="text-sm text-muted-foreground">
             Primary contact for purchase orders and supplier communication.
           </p>
@@ -47,15 +59,13 @@ export function CreateSupplierForm() {
           <RHFInput<CreateSupplierFormType>
             name="contactPersonName"
             label="Contact Person"
-            placeholder="Rahul Sharma"
-            helperText="Main point of contact."
+            placeholder="Enter Primary Contact Name"
           />
 
           <RHFInput<CreateSupplierFormType>
             name="phone"
             label="Phone Number"
-            placeholder="+91 9876543210"
-            helperText="Include country code when applicable."
+            placeholder="Enter phone number"
           />
         </div>
 
@@ -63,16 +73,18 @@ export function CreateSupplierForm() {
           name="email"
           label="Email Address"
           type="email"
-          placeholder="contact@abc.com"
-          helperText="Used for purchase orders, invoices, and communication."
+          placeholder="Enter email address"
         />
       </section>
 
       <section className="space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">Procurement Preferences</h3>
+          <h3 className="text-lg font-semibold">
+            Procurement Preferences
+          </h3>
+
           <p className="text-sm text-muted-foreground">
-            Operational information used during purchasing.
+            Operational information used during purchasing and planning.
           </p>
         </div>
 
@@ -81,14 +93,12 @@ export function CreateSupplierForm() {
             name="estimatedDeliveryPeriod"
             label="Estimated Delivery Period (Days)"
             type="number"
-            placeholder="Enter in days"
             helperText="Average number of days required to deliver an order."
           />
 
           <RHFInput<CreateSupplierFormType>
             name="paymentTerm"
             label="Payment Terms"
-            placeholder="Net 30"
             helperText="Examples: Net 30, COD, 50% Advance, Monthly Settlement."
           />
         </div>

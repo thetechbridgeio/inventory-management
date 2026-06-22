@@ -1,7 +1,7 @@
-import { deleteSupplier } from "@/features/suppliers/service/deleye-supplier.service";
+import { deleteSupplier } from "@/features/suppliers/service/delete-supplier.service";
 import { getSupplierById } from "@/features/suppliers/service/get-supplier-by-id.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
-import { createRouteHandler } from "@/lib/route-helpers/route-handlers";
+import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import { NextRequest } from "next/server";
 
 type RouteContext = {
@@ -13,9 +13,8 @@ type RouteContext = {
 export async function GET(request: NextRequest, context: RouteContext) {
   const { supplierId } = await context.params;
 
-  return createRouteHandler(async () => {
+  return routeHandler(async () => {
     const { companyId } = await getCurrentUser();
-
     return getSupplierById(supplierId, companyId);
   })(request);
 }
@@ -23,7 +22,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
 export async function DELETE(request: NextRequest, context: RouteContext) {
   const { supplierId } = await context.params;
 
-  return createRouteHandler(async () => {
-    return deleteSupplier(supplierId);
+  return routeHandler(async () => {
+    const { companyId } = await getCurrentUser();
+    return deleteSupplier(supplierId, companyId);
   })(request);
 }
