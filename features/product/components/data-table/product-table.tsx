@@ -15,9 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { productColumns } from "./product-columns";
 import { Loader2 } from "lucide-react";
 import { Product } from "../../types/product.types";
+import { useMemo } from "react";
+import { getProductColumns } from "./product-columns";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
 
 export function ProductTable({
   data,
@@ -26,9 +28,11 @@ export function ProductTable({
   data: Product[];
   isLoading: boolean;
 }) {
+  const { user } = useAuth();
+  const columns = useMemo(() => getProductColumns(user?.role), [user?.role]);
   const table = useReactTable({
     data,
-    columns: productColumns,
+    columns: columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
@@ -53,7 +57,7 @@ export function ProductTable({
         {isLoading ? (
           <TableBody>
             <TableRow>
-              <TableCell colSpan={productColumns.length} className="h-40">
+              <TableCell colSpan={columns.length} className="h-40">
                 <div className="flex flex-col items-center justify-center gap-3">
                   <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
 

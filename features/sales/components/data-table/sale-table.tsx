@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/table";
 
 import { Loader2 } from "lucide-react";
-import { saleColumns, SaleRow } from "./sale-columns";
+import { getSaleColumns, SaleRow } from "./sale-columns";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { useMemo } from "react";
 
 export function SaleTable({
   data,
@@ -25,6 +27,8 @@ export function SaleTable({
   data: SaleRow[];
   isLoading: boolean;
 }) {
+  const { user } = useAuth();
+    const saleColumns = useMemo(() => getSaleColumns(user?.role), [user?.role]);
   const table = useReactTable({
     data,
     columns: saleColumns,

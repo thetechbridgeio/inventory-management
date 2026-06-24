@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/table";
 
 import { Loader2 } from "lucide-react";
-import { purchaseColumns, PurchaseRow } from "./purchase-columns";
+import { getPurchaseColumns, PurchaseRow } from "./purchase-columns";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { useMemo } from "react";
 
 export function PurchaseTable({
   data,
@@ -25,6 +27,11 @@ export function PurchaseTable({
   data: PurchaseRow[];
   isLoading: boolean;
 }) {
+  const { user } = useAuth();
+  const purchaseColumns = useMemo(
+    () => getPurchaseColumns(user?.role),
+    [user?.role],
+  );
   const table = useReactTable({
     data,
     columns: purchaseColumns,

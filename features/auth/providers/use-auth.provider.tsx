@@ -1,15 +1,12 @@
 "use client";
 
-import {
-  createContext,
-  ReactNode,
-  useContext,
-} from "react";
+import { createContext, ReactNode, useContext } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 
 import { useMe } from "@/features/auth/hooks/use-me";
 import { UserRole } from "../constants/user-role";
+import { toast } from "sonner";
 
 export type CurrentUser = {
   id: string;
@@ -37,14 +34,9 @@ type AuthContextType = {
   hasRole: (...roles: string[]) => boolean;
 };
 
-const AuthContext =
-  createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
 
   const { data, isLoading } = useMe();
@@ -52,24 +44,42 @@ export function AuthProvider({
   const user = data?.data ?? null;
 
   async function login(data: LoginData) {
-    const { error } =
-      await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
+    const email = data.email.trim().toLowerCase();
+    const password = data.password.trim();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
+      switch (error.message) {
+        case "Invalid login credentials":
+          toast.error("Invalid email or password");
+          break;
+        case "Email not confirmed":
+          toast.error("Please verify your email before signing in");
+          break;
+
+        default:
+          toast.error("Failed to sign in. Please try again");
+      }
+
       throw error;
     }
+
+    toast.success("Signed in successfully");
   }
 
   async function logout() {
-    const { error } =
-      await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
 
     if (error) {
+      toast.error("Failed to sign out");
       throw error;
     }
+
+    toast.success("Signed out successfully");
   }
 
   function hasRole(...roles: string[]) {
@@ -102,9 +112,7 @@ export function useAuth() {
   const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error(
-      "useAuth must be used within AuthProvider"
-    );
+    throw new Error("useAuth must be used within AuthProvider");
   }
 
   return context;

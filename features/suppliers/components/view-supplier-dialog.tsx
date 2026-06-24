@@ -80,7 +80,7 @@ export function ViewSupplierDialog({
                       </h2>
 
                       <p className="text-sm text-muted-foreground">
-                        Supplier Information
+                        {supplier?.description || "Supplier Information"}
                       </p>
                     </div>
 
