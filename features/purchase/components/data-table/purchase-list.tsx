@@ -42,6 +42,8 @@ export function PurchaseList() {
     setPage(1);
   }, [debouncedSearch, supplierIds, startDate, endDate, sortBy, sortOrder]);
 
+  console.log(data)
+
   return (
     <div className="space-y-4">
       <PurchaseTableTools
@@ -71,8 +73,8 @@ export function PurchaseList() {
       <PurchaseTable data={data?.data ?? []} isLoading={isLoading} />
 
       <PurchasePagination
-        page={data?.pagination?.page ?? 1}
-        totalPages={data?.pagination?.totalPages ?? 1}
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
         onPageChange={setPage}
       />
     </div>

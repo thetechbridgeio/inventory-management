@@ -23,6 +23,8 @@ export function SaleList() {
 
   const [debouncedSearch] = useDebounce(search, 500);
 
+
+
   const { data, isLoading } = useSales({
     page,
     search: debouncedSearch,
@@ -59,8 +61,8 @@ export function SaleList() {
       />
 
       <SalePagination
-        page={data?.pagination?.page ?? 1}
-        totalPages={data?.pagination?.totalPages ?? 1}
+        page={data?.page ?? 1}
+        totalPages={data?.totalPages ?? 1}
         onPageChange={setPage}
       />
     </div>
