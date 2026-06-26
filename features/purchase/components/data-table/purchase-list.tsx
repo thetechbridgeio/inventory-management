@@ -18,6 +18,7 @@ export function PurchaseList() {
   const [supplierIds, setSupplierIds] = useState<string[]>([]);
 
   const [startDate, setStartDate] = useState<string>();
+  
   const [endDate, setEndDate] = useState<string>();
 
   const [sortBy, setSortBy] = useState<"supplier" | "grandTotal" | undefined>();
@@ -41,8 +42,6 @@ export function PurchaseList() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, supplierIds, startDate, endDate, sortBy, sortOrder]);
-
-  console.log(data)
 
   return (
     <div className="space-y-4">
@@ -69,9 +68,7 @@ export function PurchaseList() {
         sortOrder={sortOrder}
         onSortOrderChange={setSortOrder}
       />
-
       <PurchaseTable data={data?.data ?? []} isLoading={isLoading} />
-
       <PurchasePagination
         page={data?.page ?? 1}
         totalPages={data?.totalPages ?? 1}

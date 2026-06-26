@@ -15,7 +15,7 @@ export async function getFastMovingProducts(companyId: string) {
           name: products.name,
           category: products.category,
           currentStock: products.currentStock,
-          totalSold: sql<number>`sum(${saleItems.quantity})`,
+          location: products.location,
         })
         .from(saleItems)
         .innerJoin(sales, eq(saleItems.saleId, sales.id))

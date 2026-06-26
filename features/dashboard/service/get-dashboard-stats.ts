@@ -1,3 +1,4 @@
+import { DashboardStats } from "../types";
 import { getAverageInventoryDays } from "./helpers/get-average-inventory-days";
 import { getDeadStockProducts } from "./helpers/get-dead-stock-products";
 import { getFastMovingProducts } from "./helpers/get-fast-moving-products";
@@ -11,7 +12,7 @@ import { getMonthlySalesGrowthPercentage } from "./helpers/monthly-sales-growth-
 import { getMonthlySalesAmount } from "./helpers/monthly-sales.amount";
 import { getInventoryOverview } from "./helpers/overview";
 
-export async function getDashboardStats(companyId: string) {
+export async function getDashboardStats(companyId: string): Promise<DashboardStats> {
   const [
     inventoryOverview,
     lowStock,

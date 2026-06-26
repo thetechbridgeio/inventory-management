@@ -38,3 +38,10 @@ export type DashboardStats = {
   slowMovingProducts: DashboardProduct[];
   deadStockProducts: DashboardProduct[];
 };
+
+export type LowStockEmail = {
+  outOfStockCount: number;
+  lowStockCount: number;
+  lowStockProducts: DashboardProduct[];
+  outOfStockProducts: DashboardProduct[];
+};
