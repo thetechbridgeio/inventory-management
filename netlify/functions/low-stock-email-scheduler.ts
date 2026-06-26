@@ -32,5 +32,5 @@ export const handler = async () => {
 };
 
 export const config: Config = {
-  schedule: "30 1 * * *", // 7:00 AM IST
+  schedule: "30 1 * * *",
 };

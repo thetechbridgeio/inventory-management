@@ -16,6 +16,7 @@ import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
 import Link from "next/link";
 import { Product } from "../../types/product.types";
 import { ROLES } from "@/features/auth/constants/user-role";
+import { CategoryBadge } from "@/lib/category-badge";
 
 export function getProductColumns(role?: string): ColumnDef<Product>[] {
   return [
@@ -36,12 +37,7 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
     {
       accessorKey: "category",
       header: "Category",
-
-      cell: ({ row }) => {
-        const category = row.original.category;
-
-        return <Badge variant="outline">{category || "Uncategorized"}</Badge>;
-      },
+      cell: ({ row }) => <CategoryBadge category={row.original.category} />,
     },
     {
       accessorKey: "unit",
@@ -101,8 +97,7 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
       enableSorting: false,
       cell: ({ row }) => {
         const product = row.original;
-        const canUpdate =
-          role === ROLES.SUPER_ADMIN 
+        const canUpdate = role === ROLES.SUPER_ADMIN;
 
         const canDelete = role === ROLES.SUPER_ADMIN;
 

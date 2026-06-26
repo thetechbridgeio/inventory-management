@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProductPicker } from "@/features/product/components/product-picker";
 import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
-import { SupplierPicker } from "@/features/suppliers/components/supplier-pircker";
+import { SupplierPicker } from "@/features/suppliers/components/supplier-picker";
 
 export function PurchaseForm() {
   const form = useFormContext<CreatePurchaseFormType>();

@@ -1,0 +1,95 @@
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { PurchaseRequestItem } from "@/features/purchase-request-order/types/purchase-request.type";
+import { ColumnDef } from "@tanstack/react-table";
+import { RequestQtyCell } from "./request-qty-cell";
+import { SupplierCell } from "./supplier-cell";
+import { CategoryBadge } from "@/lib/category-badge";
+import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip";
+import { TriangleAlert } from "lucide-react";
+
+export const columns: ColumnDef<PurchaseRequestItem>[] = [
+  {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Select all"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+    size: 40,
+  },
+
+  {
+    accessorKey: "productName",
+    header: "Product",
+    cell: ({ row }) => (
+      <div className="space-y-1">
+        <p className="font-semibold leading-none">{row.original.productName}</p>
+
+        {row.original.description && (
+          <p className="text-muted-foreground line-clamp-2 text-xs">
+            {row.original.description}
+          </p>
+        )}
+      </div>
+    ),
+  },
+
+  {
+    accessorKey: "category",
+    header: "Category",
+    cell: ({ row }) => <CategoryBadge category={row.original.category} />,
+  },
+
+  {
+    accessorKey: "unit",
+    header: "Unit",
+  },
+
+  {
+    accessorKey: "currentStock",
+    header: "Current Stock",
+    cell: ({ row }) => (
+      <div>
+        <p className="font-medium">
+          {row.original.currentStock} {row.original.unit}
+        </p>
+
+        <p className="text-muted-foreground text-xs">
+          Min: {row.original.minOrderQty}
+          {" • "}
+          Max: {row.original.maxOrderQty ?? "-"}
+        </p>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "requestedQty",
+    header: "Request Qty",
+    cell: ({ row }) => <RequestQtyCell index={row.index} />,
+  },
+  {
+    accessorKey: "supplierId",
+    header: "Supplier",
+    cell: ({ row }) => (
+      <SupplierCell
+        index={row.index}
+        supplierName={row.original.supplierName}
+      />
+    ),
+  },
+];

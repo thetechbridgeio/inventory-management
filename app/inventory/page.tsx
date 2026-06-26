@@ -1,14 +1,15 @@
-import { DashboardLayout } from '@/components/layout/dashboard-layout'
-import { Button } from '@/components/ui/button'
-import { ProductList } from '@/features/product/components/data-table/product-list'
-import Link from 'next/link'
-import React from 'react'
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { ProductList } from "@/features/product/components/data-table/product-list";
+import { PurchaseRequestBanner } from "@/features/purchase-request-order/components/purchase-request/purchase-request-banner";
+import Link from "next/link";
+import React from "react";
 
 const InventoryPage = () => {
   return (
-     <DashboardLayout>
-     
-        <div className="flex justify-between items-center gap-6 mb-6">
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center gap-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               Inventory Management
@@ -23,11 +24,11 @@ const InventoryPage = () => {
             </Button>
           </div>
         </div>
-       
+        {/* <PurchaseRequestBanner count={10} /> */}
         <ProductList />
-     
+      </div>
     </DashboardLayout>
-  )
-}
+  );
+};
 
-export default InventoryPage
+export default InventoryPage;

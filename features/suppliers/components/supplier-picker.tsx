@@ -15,6 +15,7 @@ type SupplierPickerProps = {
   selectedSupplierIds?: string[];
   onChange: (supplier: Supplier) => void;
   onClear?: () => void;
+  popover?: boolean;
 };
 
 export function SupplierPicker({
@@ -22,6 +23,7 @@ export function SupplierPicker({
   selectedSupplierIds = [],
   onChange,
   onClear,
+  popover = false,
 }: SupplierPickerProps) {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -86,7 +88,7 @@ export function SupplierPicker({
   }
 
   return (
-    <div className="space-y-3">
+    <div className={`space-y-3 ${popover && "p-3"}`}>
       <Label>Supplier</Label>
 
       <div className="relative">
