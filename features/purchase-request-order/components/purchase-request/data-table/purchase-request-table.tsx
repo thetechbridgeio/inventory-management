@@ -52,6 +52,18 @@ export function PurchaseRequestTable({
   });
   const { watch } = useFormContext<PurchaseRequestForm>();
   const items = watch("items");
+  const selectedRows = table.getSelectedRowModel().rows;
+
+const hasInvalidSelectedItems = selectedRows.some((row) => {
+  const item = items.find((i) => i.productId === row.id);
+
+  return (
+    !item?.supplierId ||
+    !item.supplierName ||
+    !item.requestedQty ||
+    item.requestedQty <= 0
+  );
+});
 
   return (
     <Card className="overflow-hidden gap-0 py-0">

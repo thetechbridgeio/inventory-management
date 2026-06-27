@@ -33,7 +33,7 @@ export async function getCurrentUser() {
     if (!user) {
       throw new AuthenticationError("User not found");
     }
-
+ 
     if (!user.isActive) {
       throw new AuthorizationError("User is inactive");
     }

@@ -24,7 +24,7 @@ const InventoryPage = () => {
             </Button>
           </div>
         </div>
-        {/* <PurchaseRequestBanner count={10} /> */}
+        <PurchaseRequestBanner count={10} />
         <ProductList />
       </div>
     </DashboardLayout>

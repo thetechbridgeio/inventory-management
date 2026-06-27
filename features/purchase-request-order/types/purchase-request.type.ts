@@ -1,17 +1,36 @@
+import { PurchaseRequestStatus } from "../constants/purchase-request-status";
+
 export type PurchaseRequestItem = {
   productId: string;
   productName: string;
-  description: string;
+  description?: string | null;
   category: string;
   unit: string;
   currentStock: number;
   minOrderQty: number;
   maxOrderQty: number;
-  reorderQty: number;      
-  requestedQty: number;    
+  reorderQty: number;
+  requestedQty: number;
   supplierId?: string | null;
-  supplierName?: string | null
+  supplierName?: string | null;
 };
+
+export type PurchaseRequestListItem = {
+  id: string;
+  requestNumber: string;
+  status: PurchaseRequestStatus;
+  createdAt: string;
+  createdByUserName: string;
+  processedAt: string | null;
+  processedByUserName: string | null;
+  totalItems: number;
+  totalRequestedQty: number;
+};
+
+export type EligiblePurchaseRequestProduct = Omit<
+  PurchaseRequestItem,
+  "requestedQty"
+>;
 
 export const PURCHASE_REQUEST_DEMO_DATA: PurchaseRequestItem[] = [
   {
@@ -98,5 +117,62 @@ export const PURCHASE_REQUEST_DEMO_DATA: PurchaseRequestItem[] = [
     supplierId: "sup-004",
     supplierName: "Power Parts India",
   },
+];
 
+export const PURCHASE_REQUEST_DEMO_DATA_LIST: PurchaseRequestListItem[] = [
+  {
+    id: "pr-1",
+    requestNumber: "PR-20260627-0001",
+    status: "PENDING_APPROVAL",
+    createdAt: "2026-06-27T09:15:00Z",
+    createdByUserName: "Rahul Sharma",
+    processedAt: null,
+    processedByUserName: null,
+    totalItems: 4,
+    totalRequestedQty: 125,
+  },
+  {
+    id: "pr-2",
+    requestNumber: "PR-20260626-0007",
+    status: "APPROVED",
+    createdAt: "2026-06-26T14:30:00Z",
+    createdByUserName: "Priya Das",
+    processedAt: "2026-06-26T17:10:00Z",
+    processedByUserName: "Amit Roy",
+    totalItems: 6,
+    totalRequestedQty: 320,
+  },
+  {
+    id: "pr-3",
+    requestNumber: "PR-20260625-0012",
+    status: "PARTIALLY_APPROVED",
+    createdAt: "2026-06-25T11:45:00Z",
+    createdByUserName: "Sourav Ghosh",
+    processedAt: "2026-06-25T16:20:00Z",
+    processedByUserName: "Amit Roy",
+    totalItems: 8,
+    totalRequestedQty: 560,
+  },
+  {
+    id: "pr-4",
+    requestNumber: "PR-20260624-0005",
+    status: "REJECTED",
+    createdAt: "2026-06-24T08:10:00Z",
+    createdByUserName: "Neha Singh",
+    processedAt: "2026-06-24T10:00:00Z",
+    processedByUserName: "Vikram Patel",
+    totalItems: 3,
+    totalRequestedQty: 42,
+  },
+  {
+    id: "pr-5",
+    requestNumber: "PR-20260623-0003",
+    status: "DRAFT",
+    createdAt: "2026-06-23T15:50:00Z",
+    createdByUserName: "Ankit Verma",
+    processedAt: null,
+    processedByUserName: null,
+    totalItems: 5,
+    totalRequestedQty: 180,
+  },
 ];

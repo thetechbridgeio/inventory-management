@@ -107,16 +107,21 @@ function drawHeader(
 
   if (logo) {
     try {
-      const logoSize = 14;
+      const logoHeight = 14;
+
+      const imageProps = doc.getImageProperties(logo.dataUrl);
+      const logoWidth = (imageProps.width / imageProps.height) * logoHeight;
+
       doc.addImage(
         logo.dataUrl,
         logo.format,
         PAGE_MARGIN,
-        headerHeight / 2 - logoSize / 2,
-        logoSize,
-        logoSize,
+        headerHeight / 2 - logoHeight / 2,
+        logoWidth,
+        logoHeight,
       );
-      textX = PAGE_MARGIN + logoSize + 6;
+
+      textX = PAGE_MARGIN + logoWidth + 6;
     } catch {
       // Corrupt image data slipped past the fetch — skip silently.
     }
@@ -152,7 +157,11 @@ function drawSummary(
   doc.text("Summary", PAGE_MARGIN, startY);
 
   const cards = [
-    { label: "Out of Stock", value: data.outOfStockCount, color: COLORS.danger },
+    {
+      label: "Out of Stock",
+      value: data.outOfStockCount,
+      color: COLORS.danger,
+    },
     { label: "Low Stock", value: data.lowStockCount, color: COLORS.warning },
     {
       label: "Total Affected",
@@ -164,7 +173,8 @@ function drawSummary(
   const cardY = startY + 6;
   const cardHeight = 22;
   const gap = 6;
-  const cardWidth = (pageWidth - PAGE_MARGIN * 2 - gap * (cards.length - 1)) / cards.length;
+  const cardWidth =
+    (pageWidth - PAGE_MARGIN * 2 - gap * (cards.length - 1)) / cards.length;
 
   cards.forEach((card, i) => {
     const x = PAGE_MARGIN + i * (cardWidth + gap);
@@ -245,7 +255,6 @@ function drawProductTable(
 
 // ---------- Recommended actions ----------
 
-
 // ---------- Footer ----------
 
 function drawFooterOnAllPages(
@@ -261,13 +270,22 @@ function drawFooterOnAllPages(
     doc.setPage(i);
 
     doc.setDrawColor(...COLORS.border);
-    doc.line(PAGE_MARGIN, pageHeight - 14, pageWidth - PAGE_MARGIN, pageHeight - 14);
+    doc.line(
+      PAGE_MARGIN,
+      pageHeight - 14,
+      pageWidth - PAGE_MARGIN,
+      pageHeight - 14,
+    );
 
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...COLORS.muted);
 
-    doc.text(`${companyName} • Generated on ${generatedOn}`, PAGE_MARGIN, pageHeight - 8);
+    doc.text(
+      `${companyName} • Generated on ${generatedOn}`,
+      PAGE_MARGIN,
+      pageHeight - 8,
+    );
 
     const pageLabel = `Page ${i} of ${pageCount}`;
     const labelWidth = doc.getTextWidth(pageLabel);

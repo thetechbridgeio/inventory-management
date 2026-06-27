@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { positive } from "zod";
 
 export const PurchaseRequestSchema = z.object({
   remarks: z.string().optional(),
@@ -7,10 +7,12 @@ export const PurchaseRequestSchema = z.object({
       productId: z.string(),
       supplierId: z.string(),
       supplierName: z.string().optional(),
-      requestedQty: z
-        .number("requested order qty is required to make PO")
-        .min(0, "min value should be greater than")
-        .max(999999, "Enter a realistic order qty"),
+       requestedQty: z
+        .number({
+          error: "Requested quantity is required",
+        })
+        .gt(0, "Requested quantity must be greater than 0")
+        .max(999999, "Enter a realistic order quantity"),
     }),
   ),
 });

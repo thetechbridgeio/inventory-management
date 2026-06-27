@@ -7,5 +7,7 @@ export * from "@/features/purchase/schemas/purchase.schema";
 export * from "@/features/purchase/schemas/purchase-item.schema";
 export * from "@/features/sales/schemas/sales.schema";
 export * from "@/features/sales/schemas/sales-item.schema";
+export * from "@/features/purchase-request-order/schemas/purchase-request.schema";
+export * from "@/features/purchase-request-order/schemas/purchase-request-item.schema";
 
 export * from "./relation";
