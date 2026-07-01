@@ -29,8 +29,6 @@ export function UserList() {
     isActive: filters.isActive ?? undefined,
   });
 
-  console.log(data)
-
   return (
     <div className="space-y-6">
       <UserTableTools

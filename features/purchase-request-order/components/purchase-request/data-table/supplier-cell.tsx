@@ -1,33 +1,41 @@
 "use client";
 
-import { Controller, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  FieldValues,
+  Path,
+  PathValue,
+  useFormContext,
+} from "react-hook-form";
+import { TriangleAlert } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-
 import { SupplierPicker } from "@/features/suppliers/components/supplier-picker";
-import { PurchaseRequestForm } from "@/features/purchase-request-order/validation/purchase-request-form";
-import { TriangleAlert } from "lucide-react";
 
-type SupplierCellProps = {
-  index: number;
-  supplierName?: string | null;
+type SupplierCellProps<T extends FieldValues> = {
+  baseName: Path<T>;
 };
 
-export function SupplierCell({ index }: SupplierCellProps) {
-  const { control, watch, setValue } = useFormContext<PurchaseRequestForm>();
+export function SupplierCell<T extends FieldValues>({
+  baseName,
+}: SupplierCellProps<T>) {
+  const { control, watch, setValue } = useFormContext<T>();
 
-  const supplierName = watch(`items.${index}.supplierName`);
+  const supplierIdName = `${baseName}.supplierId` as Path<T>;
+  const supplierNameName = `${baseName}.supplierName` as Path<T>;
+
+  const supplierName = watch(supplierNameName);
 
   return (
     <div className="space-y-1">
       <Controller
         control={control}
-        name={`items.${index}.supplierId`}
+        name={supplierIdName}
         render={({ field }) => (
           <Popover>
             <PopoverTrigger asChild>
@@ -44,8 +52,8 @@ export function SupplierCell({ index }: SupplierCellProps) {
                   field.onChange(supplier.id);
 
                   setValue(
-                    `items.${index}.supplierName`,
-                    supplier.companyName,
+                    supplierNameName,
+                    supplier.companyName as PathValue<T, typeof supplierNameName>,
                     {
                       shouldDirty: true,
                     },
@@ -54,15 +62,20 @@ export function SupplierCell({ index }: SupplierCellProps) {
                 onClear={() => {
                   field.onChange("");
 
-                  setValue(`items.${index}.supplierName`, "", {
-                    shouldDirty: true,
-                  });
+                  setValue(
+                    supplierNameName,
+                    "" as PathValue<T, typeof supplierNameName>,
+                    {
+                      shouldDirty: true,
+                    },
+                  );
                 }}
               />
             </PopoverContent>
           </Popover>
         )}
       />
+
       {!supplierName && (
         <div className="flex items-center gap-1 text-xs font-medium text-amber-600">
           <TriangleAlert className="h-3.5 w-3.5 shrink-0" />

@@ -1,9 +1,9 @@
 export const formatDate = (
-  value?: string | null,
+  value?: string | Date | null,
 ) => {
   if (!value) return "N/A";
 
-  const date = new Date(value);
+  const date = value instanceof Date ? value : new Date(value);
 
   if (isNaN(date.getTime())) {
     return "N/A";

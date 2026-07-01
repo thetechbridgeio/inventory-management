@@ -8,5 +8,6 @@ export const ACCESS: Record<string, readonly UserRole[]> = {
   sales: [ROLES.SUPER_ADMIN, ROLES.STORE_ADMIN],
   company: [ROLES.SUPER_ADMIN],
   users: [ROLES.SUPER_ADMIN],
+  purchaseRequest: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN],
   support: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN, ROLES.STORE_ADMIN],
 };

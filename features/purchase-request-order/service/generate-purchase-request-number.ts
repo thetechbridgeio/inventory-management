@@ -15,9 +15,9 @@ export async function generatePurchaseRequestNumber(tx: Tx, companyId: string) {
   const lastPurchaseRequest = await tx.query.purchaseRequests.findFirst({
     where: eq(purchaseRequests.companyId, companyId),
     columns: {
-      requestNumber: true,
+      purchaseRequestNumber: true,
     },
-    orderBy: desc(purchaseRequests.requestNumber),
+    orderBy: desc(purchaseRequests.purchaseRequestNumber),
   });
 
   if (!lastPurchaseRequest) {
@@ -25,7 +25,7 @@ export async function generatePurchaseRequestNumber(tx: Tx, companyId: string) {
   }
 
   const lastNumber = Number(
-    lastPurchaseRequest.requestNumber.replace("PR-", ""),
+    lastPurchaseRequest.purchaseRequestNumber.replace("PR-", ""),
   );
 
   return `PR-${String(lastNumber + 1).padStart(6, "0")}`;

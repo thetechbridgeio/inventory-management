@@ -7,7 +7,6 @@ import { CompanyProfile } from "@/features/company/components/company-profile";
 
 const CompanyPage = () => {
   const { data: company, isLoading } = useCompany();
-  console.log("company", company)
 
   if (isLoading) {
     return (

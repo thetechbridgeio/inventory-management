@@ -1,14 +1,38 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { useGetPRProduct } from "../../hooks/use-get-low-stock-products";
 
-type PurchaseRequestBannerProps = {
-  count: number;
-};
+export function PurchaseRequestBanner() {
+  const { data: lowStockProducts = [], isLoading } = useGetPRProduct();
+  
 
-export function PurchaseRequestBanner({
-  count,
-}: PurchaseRequestBannerProps) {
+  if (isLoading) {
+    return (
+      <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-r from-red-50 via-red-50 to-red-100 px-6 py-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-14 w-14 animate-pulse rounded-2xl bg-red-200" />
+
+            <div className="space-y-2">
+              <div className="h-5 w-56 animate-pulse rounded bg-red-200" />
+              <div className="h-4 w-80 animate-pulse rounded bg-red-100" />
+            </div>
+          </div>
+
+          <div className="h-10 w-52 animate-pulse rounded-lg bg-red-200" />
+        </div>
+      </div>
+    );
+  }
+
+  const count = lowStockProducts.length;
+
+  if (count === 0) {
+    return null;
+  }
+
   return (
     <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-r from-red-50 via-red-50 to-red-100 px-6 py-4 shadow-sm">
       <div className="absolute inset-y-0 left-0 w-1.5 bg-red-600" />
@@ -39,7 +63,7 @@ export function PurchaseRequestBanner({
           size="lg"
           className="rounded-lg bg-red-600 px-6 shadow-md transition-all hover:bg-red-700 hover:shadow-lg"
         >
-          <Link href="/purchase-request">
+          <Link href="/purchase-request/create">
             Create Purchase Request
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>

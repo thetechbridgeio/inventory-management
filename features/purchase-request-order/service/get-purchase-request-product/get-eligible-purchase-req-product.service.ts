@@ -3,11 +3,12 @@ import { and, eq, lte, notInArray } from "drizzle-orm";
 import { db } from "@/db";
 import { products, productSuppliers, suppliers } from "@/db/schema";
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
+import { PurchaseRequestProduct } from "../../types/purchase-request.type";
 
 export async function getEligiblePurchaseRequestProducts(
   companyId: string,
   excludedProductIds: string[],
-) {
+): Promise<PurchaseRequestProduct[]> {
   try {
     return await db
       .select({
@@ -20,7 +21,6 @@ export async function getEligiblePurchaseRequestProducts(
         minOrderQty: products.minOrderQty,
         maxOrderQty: products.maxOrderQty,
         reorderQty: products.reorderQty,
-
         supplierId: suppliers.id,
         supplierName: suppliers.companyName,
       })
@@ -31,7 +31,7 @@ export async function getEligiblePurchaseRequestProducts(
         and(
           eq(products.companyId, companyId),
           lte(products.currentStock, products.minOrderQty),
-          excludedProductIds.length > 0
+          excludedProductIds.length
             ? notInArray(products.id, excludedProductIds)
             : undefined,
         ),

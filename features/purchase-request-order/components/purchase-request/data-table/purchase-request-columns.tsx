@@ -1,14 +1,14 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { PurchaseRequestItem } from "@/features/purchase-request-order/types/purchase-request.type";
 import { ColumnDef } from "@tanstack/react-table";
 import { RequestQtyCell } from "./request-qty-cell";
 import { SupplierCell } from "./supplier-cell";
 import { CategoryBadge } from "@/lib/category-badge";
-import { TooltipProvider, TooltipTrigger, TooltipContent, Tooltip } from "@/components/ui/tooltip";
-import { TriangleAlert } from "lucide-react";
+import {
+  PurchaseRequestFormType,
+  PurchaseRequestProduct,
+} from "@/features/purchase-request-order/types/purchase-request.type";
 
-export const columns: ColumnDef<PurchaseRequestItem>[] = [
+export const columns: ColumnDef<PurchaseRequestProduct>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -86,10 +86,7 @@ export const columns: ColumnDef<PurchaseRequestItem>[] = [
     accessorKey: "supplierId",
     header: "Supplier",
     cell: ({ row }) => (
-      <SupplierCell
-        index={row.index}
-        supplierName={row.original.supplierName}
-      />
+      <SupplierCell<PurchaseRequestFormType> baseName={`items.${row.index}`} />
     ),
   },
 ];

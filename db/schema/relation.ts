@@ -5,6 +5,8 @@ import {
   products,
   productSuppliers,
   purchaseItems,
+  purchaseOrderItems,
+  purchaseOrders,
   purchaseRequestItems,
   purchaseRequests,
   purchases,
@@ -22,6 +24,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   purchases: many(purchases),
   sales: many(sales),
   purchaseRequests: many(purchaseRequests),
+  purchaseOrders: many(purchaseOrders),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -139,33 +142,56 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
   }),
 }));
 
-export const purchaseRequestRelations = relations(
-  purchaseRequests,
-  ({ one, many }) => ({
-    company: one(companies, {
-      fields: [purchaseRequests.companyId],
-      references: [companies.id],
+export const purchaseOrderItemsRelations = relations(
+  purchaseOrderItems,
+  ({ one }) => ({
+    purchaseOrder: one(purchaseOrders, {
+      fields: [purchaseOrderItems.purchaseOrderId],
+      references: [purchaseOrders.id],
     }),
 
-    createdBy: one(users, {
-      fields: [purchaseRequests.createdByUserId],
-      references: [users.id],
-      relationName: "purchaseRequestCreatedBy",
+    purchaseRequestItem: one(purchaseRequestItems, {
+      fields: [purchaseOrderItems.purchaseRequestItemId],
+      references: [purchaseRequestItems.id],
     }),
 
-    approvedBy: one(users, {
-      fields: [purchaseRequests.approvedByUserId],
-      references: [users.id],
-      relationName: "purchaseRequestApprovedBy",
+    product: one(products, {
+      fields: [purchaseOrderItems.productId],
+      references: [products.id],
     }),
-
-    items: many(purchaseRequestItems),
   }),
 );
 
-export const purchaseRequestItemRelations = relations(
+export const purchaseOrdersRelations = relations(
+  purchaseOrders,
+  ({ one, many }) => ({
+    company: one(companies, {
+      fields: [purchaseOrders.companyId],
+      references: [companies.id],
+    }),
+
+    purchaseRequest: one(purchaseRequests, {
+      fields: [purchaseOrders.purchaseRequestId],
+      references: [purchaseRequests.id],
+    }),
+
+    supplier: one(suppliers, {
+      fields: [purchaseOrders.supplierId],
+      references: [suppliers.id],
+    }),
+
+    createdBy: one(users, {
+      fields: [purchaseOrders.createdByUserId],
+      references: [users.id],
+    }),
+
+    purchaseOrderItems: many(purchaseOrderItems),
+  }),
+);
+
+export const purchaseRequestItemsRelations = relations(
   purchaseRequestItems,
-  ({ one }) => ({
+  ({ one, many }) => ({
     purchaseRequest: one(purchaseRequests, {
       fields: [purchaseRequestItems.purchaseRequestId],
       references: [purchaseRequests.id],
@@ -180,5 +206,31 @@ export const purchaseRequestItemRelations = relations(
       fields: [purchaseRequestItems.supplierId],
       references: [suppliers.id],
     }),
+
+    purchaseOrderItems: many(purchaseOrderItems),
+  }),
+);
+
+export const purchaseRequestsRelations = relations(
+  purchaseRequests,
+  ({ one, many }) => ({
+    company: one(companies, {
+      fields: [purchaseRequests.companyId],
+      references: [companies.id],
+    }),
+
+    createdBy: one(users, {
+      fields: [purchaseRequests.createdByUserId],
+      references: [users.id],
+    }),
+
+    processedBy: one(users, {
+      fields: [purchaseRequests.processedByUserId],
+      references: [users.id],
+    }),
+
+    purchaseRequestItems: many(purchaseRequestItems),
+
+    purchaseOrders: many(purchaseOrders),
   }),
 );

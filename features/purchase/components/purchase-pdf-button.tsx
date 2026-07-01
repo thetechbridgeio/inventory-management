@@ -24,8 +24,6 @@ export function PurchaseExportButton({
       const purchases =
         await exportPurchases.mutateAsync(filters);
 
-        console.log(purchases)
-
       const rows = purchases.map(
         (
           purchase: {

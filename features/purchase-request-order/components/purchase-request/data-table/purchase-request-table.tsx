@@ -18,19 +18,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { PurchaseRequestItem } from "@/features/purchase-request-order/types/purchase-request.type";
 import { columns } from "./purchase-request-columns";
 import { Button } from "@/components/ui/button";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
-import { PurchaseRequestForm } from "@/features/purchase-request-order/validation/purchase-request-form";
 import { useFormContext } from "react-hook-form";
 import { cn } from "@/lib/utils";
+import { PurchaseRequestFormType, PurchaseRequestProduct } from "@/features/purchase-request-order/types/purchase-request.type";
 
 type PurchaseRequestTableProps = {
-  data: PurchaseRequestItem[];
+  data: PurchaseRequestProduct[];
   isLoading: boolean;
   rowSelection: RowSelectionState;
   onRowSelectionChange: React.Dispatch<React.SetStateAction<RowSelectionState>>;
+  isPRCreatePending: boolean
 };
 
 export function PurchaseRequestTable({
@@ -38,6 +38,7 @@ export function PurchaseRequestTable({
   isLoading,
   rowSelection,
   onRowSelectionChange,
+  isPRCreatePending = false
 }: PurchaseRequestTableProps) {
   const table = useReactTable({
     data,
@@ -50,20 +51,8 @@ export function PurchaseRequestTable({
     onRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
   });
-  const { watch } = useFormContext<PurchaseRequestForm>();
+  const { watch } = useFormContext<PurchaseRequestFormType>();
   const items = watch("items");
-  const selectedRows = table.getSelectedRowModel().rows;
-
-const hasInvalidSelectedItems = selectedRows.some((row) => {
-  const item = items.find((i) => i.productId === row.id);
-
-  return (
-    !item?.supplierId ||
-    !item.supplierName ||
-    !item.requestedQty ||
-    item.requestedQty <= 0
-  );
-});
 
   return (
     <Card className="overflow-hidden gap-0 py-0">
@@ -130,15 +119,11 @@ const hasInvalidSelectedItems = selectedRows.some((row) => {
                   return (
                     <TableRow
                       key={row.id}
-                    //   data-state={row.getIsSelected() && "selected"}
                       className={cn(
                         "transition-colors",
-
                         hasIssue
                           ? "bg-amber-50/60 hover:bg-amber-50/60"
                           : "hover:bg-muted/40",
-
-                        // Prevent TanStack/Shadcn's selected styling
                         "data-[state=selected]:bg-inherit!",
                       )}
                     >
@@ -167,7 +152,7 @@ const hasInvalidSelectedItems = selectedRows.some((row) => {
         </div>
         <div className="">
           <div className="border-t bg-muted/20 px-6 py-4">
-            <RHFTextarea<PurchaseRequestForm>
+            <RHFTextarea<PurchaseRequestFormType>
               name="remarks"
               label="Remarks"
               placeholder="Add any notes or special instructions for this purchase request..."
@@ -181,7 +166,7 @@ const hasInvalidSelectedItems = selectedRows.some((row) => {
 
             <Button
               type="submit"
-              disabled={table.getSelectedRowModel().rows.length === 0}
+              disabled={table.getSelectedRowModel().rows.length === 0 || isPRCreatePending}
             >
               Create Purchase Request
             </Button>

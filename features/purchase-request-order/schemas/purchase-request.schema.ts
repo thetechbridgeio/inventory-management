@@ -1,68 +1,54 @@
-import { companies, users } from "@/db/schema";
 import {
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
-  uniqueIndex,
   uuid,
-  varchar,
 } from "drizzle-orm/pg-core";
 
-export const purchaseRequestStatusEnum = pgEnum("purchase_request_status", [
-  "DRAFT",
-  "PENDING_APPROVAL",
-  "APPROVED",
-  "PARTIALLY_APPROVED",
-  "REJECTED",
-]);
+import {
+  PURCHASE_REQUEST_STATUS,
+  PurchaseRequestStatus,
+} from "../constants/purchase-request-status";
+
+export const purchaseRequestStatusEnum = pgEnum(
+  "purchase_request_status",
+  Object.values(PURCHASE_REQUEST_STATUS) as [string, ...string[]],
+);
 
 export const purchaseRequests = pgTable(
-  "purchase_request",
+  "purchase_requests",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-
-    companyId: uuid("company_id")
+    id: uuid("id").defaultRandom().primaryKey(),
+    companyId: uuid("company_id").notNull(),
+    purchaseRequestNumber: text("purchase_request_number").notNull().unique(),
+    status: purchaseRequestStatusEnum("status")
+      .$type<PurchaseRequestStatus>()
       .notNull()
-      .references(() => companies.id, {
-        onDelete: "restrict",
-      }),
-    requestNumber: varchar("request_number", {
-      length: 50,
-    }).notNull(),
-    status: purchaseRequestStatusEnum("status").notNull().default("DRAFT"),
+      .default(PURCHASE_REQUEST_STATUS.PENDING_APPROVAL),
     remarks: text("remarks"),
-    createdByUserId: uuid("created_by_user_id")
-      .notNull()
-      .references(() => users.id, {
-        onDelete: "restrict",
-      }),
-    approvedByUserId: uuid("approved_by_user_id").references(() => users.id, {
-      onDelete: "set null",
-    }),
-    approvedAt: timestamp("approved_at", {
+    totalItems: integer("total_items").notNull(),
+    totalRequestedQty: integer("total_requested_qty").notNull(),
+    createdByUserId: uuid("created_by_user_id").notNull(),
+    processedByUserId: uuid("processed_by_user_id"),
+    processedAt: timestamp("processed_at", {
       withTimezone: true,
     }),
     createdAt: timestamp("created_at", {
       withTimezone: true,
     })
-      .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .notNull(),
     updatedAt: timestamp("updated_at", {
       withTimezone: true,
     })
-      .notNull()
-      .defaultNow(),
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
-    uniqueIndex("pr_company_request_number_unique").on(
-      table.companyId,
-      table.requestNumber,
-    ),
-    index("pr_company_id_idx").on(table.companyId),
-    index("pr_status_idx").on(table.status),
-    index("pr_created_by_user_id_idx").on(table.createdByUserId),
-    index("pr_approved_by_user_id_idx").on(table.approvedByUserId),
+    index("purchase_requests_company_id_idx").on(table.companyId),
+    index("purchase_requests_created_by_user_id_idx").on(table.createdByUserId),
   ],
 );

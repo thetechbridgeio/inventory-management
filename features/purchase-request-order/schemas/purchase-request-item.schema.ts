@@ -1,60 +1,49 @@
-import { products, suppliers } from "@/db/schema";
 import {
-  check,
   index,
   integer,
+  pgEnum,
   pgTable,
-  text,
   timestamp,
-  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
-import { purchaseRequests } from "./purchase-request.schema";
+import {
+  PURCHASE_REQUEST_ITEM_STATUS,
+  PurchaseRequestItemStatus,
+} from "../constants/purchase-request-item-status";
+
+export const purchaseRequestItemStatusEnum = pgEnum(
+  "purchase_request_item_status",
+  Object.values(PURCHASE_REQUEST_ITEM_STATUS) as [string, ...string[]],
+);
 
 export const purchaseRequestItems = pgTable(
-  "purchase_request_item",
+  "purchase_request_items",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-
-    purchaseRequestId: uuid("purchase_request_id")
-      .notNull()
-      .references(() => purchaseRequests.id, {
-        onDelete: "cascade",
-      }),
-    productId: uuid("product_id")
-      .notNull()
-      .references(() => products.id, {
-        onDelete: "restrict",
-      }),
-    supplierId: uuid("supplier_id").references(() => suppliers.id, {
-      onDelete: "set null",
-    }),
+    id: uuid("id").defaultRandom().primaryKey(),
+    purchaseRequestId: uuid("purchase_request_id").notNull(),
+    productId: uuid("product_id").notNull(),
     requestedQty: integer("requested_qty").notNull(),
-    // Optional note for this specific item.
-    remarks: text("remarks"),
-    createdAt: timestamp("created_at", { withTimezone: true })
+    approvedQty: integer("approved_qty"),
+    status: purchaseRequestItemStatusEnum("status")
+      .$type<PurchaseRequestItemStatus>()
       .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+      .default(PURCHASE_REQUEST_ITEM_STATUS.PENDING_APPROVAL),
+    supplierId: uuid("supplier_id"),
+    createdAt: timestamp("created_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", {
+      withTimezone: true,
+    })
+      .defaultNow()
+      .notNull(),
   },
   (table) => [
-    index("pri_purchase_request_id_idx").on(table.purchaseRequestId),
-    index("pri_product_id_idx").on(table.productId),
-    index("pri_supplier_id_idx").on(table.supplierId),
-
-    // Prevent duplicate products within the same Purchase Request.
-    uniqueIndex("pri_purchase_request_product_unique").on(
+    index("purchase_request_items_purchase_request_id_idx").on(
       table.purchaseRequestId,
-      table.productId
     ),
-
-    // Quantity must be greater than zero.
-    check(
-      "pri_requested_qty_positive",
-      sql`${table.requestedQty} > 0`
-    ),
-  ]
+    index("purchase_request_items_supplier_id_idx").on(table.supplierId),
+  ],
 );

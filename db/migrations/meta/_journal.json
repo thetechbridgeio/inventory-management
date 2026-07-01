@@ -124,22 +124,8 @@
     {
       "idx": 17,
       "version": "7",
-      "when": 1782544201966,
-      "tag": "0017_tiny_miracleman",
-      "breakpoints": true
-    },
-    {
-      "idx": 18,
-      "version": "7",
-      "when": 1782546279370,
-      "tag": "0018_pretty_goliath",
-      "breakpoints": true
-    },
-    {
-      "idx": 19,
-      "version": "7",
-      "when": 1782546401045,
-      "tag": "0019_workable_patch",
+      "when": 1782926400420,
+      "tag": "0017_flowery_patch",
       "breakpoints": true
     }
   ]

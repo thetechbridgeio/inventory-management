@@ -1,23 +1,21 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-
-import { Input } from "@/components/ui/input";
-import { PurchaseRequestForm } from "@/features/purchase-request-order/validation/purchase-request-form";
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { TriangleAlert } from "lucide-react";
+import { PurchaseRequestFormType } from "@/features/purchase-request-order/types/purchase-request.type";
 
 type RequestQtyCellProps = {
   index: number;
 };
 
 export function RequestQtyCell({ index }: RequestQtyCellProps) {
-  const { register, watch } = useFormContext<PurchaseRequestForm>();
+  const { register, watch } = useFormContext<PurchaseRequestFormType>();
   const requestedQty = watch(`items.${index}.requestedQty`);
 
   return (
     <div className="space-y-1">
-      <RHFInput<PurchaseRequestForm>
+      <RHFInput<PurchaseRequestFormType>
         name={`items.${index}.requestedQty`}
         label=""
         type="number"

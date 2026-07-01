@@ -1,26 +1,20 @@
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
-import { PurchaseRequestItem } from "../../types/purchase-request.type";
 import { getActivePurchaseRequestProductIds } from "./get-active-purchase-req-prod-id.service";
 import { getEligiblePurchaseRequestProducts } from "./get-eligible-purchase-req-product.service";
-import { mapToPurchaseRequestItems } from "./map-to-purchase-req-items.service";
+import { PurchaseRequestProduct } from "../../types/purchase-request.type";
 
 export async function getPurchaseRequestItems(
   companyId: string,
-): Promise<PurchaseRequestItem[]> {
+): Promise<PurchaseRequestProduct[]> {
   try {
-    const [
-      activePurchaseRequestProductIds,
-      // activePurchaseOrderProductIds,
-    ] = await Promise.all([
+    const [activePurchaseRequestProductIds] = await Promise.all([
       getActivePurchaseRequestProductIds(companyId),
-      // getActivePurchaseOrderProductIds(companyId),
     ]);
 
+    console.log(activePurchaseRequestProductIds)
+
     const excludedProductIds = [
-      ...new Set([
-        ...activePurchaseRequestProductIds,
-        // ...activePurchaseOrderProductIds,
-      ]),
+      ...new Set([...activePurchaseRequestProductIds]),
     ];
 
     const eligibleProducts = await getEligiblePurchaseRequestProducts(
@@ -28,7 +22,11 @@ export async function getPurchaseRequestItems(
       excludedProductIds,
     );
 
-    return mapToPurchaseRequestItems(eligibleProducts);
+    return Array.from(
+      new Map(
+        eligibleProducts.map((product) => [product.productId, product]),
+      ).values(),
+    );
   } catch (error) {
     console.error("Failed to get purchase request items:", error);
 

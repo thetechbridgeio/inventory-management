@@ -1,72 +1,87 @@
 "use client";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
-import { PurchaseRequestTable } from "@/features/purchase-request-order/components/purchase-request/data-table/purchase-request-table";
-import { PURCHASE_REQUEST_DEMO_DATA } from "@/features/purchase-request-order/types/purchase-request.type";
-import {
-  PurchaseRequestForm,
-  PurchaseRequestSchema,
-} from "@/features/purchase-request-order/validation/purchase-request-form";
+
+import { useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RowSelectionState } from "@tanstack/react-table";
-import { useState } from "react";
-import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
+
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { PurchaseRequestTable } from "@/features/purchase-request-order/components/purchase-request/data-table/purchase-request-table";
+import { useGetPRProduct } from "@/features/purchase-request-order/hooks/use-get-low-stock-products";
+import { PurchaseRequestFormSchema } from "@/features/purchase-request-order/validation/purchase-request-form";
+import { PurchaseRequestFormType } from "@/features/purchase-request-order/types/purchase-request.type";
+import { useCreatePurchaseRequest } from "@/features/purchase-request-order/hooks/use-create-PR";
 
 const PurchaseRequestCreationPage = () => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  const form = useForm<PurchaseRequestForm>({
-    resolver: zodResolver(PurchaseRequestSchema),
+  const { data: lowStockProducts = [], isLoading } = useGetPRProduct();
+  const { mutate: createPurchaseRequest, isPending: isPRCreatePending } =
+    useCreatePurchaseRequest();
+
+  const form = useForm<PurchaseRequestFormType>({
+    resolver: zodResolver(PurchaseRequestFormSchema),
     defaultValues: {
       remarks: "",
-      items: PURCHASE_REQUEST_DEMO_DATA.map((p) => ({
-        productId: p.productId,
-        supplierId: p.supplierId ?? "",
-        supplierName: p.supplierName ?? "",
-        requestedQty: p.reorderQty,
-      })),
+      items: [],
     },
   });
 
-  const onSubmit = (values: PurchaseRequestForm) => {
-    console.log("clicked");
+  useEffect(() => {
+    if (!lowStockProducts.length) return;
+
+    form.reset({
+      remarks: "",
+      items: lowStockProducts.map((product) => ({
+        productId: product.productId,
+        supplierId: product.supplierId ?? null,
+        supplierName: product.supplierName ?? null,
+        requestedQty: product.reorderQty,
+      })),
+    });
+  }, [lowStockProducts, form]);
+
+  const onSubmit = (values: PurchaseRequestFormType) => {
     const selectedItems = values.items.filter(
       (item) => rowSelection[item.productId],
     );
-
-    console.log({
+    createPurchaseRequest({
       remarks: values.remarks,
       items: selectedItems,
     });
   };
+
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
             Create New Purchase Request
           </h1>
 
           <p className="mt-1 text-muted-foreground">
-            elect products, review quantities, assign suppliers, and generate a
+            Select products, review quantities, assign suppliers, and generate a
             purchase request.
           </p>
         </div>
       </div>
+
       <FormProvider {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            const firstError = Object.values(errors)[0];
-            console.log(errors)
+            console.log(errors);
 
+            const firstError = Object.values(errors)[0];
             toast.error(firstError?.message ?? "Validation failed.");
           })}
         >
           <PurchaseRequestTable
-            data={PURCHASE_REQUEST_DEMO_DATA}
-            isLoading={false}
+            data={lowStockProducts}
+            isLoading={isLoading}
             rowSelection={rowSelection}
             onRowSelectionChange={setRowSelection}
+            isPRCreatePending={isPRCreatePending}
           />
         </form>
       </FormProvider>

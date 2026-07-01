@@ -2,70 +2,82 @@ import "server-only";
 
 import { db } from "@/db";
 
-import { generatePurchaseRequestNumber } from "./generate-purchase-request-number";
-import { purchaseRequests } from "../schemas/purchase-request.schema";
-import { purchaseRequestItems } from "../schemas/purchase-request-item.schema";
-import { ValidationError } from "@/lib/errors";
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
-import { PurchaseRequestForm } from "../validation/purchase-request-form";
+import { generatePurchaseRequestNumber } from "./generate-purchase-request-number";
+import { purchaseRequestItems } from "../schemas/purchase-request-item.schema";
+import { purchaseRequests } from "../schemas/purchase-request.schema";
+import {
+  NewPurchaseRequest,
+  NewPurchaseRequestItem,
+  PurchaseRequestFormType,
+} from "../types/purchase-request.type";
+import { PurchaseRequestFormSchema } from "../validation/purchase-request-form";
+import { notifyPREmail } from "./notify-PR-creation.service";
+import { PURCHASE_REQUEST_ITEM_STATUS } from "../constants/purchase-request-item-status";
 
 export async function createPurchaseRequest(
-  data: PurchaseRequestForm,
+  data: PurchaseRequestFormType,
   companyId: string,
   createdByUserId: string,
 ) {
   try {
-    if (data.items.length === 0) {
-      throw new ValidationError(
-        "Must contain atleast one low/out of stock product",
+    const validData = PurchaseRequestFormSchema.parse(data);
+
+    const purchaseRequest = await db.transaction(async (tx) => {
+      const purchaseRequestNumber = await generatePurchaseRequestNumber(
+        tx,
+        companyId,
       );
-    }
 
-    const validItems = data.items.filter((item) => item.requestedQty > 0);
-
-    if (validItems.length === 0) {
-      throw new ValidationError(
-        "Purchase Request must contain at least one item with quantity greater than zero.",
-      );
-    }
-
-    const productIds = new Set<string>();
-
-    for (const item of validItems) {
-      if (productIds.has(item.productId)) {
-        throw new ValidationError(
-          "Duplicate products are not allowed in a Purchase Request.",
-        );
-      }
-
-      productIds.add(item.productId);
-    }
-
-    return db.transaction(async (tx) => {
-      const requestNumber = await generatePurchaseRequestNumber(tx, companyId);
+      const newPR: NewPurchaseRequest = {
+        companyId,
+        purchaseRequestNumber,
+        totalItems: validData.items.length,
+        totalRequestedQty: validData.items.reduce(
+          (sum, item) => sum + item.requestedQty,
+          0,
+        ),
+        createdByUserId,
+        remarks: validData.remarks ?? null,
+      };
 
       const [purchaseRequest] = await tx
         .insert(purchaseRequests)
-        .values({
-          companyId,
-          requestNumber,
-          remarks: data.remarks,
-          createdByUserId,
-        })
+        .values(newPR)
         .returning();
 
-      await tx.insert(purchaseRequestItems).values(
-        validItems.map((item) => ({
-          purchaseRequestId: purchaseRequest.id,
+      const newPRItems: NewPurchaseRequestItem[] = validData.items.map(
+        (item) => ({
           productId: item.productId,
-          supplierId: item.supplierId || null,
+          purchaseRequestId: purchaseRequest.id,
           requestedQty: item.requestedQty,
-        })),
+          supplierId: item.supplierId ?? null,
+          status:
+            item.supplierId === "" ||
+            item.supplierId === null ||
+            item.supplierId === "undefined"
+              ? PURCHASE_REQUEST_ITEM_STATUS.ACTION_REQUIRED
+              : PURCHASE_REQUEST_ITEM_STATUS.PENDING_APPROVAL,
+        }),
       );
+
+      await tx.insert(purchaseRequestItems).values(newPRItems);
 
       return purchaseRequest;
     });
+
+    notifyPREmail({
+      companyId,
+      purchaseRequestNumber: purchaseRequest.purchaseRequestNumber,
+      totalItems: purchaseRequest.totalItems,
+      totalRequestedQty: purchaseRequest.totalRequestedQty,
+      remarks: purchaseRequest.remarks,
+    }).catch((error: any) => {
+      console.error("Failed to send purchase request notification:", error);
+    });
+
+    return purchaseRequest;
   } catch (error) {
-    mapDatabaseError(error);
+    throw mapDatabaseError(error);
   }
 }

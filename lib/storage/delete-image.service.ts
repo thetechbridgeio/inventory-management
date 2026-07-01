@@ -19,8 +19,6 @@ function getStoragePath(pathOrUrl: string): string {
 export async function deleteImage(pathOrUrl: string) {
   const storagePath = getStoragePath(pathOrUrl);
 
-  console.log(storagePath);
-
   const { error } = await supabaseAdmin.storage
     .from(BUCKET_NAME)
     .remove([storagePath]);

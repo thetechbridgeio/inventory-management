@@ -11,8 +11,6 @@ import { Loader2 } from "lucide-react";
 const DashboardPage = () => {
   const { data, isPending, error } = useDashboardStats();
 
-  console.log(data);
-
   if (isPending) {
     return (
       <DashboardLayout>
