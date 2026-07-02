@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Controller,
   FieldValues,
@@ -25,6 +26,7 @@ export function SupplierCell<T extends FieldValues>({
   baseName,
 }: SupplierCellProps<T>) {
   const { control, watch, setValue } = useFormContext<T>();
+  const [open, setOpen] = useState(false);
 
   const supplierIdName = `${baseName}.supplierId` as Path<T>;
   const supplierNameName = `${baseName}.supplierName` as Path<T>;
@@ -37,7 +39,7 @@ export function SupplierCell<T extends FieldValues>({
         control={control}
         name={supplierIdName}
         render={({ field }) => (
-          <Popover>
+          <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-56 justify-between">
                 {supplierName || "Select Supplier"}
@@ -58,6 +60,8 @@ export function SupplierCell<T extends FieldValues>({
                       shouldDirty: true,
                     },
                   );
+
+                  setOpen(false); // Close after selection
                 }}
                 onClear={() => {
                   field.onChange("");
@@ -69,6 +73,8 @@ export function SupplierCell<T extends FieldValues>({
                       shouldDirty: true,
                     },
                   );
+
+                  setOpen(false); // Optional: close after clearing
                 }}
               />
             </PopoverContent>

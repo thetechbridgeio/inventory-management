@@ -1,5 +1,5 @@
-import { createPurchaseRequest } from "@/features/purchase-request-order/service/create-purchase-request.service";
-import { getPurchaseRequests } from "@/features/purchase-request-order/service/get-purchase-request.service";
+import { createPurchaseRequest } from "@/features/purchase-request-order/service/purchase-request/create-purchase-request.service";
+import { getPurchaseRequests } from "@/features/purchase-request-order/service/purchase-request/get-purchase-request.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 

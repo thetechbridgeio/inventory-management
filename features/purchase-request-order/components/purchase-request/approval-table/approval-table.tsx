@@ -1,16 +1,12 @@
 "use client";
 
 import React from "react";
-import {
-  flexRender,
-  getCoreRowModel,
-  RowSelectionState,
-  useReactTable,
-} from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { Check, Loader2 } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,15 +16,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { ViewPurchaseRequestProduct } from "@/features/purchase-request-order/types/purchase-request.type";
+import {
+  PurchaseRequestApprovalForm,
+  ViewPurchaseRequestProduct,
+} from "@/features/purchase-request-order/types/purchase-request.type";
 import { approvalColumns } from "./approval-column";
 import { PRPropDataType } from "../view-PR/view-PR.main";
 
 type PurchaseRequestApprovalTableProps = {
   data: ViewPurchaseRequestProduct[];
   isLoading: boolean;
-  rowSelection: RowSelectionState;
-  onRowSelectionChange: React.Dispatch<React.SetStateAction<RowSelectionState>>;
   isApprovePending?: boolean;
   isRejectPending?: boolean;
   prData: PRPropDataType;
@@ -38,24 +35,30 @@ type PurchaseRequestApprovalTableProps = {
 export function PurchaseRequestApprovalTable({
   data,
   isLoading,
-  rowSelection,
-  onRowSelectionChange,
   isApprovePending = false,
-  isRejectPending = false,
-  onReject,
-  prData,
 }: PurchaseRequestApprovalTableProps) {
+  const { watch } = useFormContext<PurchaseRequestApprovalForm>();
+
+  const purchaseRequestItems = watch("purchaseRequestItems");
+
   const table = useReactTable({
     data,
     columns: approvalColumns,
-    state: {
-      rowSelection,
-    },
     getRowId: (row) => row.purchaseRequestItemId,
-    enableRowSelection: (row) => Boolean(row.original.supplierId?.trim()),
-    onRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const approvedCount = purchaseRequestItems.filter(
+    (item) => item.decision === "APPROVE",
+  ).length;
+
+  const rejectedCount = purchaseRequestItems.filter(
+    (item) => item.decision === "REJECT",
+  ).length;
+
+  const actionRequiredCount = purchaseRequestItems.filter(
+    (item) => item.decision === "ACTION_REQUIRED",
+  ).length;
 
   return (
     <Card className="overflow-hidden gap-0 py-0">
@@ -119,10 +122,7 @@ export function PurchaseRequestApprovalTable({
                 </TableRow>
               ) : (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="hover:bg-muted/40 data-[state=selected]:bg-inherit!"
-                  >
+                  <TableRow key={row.id} className="hover:bg-muted/40">
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-4 align-middle">
                         {flexRender(
@@ -138,38 +138,38 @@ export function PurchaseRequestApprovalTable({
           </Table>
         </div>
 
-        <div className="flex items-center justify-between border-t px-6 py-3">
-          <p className="text-sm text-muted-foreground">
-            {table.getSelectedRowModel().rows.length} item(s) selected
-          </p>
+        <div className="flex items-center justify-between border-t bg-muted/20 px-6 py-4">
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            <div>
+              <span className="font-medium text-green-700">
+                {approvedCount}
+              </span>{" "}
+              <span className="text-muted-foreground">Approve</span>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {/* <RejectPurchaseRequestDialog
-              prData={prData}
-              isPending={isRejectPending}
-              onReject={onReject}
-            /> */}
+            <div>
+              <span className="font-medium text-red-600">
+                {rejectedCount}
+              </span>{" "}
+              <span className="text-muted-foreground">Reject</span>
+            </div>
 
-            <Button
-              type="submit"
-              variant="outline"
-              disabled={
-                table.getSelectedRowModel().rows.length === 0 ||
-                isApprovePending
-              }
-              className="
-    border-green-200
-    bg-green-50
-    text-green-700
-    hover:border-green-300
-    hover:bg-green-100
-    hover:text-green-800
-  "
-            >
-              <Check className="mr-2 h-4 w-4" />
-              Submit Descision
-            </Button>
+            <div>
+              <span className="font-medium text-amber-600">
+                {actionRequiredCount}
+              </span>{" "}
+              <span className="text-muted-foreground">Needs Supplier</span>
+            </div>
           </div>
+
+          <Button
+            type="submit"
+            disabled={isApprovePending}
+            className="min-w-40"
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Submit Decision
+          </Button>
         </div>
       </CardContent>
     </Card>

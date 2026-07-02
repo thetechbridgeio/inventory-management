@@ -76,6 +76,7 @@ export type PurchaseRequestApprovalItemFormType = z.infer<typeof PurchaseRequest
 
 export type PurchaseRequestApprovalItems = {
   purchaseRequestItemId: string;
+  decision: "APPROVE" | "REJECT" | "ACTION_REQUIRED";
   approvedQty: number;
   supplierId: string;
   supplierName: string;

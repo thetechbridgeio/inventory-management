@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 
 import { getReceiverEmails } from "@/features/company/service/get-company-user-email.service";
-import { AuthenticationError, AuthorizationError } from "@/lib/errors";
+import { AuthorizationError } from "@/lib/errors";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import { sendStockAlertForCompany } from "@/features/company/service/send-stock-alert.service";
 
@@ -11,14 +11,8 @@ export const POST = routeHandler(async (req: NextRequest) => {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     throw new AuthorizationError("Invalid cron secret");
   }
-  // const targets = await getReceiverEmails();
+  const targets = await getReceiverEmails();
 
-  const targets = [{
-      companyId: "df55baa7-5478-42bf-9fcf-29d20185fe61",
-      companyName: "Ecospace",
-      companyLogo: "https://i.postimg.cc/jSDN8gLY/ecospace-furniture.jpg",
-      email: "clienthelp.bgc@gmail.com"
-  }]
 
   const results = await Promise.allSettled(
     targets.map((target) => sendStockAlertForCompany(target)),

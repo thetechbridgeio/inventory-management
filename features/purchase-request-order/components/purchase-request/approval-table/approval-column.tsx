@@ -1,4 +1,3 @@
-import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
 
 import { CategoryBadge } from "@/lib/category-badge";
@@ -8,39 +7,19 @@ import {
   ViewPurchaseRequestProduct,
 } from "@/features/purchase-request-order/types/purchase-request.type";
 
-import { SupplierCell } from "../data-table/supplier-cell";
 import { ApprovedQtyCell } from "./approved-qty-cell";
+import { DecisionCell } from "./decision-cell";
+import { SupplierCellApproval } from "./supplier-cell-approval";
 
 export const approvalColumns: ColumnDef<ViewPurchaseRequestProduct>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-    size: 40,
-  },
   {
     accessorKey: "productName",
     header: "Product",
     cell: ({ row }) => (
       <div className="space-y-1">
-        <p className="font-semibold leading-none">{row.original.productName}</p>
+        <p className="font-semibold leading-none">
+          {row.original.productName}
+        </p>
 
         {row.original.description && (
           <p className="text-muted-foreground line-clamp-2 text-xs">
@@ -53,7 +32,9 @@ export const approvalColumns: ColumnDef<ViewPurchaseRequestProduct>[] = [
   {
     accessorKey: "category",
     header: "Category",
-    cell: ({ row }) => <CategoryBadge category={row.original.category} />,
+    cell: ({ row }) => (
+      <CategoryBadge category={row.original.category} />
+    ),
   },
   {
     accessorKey: "currentStock",
@@ -75,7 +56,9 @@ export const approvalColumns: ColumnDef<ViewPurchaseRequestProduct>[] = [
     accessorKey: "requestedQty",
     header: "Requested Qty",
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.requestedQty}</span>
+      <span className="font-medium">
+        {row.original.requestedQty}
+      </span>
     ),
   },
   {
@@ -91,9 +74,19 @@ export const approvalColumns: ColumnDef<ViewPurchaseRequestProduct>[] = [
     accessorKey: "supplierId",
     header: "Supplier",
     cell: ({ row }) => (
-      <SupplierCell<PurchaseRequestApprovalForm>
+      <SupplierCellApproval<PurchaseRequestApprovalForm>
         baseName={`purchaseRequestItems.${row.index}`}
       />
     ),
+  },
+  {
+    id: "decision",
+    header: "Decision",
+    cell: ({ row }) => (
+      <DecisionCell<PurchaseRequestApprovalForm>
+        baseName={`purchaseRequestItems.${row.index}`}
+      />
+    ),
+    size: 220,
   },
 ];

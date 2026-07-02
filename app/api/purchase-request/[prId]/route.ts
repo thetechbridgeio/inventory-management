@@ -1,6 +1,6 @@
-import { getPurchaseRequestById } from "@/features/purchase-request-order/service/get-pr-by-id/get-pr-by-id.service";
-import { approvePurchaseRequest } from "@/features/purchase-request-order/service/handle-pr/approve-pr.service";
-import { rejectPurchaseRequest } from "@/features/purchase-request-order/service/handle-pr/reject-pr.service";
+import { getPurchaseRequestById } from "@/features/purchase-request-order/service/purchase-request/get-pr-by-id/get-pr-by-id.service";
+import { approvePurchaseRequest } from "@/features/purchase-request-order/service/purchase-request/handle-pr/approve-pr.service";
+import { rejectPurchaseRequest } from "@/features/purchase-request-order/service/purchase-request/handle-pr/reject-pr.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
 import { AuthorizationError } from "@/lib/errors";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";

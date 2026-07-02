@@ -3,6 +3,7 @@ import axios from "axios";
 import { toast } from "sonner";
 
 import { PurchaseRequestApprovalItemFormType } from "../types/purchase-request.type";
+import { useRouter } from "next/navigation";
 
 type ApprovePurchaseRequestPayload = {
   purchaseRequestId: string;
@@ -11,6 +12,7 @@ type ApprovePurchaseRequestPayload = {
 
 export function useApprovePurchaseRequest() {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   return useMutation({
     mutationFn: async ({
@@ -28,6 +30,7 @@ export function useApprovePurchaseRequest() {
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({
         queryKey: ["purchase-request", variables.purchaseRequestId],
+        refetchType: "active",
       });
 
       await queryClient.invalidateQueries({
@@ -38,6 +41,7 @@ export function useApprovePurchaseRequest() {
     },
 
     onError: (error) => {
+      console.error("Error approving purchase request:", error);
       if (axios.isAxiosError(error)) {
         toast.error(
           error.response?.data?.message ??
