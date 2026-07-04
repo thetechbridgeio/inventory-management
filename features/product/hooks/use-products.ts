@@ -16,6 +16,7 @@ export function useProducts({
   categories,
   locations,
   units,
+  stockStatuses,
 }: GetProductsParams = {}) {
   return useQuery({
     queryKey: [
@@ -26,6 +27,7 @@ export function useProducts({
         categories,
         locations,
         units,
+        stockStatuses,
       },
     ],
 
@@ -45,6 +47,9 @@ export function useProducts({
               : undefined,
             units: units?.length
               ? units.join(",")
+              : undefined,
+            stockStatuses: stockStatuses?.length
+              ? stockStatuses.join(",")
               : undefined,
           },
         });

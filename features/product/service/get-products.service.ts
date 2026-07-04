@@ -9,6 +9,8 @@ import { GetProductsParams, GetProductsResponse } from "../types/product.types";
 
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/pagination";
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
+import { buildStockStatusFilter } from "./build-stock-status-filter.service";
+import { buildProductWhereClause } from "./build-product-filters.service";
 
 export async function getProducts(
   companyId: string,
@@ -17,29 +19,18 @@ export async function getProducts(
     search,
     categories,
     locations,
+    stockStatuses,
     units,
   }: GetProductsParams,
 ): Promise<GetProductsResponse> {
   try {
-    const filters: SQL[] = [eq(products.companyId, companyId)];
-
-    if (search?.trim()) {
-      filters.push(ilike(products.name, `%${search.trim()}%`));
-    }
-
-    if (categories?.length) {
-      filters.push(inArray(products.category, categories));
-    }
-
-    if (locations?.length) {
-      filters.push(inArray(products.location, locations));
-    }
-
-    if (units?.length) {
-      filters.push(inArray(products.unit, units));
-    }
-
-    const whereClause = and(...filters);
+    const whereClause = buildProductWhereClause(companyId, {
+      search,
+      categories,
+      locations,
+      units,
+      stockStatuses,
+    });
 
     const [data, [{ total }]] = await Promise.all([
       db.query.products.findMany({

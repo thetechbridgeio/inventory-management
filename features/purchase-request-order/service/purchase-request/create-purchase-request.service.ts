@@ -69,6 +69,7 @@ export async function createPurchaseRequest(
 
     notifyPREmail({
       companyId,
+      purchaseRequestId: purchaseRequest.id,
       purchaseRequestNumber: purchaseRequest.purchaseRequestNumber,
       totalItems: purchaseRequest.totalItems,
       totalRequestedQty: purchaseRequest.totalRequestedQty,

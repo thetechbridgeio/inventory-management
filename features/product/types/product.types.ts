@@ -8,6 +8,7 @@ import {
 } from "../validations/product.validation";
 import { products } from "../schemas/product.schema";
 import { PaginatedResponse } from "@/lib/common-types";
+import { StockStatus } from "../constants/product-stock-status";
 
 export type CreateProductFormType = z.infer<typeof CreateProductFormSchema>;
 
@@ -42,6 +43,7 @@ export type GetProductsParams = {
   page?: number;
   search?: string;
   categories?: string[];
+  stockStatuses?: StockStatus[]
   locations?: string[];
   units?: string[];
 };

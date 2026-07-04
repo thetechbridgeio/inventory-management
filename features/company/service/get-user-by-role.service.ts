@@ -1,15 +1,15 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
+import { users } from "@/db/schema";
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
 import { UserRole } from "@/features/auth/constants/user-role";
-import { users } from "@/db/schema";
 
-export async function getUsersByRole(
+export async function getUsersByRoles(
   companyId: string,
-  role: UserRole,
+  roles: UserRole[],
 ): Promise<
   {
     id: string;
@@ -19,6 +19,10 @@ export async function getUsersByRole(
   }[]
 > {
   try {
+    if (roles.length === 0) {
+      return [];
+    }
+
     return await db
       .select({
         id: users.id,
@@ -30,12 +34,12 @@ export async function getUsersByRole(
       .where(
         and(
           eq(users.companyId, companyId),
-          eq(users.role, role),
+          inArray(users.role, roles),
           eq(users.isActive, true),
         ),
       );
   } catch (error) {
-    console.error("Failed to fetch users by role:", error);
+    console.error("Failed to fetch users by roles:", error);
 
     throw mapDatabaseError("Unable to fetch users.");
   }

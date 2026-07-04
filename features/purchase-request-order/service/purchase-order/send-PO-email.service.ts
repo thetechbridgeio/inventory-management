@@ -3,7 +3,7 @@ import { generatePurchaseOrderPdf } from "./generate-PO-pdf.service";
 import { getPurchaseOrderDocument } from "./get-PO-document.service";
 import { updatePurchaseOrderStatus } from "./update-PO-status.service";
 import { PURCHASE_ORDER_STATUS } from "../../constants/purchase-order-status";
-import { getUsersByRole } from "@/features/company/service/get-user-by-role.service";
+import { getUsersByRoles } from "@/features/company/service/get-user-by-role.service";
 import { ROLES } from "@/features/auth/constants/user-role";
 
 export async function sendPurchaseOrderEmail(
@@ -16,9 +16,9 @@ export async function sendPurchaseOrderEmail(
     throw new Error("Supplier email is not configured.");
   }
 
-  const superAdmins = await getUsersByRole(companyId, ROLES.SUPER_ADMIN);
+  const recipients = await getUsersByRoles(companyId, [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN]);
 
-  const cc = superAdmins
+  const cc = recipients
     .map((user) => user.email)
     .filter((email) => email !== document.supplier.email);
 

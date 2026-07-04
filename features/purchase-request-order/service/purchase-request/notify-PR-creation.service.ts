@@ -1,5 +1,5 @@
 import { ROLES } from "@/features/auth/constants/user-role";
-import { getUsersByRole } from "@/features/company/service/get-user-by-role.service";
+import { getUsersByRoles } from "@/features/company/service/get-user-by-role.service";
 import { transporter } from "@/features/email/service/transporter";
 
 type NotifyPREmailParams = {
@@ -8,6 +8,7 @@ type NotifyPREmailParams = {
   totalItems: number;
   totalRequestedQty: number;
   remarks: string | null;
+  purchaseRequestId: string;
 };
 
 export async function notifyPREmail({
@@ -16,9 +17,10 @@ export async function notifyPREmail({
   totalItems,
   totalRequestedQty,
   remarks,
+  purchaseRequestId,
 }: NotifyPREmailParams) {
   try {
-    const superAdmins = await getUsersByRole(companyId, ROLES.SUPER_ADMIN);
+    const superAdmins = await getUsersByRoles(companyId, [ROLES.SUPER_ADMIN]);
 
     if (!superAdmins.length) {
       return;
@@ -94,9 +96,42 @@ export async function notifyPREmail({
           </tr>
         </table>
 
-        <p>
-          Please review this purchase request and take the necessary approval action.
-        </p>
+       <p>
+  Please review this purchase request and take the necessary approval action.
+</p>
+
+<div style="text-align:center; margin:32px 0;">
+  <a
+    href="${process.env.APP_URL}/purchase-request/${purchaseRequestId}"
+    style="
+      display:inline-block;
+      background:#dc2626;
+      color:#ffffff;
+      text-decoration:none;
+      padding:14px 28px;
+      border-radius:8px;
+      font-size:15px;
+      font-weight:600;
+    "
+  >
+    Review Purchase Request
+  </a>
+</div>
+
+<p style="font-size:13px; color:#6b7280; text-align:center; margin-top:16px;">
+  If the button doesn't work, copy and paste the following link into your browser:
+</p>
+
+<p style="font-size:13px; word-break:break-all; text-align:center; margin-top:8px;">
+  <a
+    href="${process.env.APP_URL}/purchase-request/${purchaseRequestId}"
+    style="color:#2563eb;"
+  >
+    ${process.env.APP_URL}/purchase-request/${purchaseRequestId}
+  </a>
+</p>
+
+<hr style="border:none; border-top:1px solid #e5e7eb; margin:32px 0;" />
 
         <hr style="border:none; border-top:1px solid #e5e7eb; margin:32px 0;" />
 

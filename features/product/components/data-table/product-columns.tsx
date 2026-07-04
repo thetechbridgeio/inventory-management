@@ -17,6 +17,11 @@ import Link from "next/link";
 import { Product } from "../../types/product.types";
 import { ROLES } from "@/features/auth/constants/user-role";
 import { CategoryBadge } from "@/lib/category-badge";
+import { getStockStatus } from "./get-stock-status";
+import {
+  STOCK_STATUS_BADGES,
+  STOCK_STATUS_LABELS,
+} from "../../constants/product-stock-status";
 
 export function getProductColumns(role?: string): ColumnDef<Product>[] {
   return [
@@ -60,29 +65,15 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
       id: "status",
       header: "Status",
       cell: ({ row }) => {
-        const stock = row.original.currentStock;
-        const minOrderQty = row.original.minOrderQty ?? 0;
-        const maxOrderQty = row.original.maxOrderQty ?? Infinity;
-
-        if (stock <= minOrderQty) {
-          return (
-            <Badge className="bg-red-100 text-red-700 border border-red-200">
-              Low
-            </Badge>
-          );
-        }
-
-        if (stock >= maxOrderQty) {
-          return (
-            <Badge className="bg-amber-100 text-amber-700 border border-amber-200">
-              Excess
-            </Badge>
-          );
-        }
+        const status = getStockStatus(
+          row.original.currentStock,
+          row.original.minOrderQty ?? 0,
+          row.original.maxOrderQty ?? Infinity,
+        );
 
         return (
-          <Badge className="bg-green-100 text-green-700 border border-green-200">
-            Normal
+          <Badge className={STOCK_STATUS_BADGES[status]}>
+            {STOCK_STATUS_LABELS[status]}
           </Badge>
         );
       },

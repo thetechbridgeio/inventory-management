@@ -1,3 +1,4 @@
+import { StockStatus } from "../constants/product-stock-status";
 import { GetProductsParams } from "../types/product.types";
 
 export function parseProductQueryParams(
@@ -6,8 +7,7 @@ export function parseProductQueryParams(
   return {
     page: Number(searchParams.get("page")) || undefined,
 
-    search:
-      searchParams.get("search")?.trim() || undefined,
+    search: searchParams.get("search")?.trim() || undefined,
 
     categories:
       searchParams
@@ -28,6 +28,13 @@ export function parseProductQueryParams(
         .get("units")
         ?.split(",")
         .map((v) => v.trim())
+        .filter(Boolean) || undefined,
+
+    stockStatuses:
+      searchParams
+        .get("stockStatuses")
+        ?.split(",")
+        .map((v) => v.trim() as StockStatus)
         .filter(Boolean) || undefined,
   };
 }

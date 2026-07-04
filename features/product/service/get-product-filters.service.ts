@@ -1,12 +1,10 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
-
 import { db } from "@/db";
-
 import { products } from "../schemas/product.schema";
-
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
+
 
 export async function getProductFilters(
   companyId: string,
@@ -50,7 +48,6 @@ export async function getProductFilters(
         }),
       ),
     ].sort();
-
     return {
       categories,
       locations,

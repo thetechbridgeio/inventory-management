@@ -36,6 +36,8 @@ export function ProductTable({
     getCoreRowModel: getCoreRowModel(),
   });
 
+  console.log(data)
+
   return (
     <div className="overflow-hidden rounded-xl border bg-white">
       <Table>
