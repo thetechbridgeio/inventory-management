@@ -8,10 +8,15 @@ import { toast } from "sonner";
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { PurchaseRequestTable } from "@/features/purchase-request-order/components/purchase-request/data-table/purchase-request-table";
-import { useGetPRProduct } from "@/features/purchase-request-order/hooks/use-get-low-stock-products";
-import { PurchaseRequestFormSchema } from "@/features/purchase-request-order/validation/purchase-request-form";
-import { PurchaseRequestFormType } from "@/features/purchase-request-order/types/purchase-request.type";
 import { useCreatePurchaseRequest } from "@/features/purchase-request-order/hooks/use-create-PR";
+import { useGetPRProduct } from "@/features/purchase-request-order/hooks/use-get-low-stock-products";
+import { PurchaseRequestFormType } from "@/features/purchase-request-order/types/purchase-request.type";
+import { PurchaseRequestFormSchema } from "@/features/purchase-request-order/validation/purchase-request-form";
+
+const defaultValues: PurchaseRequestFormType = {
+  remarks: "",
+  items: [],
+};
 
 const PurchaseRequestCreationPage = () => {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -22,10 +27,7 @@ const PurchaseRequestCreationPage = () => {
 
   const form = useForm<PurchaseRequestFormType>({
     resolver: zodResolver(PurchaseRequestFormSchema),
-    defaultValues: {
-      remarks: "",
-      items: [],
-    },
+    defaultValues,
   });
 
   useEffect(() => {
@@ -40,16 +42,24 @@ const PurchaseRequestCreationPage = () => {
         requestedQty: product.reorderQty,
       })),
     });
-  }, [lowStockProducts, form]);
+  }, [form, lowStockProducts]);
 
-  const onSubmit = (values: PurchaseRequestFormType) => {
-    const selectedItems = values.items.filter(
-      (item) => rowSelection[item.productId],
-    );
+  const onSubmit = ({ remarks, items }: PurchaseRequestFormType) => {
+    const selectedItems = items.filter(({ productId }) => rowSelection[productId]);
+
+    if (selectedItems.length === 0) {
+      toast.error("Please select at least one product.");
+      return;
+    }
+
     createPurchaseRequest({
-      remarks: values.remarks,
+      remarks,
       items: selectedItems,
     });
+  };
+
+  const onInvalid = () => {
+    toast.error("Please fix the validation errors before continuing.");
   };
 
   return (
@@ -68,14 +78,7 @@ const PurchaseRequestCreationPage = () => {
       </div>
 
       <FormProvider {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            console.log(errors);
-
-            const firstError = Object.values(errors)[0];
-            toast.error(firstError?.message ?? "Validation failed.");
-          })}
-        >
+        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
           <PurchaseRequestTable
             data={lowStockProducts}
             isLoading={isLoading}

@@ -1,18 +1,25 @@
 "use client";
+
+import Link from "next/link";
+
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { Button } from "@/components/ui/button";
+import { ROLES } from "@/features/auth/constants/user-role";
 import { useAuth } from "@/features/auth/providers/use-auth.provider";
 import { ProductList } from "@/features/product/components/data-table/product-list";
 import { PurchaseRequestBanner } from "@/features/purchase-request-order/components/purchase-request/purchase-request-banner";
-import Link from "next/link";
 
 const InventoryPage = () => {
   const { user } = useAuth();
 
+  const canViewPurchaseRequestBanner =
+    user?.role === ROLES.PURCHASE_ADMIN ||
+    user?.role === ROLES.SUPER_ADMIN;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center gap-6">
+        <div className="flex items-center justify-between gap-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
               Inventory Management
@@ -21,14 +28,14 @@ const InventoryPage = () => {
               Manage and track your product inventory
             </p>
           </div>
-          <div className="flex justify-end items-center gap-3">
-            <Button asChild>
-              <Link href={"/inventory/create"}>Add Product</Link>
-            </Button>
-          </div>
+
+          <Button asChild>
+            <Link href="/inventory/create">Add Product</Link>
+          </Button>
         </div>
-        {user?.role === "PURCHASE_ADMIN" ||
-          (user?.role === "SUPER_ADMIN" && <PurchaseRequestBanner />)}
+
+        {canViewPurchaseRequestBanner && <PurchaseRequestBanner />}
+
         <ProductList />
       </div>
     </DashboardLayout>

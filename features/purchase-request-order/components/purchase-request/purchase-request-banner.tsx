@@ -6,7 +6,6 @@ import { useGetPRProduct } from "../../hooks/use-get-low-stock-products";
 
 export function PurchaseRequestBanner() {
   const { data: lowStockProducts = [], isLoading } = useGetPRProduct();
-  
 
   if (isLoading) {
     return (
@@ -27,16 +26,19 @@ export function PurchaseRequestBanner() {
     );
   }
 
-  const count = lowStockProducts.length;
+  const lowStockCount = lowStockProducts.length;
 
-  if (count === 0) {
+  if (lowStockCount === 0) {
     return null;
   }
+
+  const title = `${lowStockCount} ${
+    lowStockCount === 1 ? "Product is" : "Products are"
+  } Low / Out of Stock`;
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-red-200 bg-gradient-to-r from-red-50 via-red-50 to-red-100 px-6 py-4 shadow-sm">
       <div className="absolute inset-y-0 left-0 w-1.5 bg-red-600" />
-
       <div className="absolute -right-16 -top-16 h-30 w-30 rounded-full bg-red-300/20 blur-3xl" />
 
       <div className="relative flex items-center justify-between gap-6">
@@ -46,10 +48,7 @@ export function PurchaseRequestBanner() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-red-950">
-              {count} {count === 1 ? "Product is" : "Products are"} Low / Out of
-              Stock
-            </h2>
+            <h2 className="text-lg font-semibold text-red-950">{title}</h2>
 
             <p className="mt-1 text-sm text-red-700">
               Generate a Purchase Request to replenish inventory before stock

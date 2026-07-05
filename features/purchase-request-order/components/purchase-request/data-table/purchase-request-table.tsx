@@ -1,3 +1,5 @@
+"use client";
+
 import {
   flexRender,
   getCoreRowModel,
@@ -5,40 +7,83 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Loader2 } from "lucide-react";
+import { useFormContext, useWatch } from "react-hook-form";
 
 import { Card, CardContent } from "@/components/ui/card";
-
+import { Button } from "@/components/ui/button";
+import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
 import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 import { columns } from "./purchase-request-columns";
-import { Button } from "@/components/ui/button";
-import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
-import { useFormContext } from "react-hook-form";
-import { cn } from "@/lib/utils";
-import { PurchaseRequestFormType, PurchaseRequestProduct } from "@/features/purchase-request-order/types/purchase-request.type";
+import {
+  PurchaseRequestFormType,
+  PurchaseRequestProduct,
+} from "@/features/purchase-request-order/types/purchase-request.type";
 
 type PurchaseRequestTableProps = {
   data: PurchaseRequestProduct[];
   isLoading: boolean;
   rowSelection: RowSelectionState;
-  onRowSelectionChange: React.Dispatch<React.SetStateAction<RowSelectionState>>;
-  isPRCreatePending: boolean
+  onRowSelectionChange: React.Dispatch<
+    React.SetStateAction<RowSelectionState>
+  >;
+  isPRCreatePending: boolean;
 };
+
+function hasValidationIssue(
+  item?: PurchaseRequestFormType["items"][number],
+) {
+  return (
+    !item?.supplierId ||
+    !item.supplierName ||
+    !item.requestedQty ||
+    item.requestedQty <= 0
+  );
+}
+
+type TableMessageProps = {
+  title: string;
+  description: string;
+  loading?: boolean;
+};
+
+function TableMessage({
+  title,
+  description,
+  loading = false,
+}: TableMessageProps) {
+  return (
+    <TableRow>
+      <TableCell colSpan={columns.length} className="h-[550px]">
+        <div className="flex h-full flex-col items-center justify-center gap-4">
+          {loading && (
+            <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+          )}
+
+          <div className="space-y-1 text-center">
+            <p className="font-medium">{title}</p>
+            <p className="text-sm text-muted-foreground">{description}</p>
+          </div>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export function PurchaseRequestTable({
   data,
   isLoading,
   rowSelection,
   onRowSelectionChange,
-  isPRCreatePending = false
+  isPRCreatePending,
 }: PurchaseRequestTableProps) {
   const table = useReactTable({
     data,
@@ -51,11 +96,19 @@ export function PurchaseRequestTable({
     onRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
   });
-  const { watch } = useFormContext<PurchaseRequestFormType>();
-  const items = watch("items");
+
+  const { control } = useFormContext<PurchaseRequestFormType>();
+
+  const items = useWatch({
+    control,
+    name: "items",
+  });
+
+  const rows = table.getRowModel().rows;
+  const selectedCount = table.getSelectedRowModel().rows.length;
 
   return (
-    <Card className="overflow-hidden gap-0 py-0">
+    <Card className="gap-0 overflow-hidden py-0">
       <CardContent className="p-0">
         <div className="max-h-[50vh] overflow-auto">
           <Table>
@@ -79,52 +132,28 @@ export function PurchaseRequestTable({
 
             <TableBody>
               {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-[550px]">
-                    <div className="flex h-full flex-col items-center justify-center gap-4">
-                      <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
-
-                      <div className="space-y-1 text-center">
-                        <p className="font-medium">Loading products...</p>
-                        <p className="text-sm text-muted-foreground">
-                          Please wait while we fetch the inventory.
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-[550px]">
-                    <div className="flex h-full flex-col items-center justify-center gap-2">
-                      <p className="font-medium">No products found</p>
-
-                      <p className="text-sm text-muted-foreground">
-                        There are no products available to create a purchase
-                        request.
-                      </p>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <TableMessage
+                  loading
+                  title="Loading products..."
+                  description="Please wait while we fetch the inventory."
+                />
+              ) : rows.length === 0 ? (
+                <TableMessage
+                  title="No products found"
+                  description="There are no products available to create a purchase request."
+                />
               ) : (
-                table.getRowModel().rows.map((row, index) => {
-                  const item = items[index];
-
-                  const hasIssue =
-                    !item?.supplierId ||
-                    !item.supplierName ||
-                    !item?.requestedQty ||
-                    item.requestedQty <= 0;
+                rows.map((row, index) => {
+                  const hasIssue = hasValidationIssue(items?.[index]);
 
                   return (
                     <TableRow
                       key={row.id}
                       className={cn(
-                        "transition-colors",
+                        "transition-colors data-[state=selected]:bg-inherit!",
                         hasIssue
                           ? "bg-amber-50/60 hover:bg-amber-50/60"
                           : "hover:bg-muted/40",
-                        "data-[state=selected]:bg-inherit!",
                       )}
                     >
                       {row.getVisibleCells().map((cell, cellIndex) => (
@@ -150,7 +179,8 @@ export function PurchaseRequestTable({
             </TableBody>
           </Table>
         </div>
-        <div className="">
+
+        <div>
           <div className="border-t bg-muted/20 px-6 py-4">
             <RHFTextarea<PurchaseRequestFormType>
               name="remarks"
@@ -159,15 +189,23 @@ export function PurchaseRequestTable({
               helperText="Optional. This remark will be included with the purchase request."
             />
           </div>
+
           <div className="flex items-center justify-between px-6 py-3">
             <p className="text-sm text-muted-foreground">
-              {table.getSelectedRowModel().rows.length} product(s) selected
+              {selectedCount} product{selectedCount !== 1 && "s"} selected
             </p>
 
             <Button
               type="submit"
-              disabled={table.getSelectedRowModel().rows.length === 0 || isPRCreatePending}
+              disabled={
+                isLoading ||
+                selectedCount === 0 ||
+                isPRCreatePending
+              }
             >
+              {isPRCreatePending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Create Purchase Request
             </Button>
           </div>

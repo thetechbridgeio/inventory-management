@@ -4,10 +4,12 @@ import { PurchaseOrderListItem } from "../types/purchase-order.type";
 
 type UseGetPurchaseOrdersByPurchaseRequestProps = {
   purchaseRequestId: string;
+  enabled?: boolean;
 };
 
 export function useGetPurchaseOrdersByPurchaseRequest({
   purchaseRequestId,
+  enabled = true,
 }: UseGetPurchaseOrdersByPurchaseRequestProps) {
   return useQuery<PurchaseOrderListItem[]>({
     queryKey: ["purchase-request", purchaseRequestId, "purchase-orders"],
@@ -18,6 +20,6 @@ export function useGetPurchaseOrdersByPurchaseRequest({
 
       return data.data;
     },
-    enabled: !!purchaseRequestId,
+    enabled: !!purchaseRequestId && enabled,
   });
 }

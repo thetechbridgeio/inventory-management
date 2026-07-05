@@ -10,9 +10,9 @@ import {
 } from "../../../types/purchase-request.type";
 import { PurchaseRequestApprovalTable } from "../approval-table/approval-table";
 import { PurchaseRequestApprovalFormSchema } from "../../../validation/approve-pr-form";
-import { PRPropDataType } from "./view-PR.main";
 import { useRejectPurchaseRequest } from "@/features/purchase-request-order/hooks/use-reject-PR";
 import { useApprovePurchaseRequest } from "@/features/purchase-request-order/hooks/use-approve-pr";
+import { PRPropDataType } from "./ViewPRMain";
 
 const PRTableMain = ({
   products,
