@@ -38,7 +38,7 @@ const AddPurchasePage = () => {
         <div className="flex justify-between items-center gap-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              Add New Purchase
+              Add New Incoming
             </h1>
 
             <p className="mt-2 text-muted-foreground">
@@ -64,12 +64,12 @@ const AddPurchasePage = () => {
               <div className="flex items-center justify-between border-t pt-6">
                 <div>
                   <p className="text-sm font-medium">
-                    Ready to create this Purchase?
+                    Ready to create this Incoming?
                   </p>
                 </div>
 
                 <Button type="submit" disabled={isPending} size="lg">
-                  {isPending ? "Creating Purchase..." : "Create Purchase"}
+                  {isPending ? "Creating Incoming..." : "Create Incoming"}
                 </Button>
               </div>
             </form>

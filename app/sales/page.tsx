@@ -23,7 +23,7 @@ const SalePage = () => {
           {/* ACTIONS */}
           <div className="flex items-center gap-3">
             <Button asChild>
-              <Link href={"/sales/create"}>Add Sale</Link>
+              <Link href={"/sales/create"}>Add Outgoing</Link>
             </Button>
           </div>
         </div>

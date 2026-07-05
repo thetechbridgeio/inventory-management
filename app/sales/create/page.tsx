@@ -24,11 +24,11 @@ const AddSalePage = () => {
   const onSubmit = (data: CreateSaleFormType) => {
     mutate(data, {
       onSuccess: () => {
-        toast.success("Ingoing created successfully");
+        toast.success("Outgoing created successfully");
         createSaleForm.reset();
       },
       onError: () => {
-        toast.error("Failed to create Ingoing");
+        toast.error("Failed to create Outgoing");
       },
     });
   };
