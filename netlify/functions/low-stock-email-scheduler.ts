@@ -1,46 +1,58 @@
 import axios from "axios";
 import type { Config } from "@netlify/functions";
 
-export default async () => {
+const { APP_URL, CRON_SECRET } = process.env;
+
+export default async (): Promise<Response> => {
+  if (!APP_URL) {
+    console.error("[Low Stock Scheduler] APP_URL environment variable is missing.");
+
+    return new Response(null, { status: 500 });
+  }
+
+  if (!CRON_SECRET) {
+    console.error("[Low Stock Scheduler] CRON_SECRET environment variable is missing.");
+
+    return new Response(null, { status: 500 });
+  }
+
+  const endpoint = `${APP_URL}/api/email/low-stock`;
+
+  console.log(
+    `[Low Stock Scheduler] Started at ${new Date().toISOString()}`,
+  );
+
   try {
-    if (!process.env.APP_URL) {
-      throw new Error("APP_URL is not defined");
-    }
-
-    if (!process.env.CRON_SECRET) {
-      throw new Error("CRON_SECRET is not defined");
-    }
-
-    console.log("Calling:", `${process.env.APP_URL}/api/email/low-stock`);
-
-    const { data } = await axios.post(
-      `${process.env.APP_URL}/api/email/low-stock`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.CRON_SECRET}`,
-        },
+    await axios.post(endpoint, undefined, {
+      headers: {
+        Authorization: `Bearer ${CRON_SECRET}`,
       },
-    );
-    console.log("Scheduler completed successfully");
+      timeout: 30_000,
+    });
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(data),
-    };
+    console.log("[Low Stock Scheduler] Completed successfully.");
+
+    return new Response(null, {
+      status: 204,
+    });
   } catch (error) {
-    console.error(error);
+    if (axios.isAxiosError(error)) {
+      console.error("[Low Stock Scheduler] Request failed.", {
+        status: error.response?.status,
+        message: error.message,
+        response: error.response?.data,
+      });
+    } else {
+      console.error("[Low Stock Scheduler] Unexpected error.", error);
+    }
 
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "Scheduler failed",
-      }),
-    };
+    return new Response(null, {
+      status: 500,
+    });
   }
 };
 
-
 export const config: Config = {
-  schedule: "36 15 * * *",
+  // Every day at 7:00 AM IST (01:30 UTC)
+  schedule: "30 1 * * *",
 };
