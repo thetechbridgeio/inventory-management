@@ -3,80 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import {
-  BarChart3,
-  Box,
-  Boxes,
-  Building2,
-  Headset,
-  PackagePlus,
-  PackageSearch,
-  ShoppingCart,
-  Truck,
-} from "lucide-react";
+import { Building2, Truck } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/features/auth/providers/use-auth.provider";
-import { ROLE_LABELS, ROLES } from "@/features/auth/constants/user-role";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { ACCESS } from "@/features/auth/constants/access";
+import {
+  ROLE_LABELS,
+  ROLES,
+  UserRole,
+} from "@/features/auth/constants/user-role";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { cn } from "@/lib/utils";
 
-const sidebarItems = [
-  {
-    title: "Inventory",
-    href: "/inventory",
-    icon: Boxes,
-    access: "inventory",
-  },
-  {
-    title: "Incomings",
-    href: "/purchases",
-    icon: ShoppingCart,
-    access: "purchases",
-  },
-  {
-    title: "Outgoings",
-    href: "/sales",
-    icon: PackageSearch,
-    access: "sales",
-  },
-  {
-    title: "Dashboard",
-    href: "/dashboard",
-    icon: BarChart3,
-    access: "dashboard",
-  },
-  {
-    title: "Purchase",
-    href: "/purchase-request",
-    icon: Box,
-    access: "purchaseRequest",
-  },
-  {
-    title: "Suppliers",
-    href: "/suppliers",
-    icon: PackagePlus,
-    access: "suppliers",
-  },
-  {
-    title: "Company",
-    href: "/company",
-    icon: Building2,
-    access: "company",
-  },
-  {
-    title: "Users",
-    href: "/users",
-    icon: Building2,
-    access: "users",
-  },
-  {
-    title: "Support",
-    href: "/support",
-    icon: Headset,
-    access: "support",
-  },
-] as const;
+import { SIDEBAR_ITEMS } from "./sidebar-items";
 
 const roleConfig = {
   [ROLES.SUPER_ADMIN]: {
@@ -86,7 +25,8 @@ const roleConfig = {
   },
   [ROLES.PURCHASE_ADMIN]: {
     label: ROLE_LABELS.PURCHASE_ADMIN,
-    className: "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50",
+    className:
+      "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-50",
   },
   [ROLES.STORE_ADMIN]: {
     label: ROLE_LABELS.STORE_ADMIN,
@@ -99,13 +39,17 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   const roleBadge = roleConfig[user.role];
 
-  const visibleItems = sidebarItems.filter((item) =>
-    ACCESS[item.access].includes(user.role),
-  );
+  const visibleItems = SIDEBAR_ITEMS.filter(({ access }) => {
+    const allowedRoles: readonly UserRole[] = ACCESS[access];
+
+    return allowedRoles.includes(user.role);
+  });
 
   return (
     <aside className="fixed left-0 top-0 flex h-screen w-72 flex-col border-r bg-background">
@@ -137,16 +81,14 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {visibleItems.map((item) => {
-          const Icon = item.icon;
-
+        {visibleItems.map(({ title, href, icon: Icon }) => {
           const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+            pathname === href || pathname.startsWith(`${href}/`);
 
           return (
             <Link
-              key={item.title}
-              href={item.href}
+              key={href}
+              href={href}
               className={cn(
                 "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors",
                 isActive
@@ -155,7 +97,7 @@ export function Sidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              <span>{item.title}</span>
+              <span>{title}</span>
             </Link>
           );
         })}

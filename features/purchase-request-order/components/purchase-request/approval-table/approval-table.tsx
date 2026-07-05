@@ -21,7 +21,7 @@ import {
   ViewPurchaseRequestProduct,
 } from "@/features/purchase-request-order/types/purchase-request.type";
 import { approvalColumns } from "./approval-column";
-import { PRPropDataType } from "../view-PR/view-PR.main";
+import { PRPropDataType } from "../view-PR/ViewPRMain";
 
 type PurchaseRequestApprovalTableProps = {
   data: ViewPurchaseRequestProduct[];

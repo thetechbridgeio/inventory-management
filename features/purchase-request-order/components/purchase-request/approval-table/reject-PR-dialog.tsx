@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { PRPropDataType } from "../view-PR/view-PR.main";
+import { PRPropDataType } from "../view-PR/ViewPRMain";
 
 type RejectPurchaseRequestDialogProps = {
   prData: PRPropDataType;

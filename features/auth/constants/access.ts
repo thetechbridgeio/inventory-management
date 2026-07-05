@@ -1,13 +1,13 @@
 import { ROLES, UserRole } from "./user-role";
 
-export const ACCESS: Record<string, readonly UserRole[]> = {
+export const ACCESS = {
   dashboard: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN, ROLES.STORE_ADMIN],
   inventory: [ROLES.SUPER_ADMIN, ROLES.STORE_ADMIN, ROLES.PURCHASE_ADMIN],
-  suppliers: [ROLES.SUPER_ADMIN, ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN],
+  suppliers: [ROLES.SUPER_ADMIN, ROLES.STORE_ADMIN, ROLES.PURCHASE_ADMIN],
   purchases: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN],
   sales: [ROLES.SUPER_ADMIN, ROLES.STORE_ADMIN],
   company: [ROLES.SUPER_ADMIN],
   users: [ROLES.SUPER_ADMIN],
   purchaseRequest: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN],
   support: [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN, ROLES.STORE_ADMIN],
-};
+} satisfies Record<string, readonly UserRole[]>;
