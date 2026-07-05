@@ -1,7 +1,7 @@
 import axios from "axios";
 import type { Config } from "@netlify/functions";
 
-export const handler = async () => {
+export default async () => {
   try {
     if (!process.env.APP_URL) {
       throw new Error("APP_URL is not defined");
@@ -10,6 +10,9 @@ export const handler = async () => {
     if (!process.env.CRON_SECRET) {
       throw new Error("CRON_SECRET is not defined");
     }
+
+    console.log("Calling:", `${process.env.APP_URL}/api/email/low-stock`);
+
     const { data } = await axios.post(
       `${process.env.APP_URL}/api/email/low-stock`,
       {},
@@ -19,6 +22,7 @@ export const handler = async () => {
         },
       },
     );
+    console.log("Scheduler completed successfully");
 
     return {
       statusCode: 200,
@@ -36,6 +40,7 @@ export const handler = async () => {
   }
 };
 
+
 export const config: Config = {
-  schedule: "40 20 * * *",
+  schedule: "36 15 * * *",
 };

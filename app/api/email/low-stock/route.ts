@@ -11,8 +11,17 @@ export const POST = routeHandler(async (req: NextRequest) => {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     throw new AuthorizationError("Invalid cron secret");
   }
-  const targets = await getReceiverEmails();
+  // const targets = await getReceiverEmails();
 
+  const targets = [
+    {
+      companyId: "8e962863-f4da-447c-8b7f-4a73b9396c98",
+      companyName: "ABC Traders Pvt Ltd",
+      companyLogo:
+        "https://i.postimg.cc/x83HQ8R7/abstract-logo-design-for-any-corporate-brand-business-company-vector-(1).jpg",
+      email: "clienthelp.bgc@gmail.com",
+    },
+  ];
 
   const results = await Promise.allSettled(
     targets.map((target) => sendStockAlertForCompany(target)),
