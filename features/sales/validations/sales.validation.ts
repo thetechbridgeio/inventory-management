@@ -28,6 +28,21 @@ export const CreateSaleFormSchema = z
       .nullable()
       .optional(),
     image: z.instanceof(File).optional().or(z.null()),
+    workOrderNumber: z
+      .string()
+      .trim()
+      .max(100, "Work order number is too long")
+      .optional(),
+    challanNumber: z
+      .string()
+      .trim()
+      .max(100, "Challan number is too long")
+      .optional(),
+    invoiceNumber: z
+      .string()
+      .trim()
+      .max(100, "Invoice number is too long")
+      .optional(),
 
     soldTo: z
       .string()

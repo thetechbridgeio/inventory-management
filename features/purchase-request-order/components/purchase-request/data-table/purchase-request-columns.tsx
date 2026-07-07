@@ -36,12 +36,20 @@ export const columns: ColumnDef<PurchaseRequestProduct>[] = [
   {
     accessorKey: "productName",
     header: "Product",
+    size: 245,
+    minSize: 245,
+    maxSize: 245,
     cell: ({ row }) => (
-      <div className="space-y-1">
-        <p className="font-semibold leading-none">{row.original.productName}</p>
+      <div className="w-[245px] space-y-1">
+        <p
+          className="break-words whitespace-normal font-semibold leading-tight"
+          title={row.original.productName}
+        >
+          {row.original.productName}
+        </p>
 
         {row.original.description && (
-          <p className="text-muted-foreground line-clamp-2 text-xs">
+          <p className="text-muted-foreground text-xs leading-relaxed">
             {row.original.description}
           </p>
         )}
@@ -53,11 +61,6 @@ export const columns: ColumnDef<PurchaseRequestProduct>[] = [
     accessorKey: "category",
     header: "Category",
     cell: ({ row }) => <CategoryBadge category={row.original.category} />,
-  },
-
-  {
-    accessorKey: "unit",
-    header: "Unit",
   },
 
   {

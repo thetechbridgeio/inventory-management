@@ -1,6 +1,5 @@
 import z from "zod";
 import {
-  CreateSaleFormSchema,
   SaleItemSchema,
 } from "../validations/sales.validation";
 
@@ -11,6 +10,9 @@ export type CreateSaleFormType = {
   remarks?: string | null;
   image?: File | null;
   soldTo?: string | null;
+  workOrderNumber?: string;
+  challanNumber?: string;
+  invoiceNumber?: string;
   items: CreateSaleItemFormType[];
 };
 
@@ -21,6 +23,9 @@ export type CreateSaleType = {
   image?: string;
   soldTo?: string | null;
   remarks: string | null;
+  workOrderNumber: string | null;
+  challanNumber: string | null;
+  invoiceNumber: string | null;
   grandTotal: string;
   createdBy: string;
 };

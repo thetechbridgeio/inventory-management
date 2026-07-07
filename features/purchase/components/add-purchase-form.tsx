@@ -20,7 +20,6 @@ import { SupplierPicker } from "@/features/suppliers/components/supplier-picker"
 
 export function PurchaseForm() {
   const form = useFormContext<CreatePurchaseFormType>();
-  const { data: suppliersData } = useSuppliers();
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -70,6 +69,21 @@ export function PurchaseForm() {
             label="Purchase Date"
             helperText="Date when the purchase was made."
             required
+          />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <RHFInput
+            name="challanNumber"
+            type="text"
+            label="Challan Number"
+            helperText="Enter the challan number."
+          />
+
+          <RHFInput
+            name="invoiceNumber"
+            type="text"
+            label="Invoice Number"
+            helperText="Enter the invoice number."
           />
         </div>
 

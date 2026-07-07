@@ -55,6 +55,8 @@ export async function createPurchase(
         purchaseNumber,
         grandTotal: grandTotal.toFixed(2),
         purchaseDate: data.purchaseDate,
+        challanNumber: data.challanNumber?.trim() || undefined,
+        invoiceNumber: data.invoiceNumber?.trim() || undefined,
         remarks: data.remarks?.trim() || null,
         image: imageUrl,
         createdBy: userId,

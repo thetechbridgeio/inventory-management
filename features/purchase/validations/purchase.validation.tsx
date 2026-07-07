@@ -19,6 +19,8 @@ export const CreatePurchaseFormSchema = z
   .object({
     supplierId: z.uuid("Supplier is required"),
     purchaseDate: z.string().min(1, "Purchase date is required"),
+    challanNumber: z.string().trim().max(100, "Challan number is too long").optional(),
+    invoiceNumber: z.string().trim().max(100, "Invoice number is too long").optional(),
     remarks: z.string().trim().max(1000, "Remarks is too long").optional(),
     image: z.instanceof(File).optional().or(z.null()),
     items: z.array(PurchaseItemSchema).min(1, "At least one item is required"),

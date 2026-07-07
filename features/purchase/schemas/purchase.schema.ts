@@ -28,6 +28,8 @@ export const purchases = pgTable(
     }).notNull(),
     purchaseDate: date("purchase_date").notNull(),
     image: text("image"),
+    challanNumber: text("challan_number"),
+    invoiceNumber: text("invoice_number"),
     remarks: text("remarks"),
     createdBy: uuid("created_by")
       .references(() => users.id)

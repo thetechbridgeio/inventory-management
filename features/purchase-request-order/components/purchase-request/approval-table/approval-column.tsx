@@ -13,22 +13,28 @@ import { SupplierCellApproval } from "./supplier-cell-approval";
 
 export const approvalColumns: ColumnDef<ViewPurchaseRequestProduct>[] = [
   {
-    accessorKey: "productName",
-    header: "Product",
-    cell: ({ row }) => (
-      <div className="space-y-1">
-        <p className="font-semibold leading-none">
-          {row.original.productName}
-        </p>
+  accessorKey: "productName",
+  header: "Product",
+  size: 260,
+  minSize: 260,
+  maxSize: 260,
+  cell: ({ row }) => (
+    <div className="w-[260px] space-y-1">
+      <p
+        className="break-words whitespace-normal font-semibold leading-tight"
+        title={row.original.productName}
+      >
+        {row.original.productName}
+      </p>
 
-        {row.original.description && (
-          <p className="text-muted-foreground line-clamp-2 text-xs">
-            {row.original.description}
-          </p>
-        )}
-      </div>
-    ),
-  },
+      {row.original.description && (
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {row.original.description}
+        </p>
+      )}
+    </div>
+  ),
+},
   {
     accessorKey: "category",
     header: "Category",

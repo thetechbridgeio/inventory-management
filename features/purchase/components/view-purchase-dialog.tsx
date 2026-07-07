@@ -145,6 +145,26 @@ export function ViewPurchaseDialog({
                             </p>
                           </div>
                         </div>
+                        {data.challanNumber && (
+                          <div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Challan Number
+                            </p>
+                            <p className="text-sm font-medium">
+                              {data.challanNumber}
+                            </p>
+                          </div>
+                        )}
+                        {data.invoiceNumber && (
+                          <div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Invoice Number
+                            </p>
+                            <p className="text-sm font-medium">
+                              {data.invoiceNumber}
+                            </p>
+                          </div>
+                        )}
                         {data.remarks && (
                           <div>
                             <p className="text-[11px] text-muted-foreground">

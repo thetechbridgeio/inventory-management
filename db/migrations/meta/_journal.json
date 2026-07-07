@@ -127,6 +127,13 @@
       "when": 1782926400420,
       "tag": "0017_flowery_patch",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1783438147760,
+      "tag": "0018_exotic_miracleman",
+      "breakpoints": true
     }
   ]
 }

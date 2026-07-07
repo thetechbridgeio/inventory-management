@@ -25,6 +25,9 @@ export const sales = pgTable(
     saleDate: date("sale_date").notNull(),
     remarks: text("remarks"),
     image: text("image"),
+    workOrderNumber: text("work_order_number"),
+    challanNumber: text("challan_number"),
+    invoiceNumber: text("invoice_number"),
     grandTotal: numeric("grand_total", {
       precision: 12,
       scale: 2,

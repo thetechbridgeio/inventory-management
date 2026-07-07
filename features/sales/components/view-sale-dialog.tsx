@@ -85,9 +85,7 @@ export function ViewSaleDialog({ saleId, children }: ViewSaleDialogProps) {
               <div className="p-5 space-y-5">
                 <div
                   className={
-                    data.image
-                      ? "grid gap-5 lg:grid-cols-[1fr_320px] "
-                      : ""
+                    data.image ? "grid gap-5 lg:grid-cols-[1fr_320px] " : ""
                   }
                 >
                   <div className="space-y-5">
@@ -120,35 +118,56 @@ export function ViewSaleDialog({ saleId, children }: ViewSaleDialogProps) {
                         </div>
 
                         <Separator />
+                        <div className="grid grid-cols-2 gap-5">
+                          <div>
+                            <p className="text-[11px] text-muted-foreground">
+                              Sale Date
+                            </p>
 
-                        <div
-                          className={
-                            data.image
-                              ? "grid gap-5 lg:grid-cols-[1fr_320px]"
-                              : ""
-                          }
-                        >
-                          <div className="space-y-5">
+                            <p className="text-sm font-medium">
+                              {data.saleDate}
+                            </p>
+                          </div>
+                          {data.workOrderNumber && (
                             <div>
                               <p className="text-[11px] text-muted-foreground">
-                                Sale Date
+                                Work Order Number
                               </p>
-
                               <p className="text-sm font-medium">
-                                {data.saleDate}
+                                {data.workOrderNumber}
                               </p>
                             </div>
-                            {data.remarks && (
-                              <div>
-                                <p className="text-[11px] text-muted-foreground">
-                                  Remarks
-                                </p>
-                                <p className="text-sm font-medium">
-                                  {data.remarks}
-                                </p>
-                              </div>
-                            )}
-                          </div>
+                          )}
+                          {data.challanNumber && (
+                            <div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Challan Number
+                              </p>
+                              <p className="text-sm font-medium">
+                                {data.challanNumber}
+                              </p>
+                            </div>
+                          )}
+                          {data.invoiceNumber && (
+                            <div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Invoice Number
+                              </p>
+                              <p className="text-sm font-medium">
+                                {data.invoiceNumber}
+                              </p>
+                            </div>
+                          )}
+                          {data.remarks && (
+                            <div>
+                              <p className="text-[11px] text-muted-foreground">
+                                Remarks
+                              </p>
+                              <p className="text-sm font-medium">
+                                {data.remarks}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

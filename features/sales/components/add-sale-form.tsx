@@ -48,6 +48,23 @@ export function SaleForm() {
             helperText="Enter the customer, company, or person the items were sold to."
           />
         </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          <RHFInput
+            name="workOrderNumber"
+            label="Work Order Number"
+            helperText="Enter the work order number."
+          />
+          <RHFInput
+            name="challanNumber"
+            label="Challan Number"
+            helperText="Enter the challan number."
+          />
+          <RHFInput
+            name="invoiceNumber"
+            label="Invoice Number"
+            helperText="Enter the invoice number."
+          />
+        </div>
 
         <RHFTextarea
           name="remarks"
