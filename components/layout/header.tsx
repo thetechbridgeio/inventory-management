@@ -18,9 +18,7 @@ export function Header() {
     try {
       logout();
       router.push("/");
-      toast.success("Logged out successfully");
     } catch (error) {
-      toast.error("There was an error while logging out");
     }
   };
   return (

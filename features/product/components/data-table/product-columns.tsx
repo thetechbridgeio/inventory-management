@@ -9,7 +9,7 @@ import {
   DropdownMenu,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Plus, Trash2, View } from "lucide-react";
 import { DeleteProductDialog } from "../delete-product-dialog";
 import { ViewProductDialog } from "../view-product-dialog";
 import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
@@ -110,6 +110,12 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
                   View
                 </DropdownMenuItem>
               </ViewProductDialog>
+              <DropdownMenuItem asChild>
+                <Link href={`/inventory/${product.id}`}>
+                  <View className="mr-2 h-4 w-4" /> View Detail
+                </Link>
+              </DropdownMenuItem>
+
               {canUpdate && (
                 <DropdownMenuItem asChild>
                   <Link href={`/inventory/update/${product.id}`}>
@@ -119,14 +125,14 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
                 </DropdownMenuItem>
               )}
 
-              {canAddSupplier && (
+              {/* {canAddSupplier && (
                 <AddSupplierToProductDialog productId={product.id}>
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Supplier
                   </DropdownMenuItem>
                 </AddSupplierToProductDialog>
-              )}
+              )} */}
 
               {canDelete && (
                 <DeleteProductDialog

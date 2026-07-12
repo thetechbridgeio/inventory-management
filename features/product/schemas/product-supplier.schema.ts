@@ -1,4 +1,3 @@
-import {} from "drizzle-orm/gel-core";
 import { pgTable, uuid, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { companies, products, suppliers } from "@/db/schema";
 

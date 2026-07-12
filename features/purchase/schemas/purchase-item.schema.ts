@@ -24,10 +24,12 @@ export const purchaseItems = pgTable(
     purchasePrice: numeric("purchase_price", {
       precision: 12,
       scale: 2,
+      mode: "number",
     }).notNull(),
     lineTotal: numeric("line_total", {
       precision: 12,
       scale: 2,
+      mode: "number",
     }).notNull(),
   },
   (table) => [
