@@ -7,12 +7,16 @@ type RHFSwitchProps<T extends FieldValues> = {
   name: Path<T>;
   label: string;
   helperText?: string;
+  checkedValue?: unknown;
+  uncheckedValue?: unknown;
 };
 
 export function RHFSwitch<T extends FieldValues>({
   name,
   label,
   helperText,
+  checkedValue,
+  uncheckedValue,
 }: RHFSwitchProps<T>) {
   const {
     control,
@@ -27,7 +31,7 @@ export function RHFSwitch<T extends FieldValues>({
         control={control}
         name={name}
         render={({ field }) => (
-          <div className="flex items-center justify-between rounded-lg border p-4">
+          <div className="flex items-center justify-between rounded-lg p-4 gap-2">
             <div>
               <Label>{label}</Label>
 
@@ -37,8 +41,18 @@ export function RHFSwitch<T extends FieldValues>({
             </div>
 
             <Switch
-              checked={field.value ?? false}
-              onCheckedChange={field.onChange}
+              checked={
+                checkedValue !== undefined
+                  ? field.value === checkedValue
+                  : Boolean(field.value)
+              }
+              onCheckedChange={(checked) => {
+                if (checkedValue !== undefined) {
+                  field.onChange(checked ? checkedValue : uncheckedValue);
+                } else {
+                  field.onChange(checked);
+                }
+              }}
             />
           </div>
         )}

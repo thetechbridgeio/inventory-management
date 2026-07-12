@@ -2,6 +2,8 @@ import { relations } from "drizzle-orm";
 
 import {
   companies,
+  processOrderItems,
+  processOrders,
   products,
   productSuppliers,
   purchaseItems,
@@ -25,6 +27,7 @@ export const companiesRelations = relations(companies, ({ many }) => ({
   sales: many(sales),
   purchaseRequests: many(purchaseRequests),
   purchaseOrders: many(purchaseOrders),
+  processOrders: many(processOrders),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -62,10 +65,17 @@ export const productRelations = relations(products, ({ one, many }) => ({
     fields: [products.companyId],
     references: [companies.id],
   }),
-
   suppliers: many(productSuppliers),
-
+  purchaseItems: many(purchaseItems),
+  saleItems: many(saleItems),
+  purchaseOrderItems: many(purchaseOrderItems),
   purchaseRequestItems: many(purchaseRequestItems),
+  sentProcessOrderItems: many(processOrderItems, {
+    relationName: "sentProduct",
+  }),
+  receivedProcessOrderItems: many(processOrderItems, {
+    relationName: "receivedProduct",
+  }),
 }));
 
 export const productSuppliersRelations = relations(
@@ -232,5 +242,39 @@ export const purchaseRequestsRelations = relations(
     purchaseRequestItems: many(purchaseRequestItems),
 
     purchaseOrders: many(purchaseOrders),
+  }),
+);
+
+export const processOrdersRelations = relations(
+  processOrders,
+  ({ one, many }) => ({
+    company: one(companies, {
+      fields: [processOrders.companyId],
+      references: [companies.id],
+    }),
+
+    items: many(processOrderItems),
+  }),
+);
+
+export const processOrderItemsRelations = relations(
+  processOrderItems,
+  ({ one }) => ({
+    processOrder: one(processOrders, {
+      fields: [processOrderItems.processOrderId],
+      references: [processOrders.id],
+    }),
+
+    sentProduct: one(products, {
+      fields: [processOrderItems.sentProductId],
+      references: [products.id],
+      relationName: "sentProduct",
+    }),
+
+    receivedProduct: one(products, {
+      fields: [processOrderItems.receivedProductId],
+      references: [products.id],
+      relationName: "receivedProduct",
+    }),
   }),
 );

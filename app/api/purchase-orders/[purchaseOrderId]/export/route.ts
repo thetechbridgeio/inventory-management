@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
       user.companyId,
     );
 
-    console.log("PDF generated successfully for purchase order:", purchaseOrderNumber);
-
     return new Response(new Uint8Array(pdf), {
       headers: {
         "Content-Type": "application/pdf",

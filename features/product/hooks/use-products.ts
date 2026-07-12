@@ -45,9 +45,7 @@ export function useProducts({
             locations: locations?.length
               ? locations.join(",")
               : undefined,
-            units: units?.length
-              ? units.join(",")
-              : undefined,
+            units: units?.length ? units.join(",") : undefined,
             stockStatuses: stockStatuses?.length
               ? stockStatuses.join(",")
               : undefined,
@@ -59,5 +57,11 @@ export function useProducts({
         handleApiError(error);
       }
     },
+
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    retry: 1,
   });
 }

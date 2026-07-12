@@ -11,8 +11,6 @@ export async function getPurchaseRequestItems(
       getActivePurchaseRequestProductIds(companyId),
     ]);
 
-    console.log(activePurchaseRequestProductIds)
-
     const excludedProductIds = [
       ...new Set([...activePurchaseRequestProductIds]),
     ];

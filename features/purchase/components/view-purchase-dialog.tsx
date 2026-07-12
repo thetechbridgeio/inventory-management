@@ -44,8 +44,6 @@ export function ViewPurchaseDialog({
 }: ViewPurchaseDialogProps) {
   const { data, isLoading, isError, error } = usePurchase(purchaseId);
 
-  console.log(data);
-
   return (
     <Dialog>
       <DialogTrigger asChild>

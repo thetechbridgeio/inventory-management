@@ -134,6 +134,13 @@
       "when": 1783438147760,
       "tag": "0018_exotic_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1783708782832,
+      "tag": "0019_melted_raider",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,8 @@ type ProductPickerProps = {
   selectedProductIds?: string[];
   onChange: (product: Product) => void;
   onClear?: () => void;
+  label?: string;
+  error?: string;
 };
 
 export function ProductPicker({
@@ -22,6 +24,8 @@ export function ProductPicker({
   selectedProductIds = [],
   onChange,
   onClear,
+  label = "Product",
+  error,
 }: ProductPickerProps) {
   const [search, setSearch] = useState("");
 
@@ -104,7 +108,7 @@ export function ProductPicker({
 
   return (
     <div className="space-y-3">
-        <Label>Product</Label>
+      <Label>{label}</Label>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
@@ -164,6 +168,9 @@ export function ProductPicker({
             </div>
           )}
         </div>
+      )}
+      {error && (
+        <p className="text-[0.8rem] font-medium text-destructive">{error}</p>
       )}
     </div>
   );

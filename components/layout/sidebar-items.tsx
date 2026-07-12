@@ -8,6 +8,7 @@ import {
   PackagePlus,
   PackageSearch,
   ShoppingCart,
+  Workflow,
 } from "lucide-react";
 
 import { ACCESS } from "@/features/auth/constants/access";
@@ -37,6 +38,12 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     href: "/sales",
     icon: PackageSearch,
     access: "sales",
+  },
+    {
+    title: "Process Orders",
+    href: "/process-orders",
+    icon: Workflow,
+    access: "processOrders",
   },
   {
     title: "Dashboard",
