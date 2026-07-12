@@ -21,7 +21,6 @@ export const saleItems = pgTable(
     sellingPrice: numeric("selling_price", {
       precision: 12,
       scale: 2,
-      mode: "number",
     }).notNull(),
 
     lineTotal: numeric("line_total", {
