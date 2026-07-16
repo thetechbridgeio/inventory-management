@@ -29,10 +29,19 @@ export const PurchaseRequestFormSchema = z
     items: z
       .array(
         z.object({
-          productId: z.uuid(),
-          requestedQty: z.number().nonnegative().gt(0),
-          supplierId: z.uuid().optional().nullable(),
-          supplierName: z.string().optional().nullable()
+          productId: z.uuid("Please select a product."),
+
+          requestedQty: z
+            .number("Please enter the requested quantity.")
+            .nonnegative("Requested quantity cannot be negative.")
+            .gt(0, "Requested quantity must be greater than 0."),
+
+          supplierId: z
+            .uuid("Please select a valid supplier.")
+            .optional()
+            .nullable(),
+
+          supplierName: z.string().optional().nullable(),
         }),
       )
       .min(1, "At least one product is required"),

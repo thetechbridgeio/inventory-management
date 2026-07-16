@@ -5,6 +5,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -23,7 +24,7 @@ export const purchaseRequests = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     companyId: uuid("company_id").notNull(),
-    purchaseRequestNumber: text("purchase_request_number").notNull().unique(),
+    purchaseRequestNumber: text("purchase_request_number").notNull(),
     status: purchaseRequestStatusEnum("status")
       .$type<PurchaseRequestStatus>()
       .notNull()
@@ -50,5 +51,9 @@ export const purchaseRequests = pgTable(
   (table) => [
     index("purchase_requests_company_id_idx").on(table.companyId),
     index("purchase_requests_created_by_user_id_idx").on(table.createdByUserId),
+    unique("purchase_requests_company_pr_no_unique").on(
+      table.companyId,
+      table.purchaseRequestNumber,
+    ),
   ],
 );

@@ -141,6 +141,13 @@
       "when": 1783708782832,
       "tag": "0019_melted_raider",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1784188507538,
+      "tag": "0020_high_klaw",
+      "breakpoints": true
     }
   ]
 }

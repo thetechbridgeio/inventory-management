@@ -26,7 +26,7 @@ const PurchaseRequestCreationPage = () => {
     useCreatePurchaseRequest();
 
   const form = useForm<PurchaseRequestFormType>({
-    resolver: zodResolver(PurchaseRequestFormSchema),
+    // resolver: zodResolver(PurchaseRequestFormSchema),
     defaultValues,
   });
 
@@ -45,17 +45,29 @@ const PurchaseRequestCreationPage = () => {
   }, [form, lowStockProducts]);
 
   const onSubmit = ({ remarks, items }: PurchaseRequestFormType) => {
-    const selectedItems = items.filter(({ productId }) => rowSelection[productId]);
+    const selectedItems = items.filter(
+      ({ productId }) => rowSelection[productId],
+    );
 
     if (selectedItems.length === 0) {
       toast.error("Please select at least one product.");
       return;
     }
 
-    createPurchaseRequest({
+    // Validate only the selected items
+    const result = PurchaseRequestFormSchema.safeParse({
       remarks,
       items: selectedItems,
     });
+
+    if (!result.success) {
+      result.error.issues.forEach((issue) => {
+        toast.error(issue.message);
+      });
+      return;
+    }
+
+    createPurchaseRequest(result.data);
   };
 
   const onInvalid = () => {
@@ -78,7 +90,7 @@ const PurchaseRequestCreationPage = () => {
       </div>
 
       <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit, onInvalid)}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
           <PurchaseRequestTable
             data={lowStockProducts}
             isLoading={isLoading}
