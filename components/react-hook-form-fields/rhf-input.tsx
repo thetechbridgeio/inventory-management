@@ -29,16 +29,20 @@ export function RHFInput<T extends FieldValues>({
 
   const error = name.split(".").reduce<any>((obj, key) => obj?.[key], errors);
 
-  const registerOptions =
-    type === "number"
-      ? {
-          setValueAs: (value: string) =>
-            value === "" ? undefined : Number(value),
-        }
-      : {
-          setValueAs: (value: string) =>
-            value.trim() === "" ? undefined : value,
-        };
+ const registerOptions =
+  type === "number"
+    ? {
+        setValueAs: (value: unknown) =>
+          value === "" || value == null ? undefined : Number(value),
+      }
+    : {
+        setValueAs: (value: unknown) => {
+          if (value == null) return undefined;
+
+          const str = String(value).trim();
+          return str === "" ? undefined : str;
+        },
+      };
 
   return (
     <div className="space-y-2">
