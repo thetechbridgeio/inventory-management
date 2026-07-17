@@ -3,27 +3,29 @@ import type { Config } from "@netlify/functions";
 
 const { APP_URL, CRON_SECRET } = process.env;
 
-export default async (): Promise<Response> => {
+export default async () => {
   if (!APP_URL) {
-    console.error("[Low Stock Scheduler] APP_URL environment variable is missing.");
+    console.error(
+      "[Low Stock Scheduler] APP_URL environment variable is missing.",
+    );
 
     return new Response(null, { status: 500 });
   }
 
   if (!CRON_SECRET) {
-    console.error("[Low Stock Scheduler] CRON_SECRET environment variable is missing.");
+    console.error(
+      "[Low Stock Scheduler] CRON_SECRET environment variable is missing.",
+    );
 
     return new Response(null, { status: 500 });
   }
 
   const endpoint = `${APP_URL}/api/email/low-stock`;
 
-  console.log(
-    `[Low Stock Scheduler] Started at ${new Date().toISOString()}`,
-  );
+  console.log(`[Low Stock Scheduler] Started at ${new Date().toISOString()}`);
 
   try {
-    await axios.post(endpoint, undefined, {
+    const response = await axios.post(endpoint, undefined, {
       headers: {
         Authorization: `Bearer ${CRON_SECRET}`,
       },
@@ -32,9 +34,12 @@ export default async (): Promise<Response> => {
 
     console.log("[Low Stock Scheduler] Completed successfully.");
 
-    return new Response(null, {
-      status: 204,
-    });
+    console.log("Emails sent to:");
+    response.data.sentTo.forEach(
+      (recipient: { companyName: string; email: string }) => {
+        console.log(`✓ ${recipient.companyName} (${recipient.email})`);
+      },
+    );
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("[Low Stock Scheduler] Request failed.", {
