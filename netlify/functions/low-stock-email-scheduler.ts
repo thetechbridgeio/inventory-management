@@ -38,7 +38,7 @@ export default async () => {
 
     if (Array.isArray(sentTo)) {
       console.log("Emails sent to:");
-      sentTo.forEach((email: string) => {
+      sentTo.forEach(({ email }: { email: string }) => {
         console.log(`✓ ${email}`);
       });
     } else {
