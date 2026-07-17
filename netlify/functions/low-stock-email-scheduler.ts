@@ -34,6 +34,8 @@ export default async () => {
 
     console.log("[Low Stock Scheduler] Completed successfully.");
 
+    console.log(response)
+
     console.log("Emails sent to:");
     response.data.sentTo.forEach(
       (recipient: { companyName: string; email: string }) => {
