@@ -34,14 +34,16 @@ export default async () => {
 
     console.log("[Low Stock Scheduler] Completed successfully.");
 
-    console.log(response)
+    const sentTo = response.data?.data?.sentTo;
 
-    console.log("Emails sent to:");
-    response.data.sentTo.forEach(
-      (recipient: { companyName: string; email: string }) => {
-        console.log(`✓ ${recipient.companyName} (${recipient.email})`);
-      },
-    );
+    if (Array.isArray(sentTo)) {
+      console.log("Emails sent to:");
+      sentTo.forEach((email: string) => {
+        console.log(`✓ ${email}`);
+      });
+    } else {
+      console.log("No recipient list returned.");
+    }
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("[Low Stock Scheduler] Request failed.", {
