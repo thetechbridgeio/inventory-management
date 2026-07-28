@@ -23,8 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers/use-auth.provider";
-
-// import { ForgotPasswordDialog } from "./forgot-password-dialog"
+import { useLogin } from "../hooks/use-login";
 
 interface LoginFormData {
   email: string;
@@ -33,7 +32,7 @@ interface LoginFormData {
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+   const { login } = useLogin();
   const router = useRouter()
 
   const [loading, setLoading] = useState(false);

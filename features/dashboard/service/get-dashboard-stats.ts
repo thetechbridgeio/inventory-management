@@ -2,6 +2,7 @@ import { DashboardStats } from "../types";
 import { getAverageInventoryDays } from "./helpers/get-average-inventory-days";
 import { getDeadStockProducts } from "./helpers/get-dead-stock-products";
 import { getFastMovingProducts } from "./helpers/get-fast-moving-products";
+import { getIngoingProcessStats } from "./helpers/get-ingoing-process-stats";
 import { getLowStockProducts } from "./helpers/get-low-stock-products";
 import { getOutOfStockProducts } from "./helpers/get-out-of-stock-products";
 import { getSlowMovingProducts } from "./helpers/get-slow-moving-products";
@@ -12,7 +13,9 @@ import { getMonthlySalesGrowthPercentage } from "./helpers/monthly-sales-growth-
 import { getMonthlySalesAmount } from "./helpers/monthly-sales.amount";
 import { getInventoryOverview } from "./helpers/overview";
 
-export async function getDashboardStats(companyId: string): Promise<DashboardStats> {
+export async function getDashboardStats(
+  companyId: string,
+): Promise<DashboardStats> {
   const [
     inventoryOverview,
     lowStock,
@@ -26,6 +29,7 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
     monthlySalesGrowth,
     inventoryTurnover,
     averageInventoryDays,
+    ingoingProcessStats,
   ] = await Promise.all([
     getInventoryOverview(companyId),
     getLowStockProducts(companyId),
@@ -39,6 +43,7 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
     getMonthlySalesGrowthPercentage(companyId),
     getInventoryTurnoverRatio(companyId),
     getAverageInventoryDays(companyId),
+    getIngoingProcessStats(companyId),
   ]);
 
   return {
@@ -75,5 +80,7 @@ export async function getDashboardStats(companyId: string): Promise<DashboardSta
     inventoryTurnoverRatio: inventoryTurnover.inventoryTurnoverRatio,
 
     averageInventoryDays: averageInventoryDays.averageInventoryDays,
+    activeProcessItemCount: Number(ingoingProcessStats.activeItemCount),
+    activeProcessUnitCount: Number(ingoingProcessStats.activeUnitCount),
   };
 }

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Package, Layers, Truck, AlertTriangle, XCircle } from "lucide-react";
+import { Package, Layers, Truck, AlertTriangle, XCircle, Boxes } from "lucide-react";
 
 export type OverviewCardProps = {
   totalProducts: number;
@@ -9,6 +9,7 @@ export type OverviewCardProps = {
   totalSuppliers: number;
   lowStockCount: number;
   outOfStockCount: number;
+  activeProcessUnitCount: number;
 };
 
 type StatItem = {
@@ -28,6 +29,7 @@ export function OverviewCard({
   totalSuppliers,
   lowStockCount,
   outOfStockCount,
+  activeProcessUnitCount
 }: OverviewCardProps) {
   const stats: StatItem[] = [
     {
@@ -65,10 +67,17 @@ export function OverviewCard({
       cardClass:
         "border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900",
     },
+    {
+      label: "Units In Processing",
+      value: activeProcessUnitCount,
+      icon: <Boxes className="size-5 text-indigo-500" />,
+      cardClass:
+        "border-indigo-200 bg-indigo-50 dark:bg-indigo-950/30 dark:border-indigo-900",
+    },
   ];
 
   return (
-    <Card >
+    <Card>
       <CardHeader className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
         Overview
       </CardHeader>
@@ -76,7 +85,7 @@ export function OverviewCard({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+            gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
             gap: "1rem",
           }}
         >

@@ -20,6 +20,8 @@ export function ProductList() {
 
   const [debouncedSearch] = useDebounce(search, 500);
 
+  console.log(categories)
+
   const { data: filters } = useProductFilters();
 
   const { data, isLoading } = useProducts({

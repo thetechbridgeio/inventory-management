@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -10,8 +11,9 @@ import { AuthenticationError } from "@/lib/errors/authentication-error";
 import { AuthorizationError } from "@/lib/errors/authorization-error";
 import { DatabaseError } from "@/lib/errors/database-error";
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
+  console.log("called")
 
   const {
     data: { user: authUser },
@@ -33,7 +35,7 @@ export async function getCurrentUser() {
     if (!user) {
       throw new AuthenticationError("User not found");
     }
- 
+
     if (!user.isActive) {
       throw new AuthorizationError("User is inactive");
     }
@@ -53,4 +55,4 @@ export async function getCurrentUser() {
 
     throw new DatabaseError("Failed to retrieve current user", error);
   }
-}
+});

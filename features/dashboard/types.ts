@@ -37,6 +37,9 @@ export type DashboardStats = {
   fastMovingProducts: DashboardProduct[];
   slowMovingProducts: DashboardProduct[];
   deadStockProducts: DashboardProduct[];
+
+  activeProcessItemCount: number;
+  activeProcessUnitCount: number;
 };
 
 export type LowStockEmail = {

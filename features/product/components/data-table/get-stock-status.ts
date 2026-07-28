@@ -5,6 +5,10 @@ export function getStockStatus(
   minOrderQty: number,
   maxOrderQty: number,
 ) {
+  if (currentStock === 0) {
+    return STOCK_STATUSES.OUT_OF_STOCK;
+  }
+
   if (currentStock <= minOrderQty) {
     return STOCK_STATUSES.LOW;
   }
