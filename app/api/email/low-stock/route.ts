@@ -5,9 +5,7 @@ import { AuthorizationError } from "@/lib/errors";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import {
   buildStockAlertForCompany,
-  markStockAlertSentToday,
   sendStockAlertEmail,
-  wasStockAlertAlreadySentToday,
 } from "@/features/company/service/send-stock-alert.service";
 
 type RecipientResult = {
@@ -52,18 +50,6 @@ export const POST = routeHandler(async (req: NextRequest) => {
     companyLogo: string | null,
     emails: string[],
   ): Promise<RecipientResult[]> {
-    const alreadySentToday = await wasStockAlertAlreadySentToday(companyId);
-
-    if (alreadySentToday) {
-      return emails.map((email) => ({
-        companyId,
-        companyName,
-        email,
-        status: "skipped",
-        reason: "Alert already sent today",
-      }));
-    }
-
     const content = await buildStockAlertForCompany(
       companyId,
       companyName,
@@ -85,13 +71,11 @@ export const POST = routeHandler(async (req: NextRequest) => {
     );
 
     const companyResults: RecipientResult[] = [];
-    let anySucceeded = false;
 
     sendResults.forEach((result, index) => {
       const email = emails[index];
 
       if (result.status === "fulfilled") {
-        anySucceeded = true;
         companyResults.push({ companyId, companyName, email, status: "sent" });
       } else {
         companyResults.push({
@@ -103,10 +87,6 @@ export const POST = routeHandler(async (req: NextRequest) => {
         });
       }
     });
-
-    if (anySucceeded) {
-      await markStockAlertSentToday(companyId);
-    }
 
     return companyResults;
   }

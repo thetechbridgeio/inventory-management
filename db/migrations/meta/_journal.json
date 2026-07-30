@@ -162,6 +162,13 @@
       "when": 1785436468624,
       "tag": "0022_nostalgic_frank_castle",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1785438653196,
+      "tag": "0023_purple_loa",
+      "breakpoints": true
     }
   ]
 }

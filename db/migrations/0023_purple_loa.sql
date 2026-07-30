@@ -1,0 +1,1 @@
+ALTER TABLE "companies" DROP COLUMN "last_low_stock_alert_sent_at";

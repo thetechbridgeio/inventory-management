@@ -1,10 +1,6 @@
-import { eq } from "drizzle-orm";
-
-import { db } from "@/db";
 import { transporter } from "@/features/email/service/transporter";
 import { getStockAlertData } from "@/features/dashboard/service/helpers/get-stock-alert-data";
 import { generateStockAlertPDF } from "@/features/dashboard/service/helpers/generate-stock-alert-pdf";
-import { companies } from "../schemas/company.schema";
 import { stockAlertEmailTemplate } from "./build-stock-alert-email.service";
 
 export type StockAlertContent = {
@@ -12,38 +8,6 @@ export type StockAlertContent = {
   html: string;
   pdf: Buffer;
 };
-
-function toISTDateString(date: Date): string {
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Kolkata",
-  }).format(date);
-}
-
-export async function wasStockAlertAlreadySentToday(
-  companyId: string,
-): Promise<boolean> {
-  const [company] = await db
-    .select({ lastLowStockAlertSentAt: companies.lastLowStockAlertSentAt })
-    .from(companies)
-    .where(eq(companies.id, companyId))
-    .limit(1);
-
-  if (!company?.lastLowStockAlertSentAt) return false;
-
-  return (
-    toISTDateString(company.lastLowStockAlertSentAt) ===
-    toISTDateString(new Date())
-  );
-}
-
-export async function markStockAlertSentToday(
-  companyId: string,
-): Promise<void> {
-  await db
-    .update(companies)
-    .set({ lastLowStockAlertSentAt: new Date() })
-    .where(eq(companies.id, companyId));
-}
 
 export async function buildStockAlertForCompany(
   companyId: string,
