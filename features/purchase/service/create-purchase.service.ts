@@ -9,7 +9,6 @@ import { purchases } from "../schemas/purchase.schema";
 import {
   CreatePurchaseFormType,
   CreatePurchaseType,
-  PurchaseItemType,
 } from "../types/purchase.type";
 import { generatePurchaseNumber } from "./generate-purchase-number.service";
 import {

@@ -15,8 +15,6 @@ export default function Page({ params }: PageProps) {
 
   const { data: product, isLoading, isError, error } = useProductDashboard(id);
 
-  console.log(product);
-
   return (
     <>
       {isLoading ? (

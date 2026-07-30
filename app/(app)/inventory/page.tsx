@@ -4,7 +4,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ROLES } from "@/features/auth/constants/user-role";
 import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { BulkUploadDialog } from "@/features/product/components/bulk-upload/bulk-upload-dialog";
 import { ProductList } from "@/features/product/components/data-table/product-list";
+import { DownloadProductTemplateButton } from "@/features/product/components/download-template-button";
 import { PurchaseRequestBanner } from "@/features/purchase-request-order/components/purchase-request/purchase-request-banner";
 
 const InventoryPage = () => {
@@ -26,9 +28,15 @@ const InventoryPage = () => {
             </p>
           </div>
 
-          <Button asChild>
-            <Link href="/inventory/create">Add Product</Link>
-          </Button>
+          <div className="flex items-center gap-4">
+            <DownloadProductTemplateButton />
+
+            <BulkUploadDialog />
+
+            <Button asChild>
+              <Link href="/inventory/create">Add Product</Link>
+            </Button>
+          </div>
         </div>
 
         {canViewPurchaseRequestBanner && <PurchaseRequestBanner />}

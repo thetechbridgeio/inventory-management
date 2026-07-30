@@ -1,7 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button";
 import { PurchaseList } from "@/features/purchase/components/data-table/purchase-list";
-import { DownloadPurchaseTemplateButton } from "@/features/purchase/components/download-template-button";
 import Link from "next/link";
 
 const PurchasePage = () => {
@@ -19,7 +18,6 @@ const PurchasePage = () => {
 
         {/* ACTIONS */}
         <div className="flex items-center gap-3">
-          <DownloadPurchaseTemplateButton/>
           <Button asChild>
             <Link href={"/purchases/create"}>Add Incoming</Link>
           </Button>

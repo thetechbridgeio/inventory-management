@@ -1,10 +1,12 @@
+"use client";
+
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-export function useDownloadPurchaseTemplate() {
+export function useDownloadProductTemplate() {
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/purchases/template");
+      const response = await fetch("/api/product/import/template");
 
       if (!response.ok) {
         throw new Error("Failed to download template.");
@@ -17,7 +19,7 @@ export function useDownloadPurchaseTemplate() {
       const link = document.createElement("a");
 
       link.href = url;
-      link.download = "purchase-import-template.xlsx";
+      link.download = "product-import-template.xlsx";
 
       document.body.appendChild(link);
 

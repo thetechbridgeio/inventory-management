@@ -13,7 +13,6 @@ import { DatabaseError } from "@/lib/errors/database-error";
 
 export const getCurrentUser = cache(async () => {
   const supabase = await createClient();
-  console.log("called")
 
   const {
     data: { user: authUser },

@@ -1,10 +1,10 @@
 import { Download, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useDownloadPurchaseTemplate } from "@/features/purchase/hooks/use-download-purchase-template";
+import { useDownloadProductTemplate } from "@/features/product/hooks/use-download-product-template";
 
-export function DownloadPurchaseTemplateButton() {
-  const { mutate, isPending } = useDownloadPurchaseTemplate();
+export function DownloadProductTemplateButton() {
+  const { mutate, isPending } = useDownloadProductTemplate();
 
   return (
     <Button
