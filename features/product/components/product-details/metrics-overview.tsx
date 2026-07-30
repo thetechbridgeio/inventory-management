@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, ShoppingCart, TrendingUp, Package } from 'lucide-react';
+import { BarChart3, ShoppingCart, TrendingUp, Package, Wallet, Coins } from 'lucide-react';
 import { ProductMetrics } from '../../types/product-details.type';
 
 interface MetricsOverviewProps {
@@ -11,12 +11,14 @@ interface MetricsOverviewProps {
 export function MetricsOverview({ metrics }: MetricsOverviewProps) {
   const profitPerUnit = metrics.averageSellingPrice - metrics.averagePurchasePrice;
   const totalProfit = profitPerUnit * metrics.totalSoldQty;
+  const totalValue =
+    metrics.unitCost != null ? metrics.unitCost * metrics.currentStock : null;
 
   return (
     <div>
       <h2 className="text-xl font-bold text-foreground mb-6">Key Metrics</h2>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Inventory Section */}
         <MetricCard
           title="Current Stock"
@@ -25,6 +27,24 @@ export function MetricsOverview({ metrics }: MetricsOverviewProps) {
           icon={<Package className="h-5 w-5" />}
           color="bg-blue-50 text-blue-700"
           borderColor="border-blue-200"
+        />
+
+        <MetricCard
+          title="Unit Cost"
+          value={metrics.unitCost != null ? `₹${metrics.unitCost.toFixed(2)}` : 'N/A'}
+          subtitle="Cost price per unit"
+          icon={<Wallet className="h-5 w-5" />}
+          color="bg-teal-50 text-teal-700"
+          borderColor="border-teal-200"
+        />
+
+        <MetricCard
+          title="Total Value"
+          value={totalValue != null ? `₹${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A'}
+          subtitle="Unit cost × current stock"
+          icon={<Coins className="h-5 w-5" />}
+          color="bg-indigo-50 text-indigo-700"
+          borderColor="border-indigo-200"
         />
 
         {/* Purchase Section */}

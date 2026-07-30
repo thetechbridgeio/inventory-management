@@ -46,6 +46,8 @@ const UpdateProductPage = () => {
       maxOrderQty: product.maxOrderQty,
       reorderQty: product.reorderQty,
       currentStock: product.currentStock,
+      unitCost:
+        product.unitCost !== null ? Number(product.unitCost) : undefined,
       location: product.location ?? undefined,
       image: product.image,
       supplierIds: product.suppliers?.map((supplier) => supplier.id) ?? [],

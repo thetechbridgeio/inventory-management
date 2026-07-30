@@ -84,6 +84,7 @@ export async function updateProduct(
         maxOrderQty: data.maxOrderQty,
         reorderQty: data.reorderQty,
         currentStock: data.currentStock,
+        unitCost: data.unitCost !== undefined ? data.unitCost.toFixed(2) : null,
         location: data.location?.trim() || null,
       });
 

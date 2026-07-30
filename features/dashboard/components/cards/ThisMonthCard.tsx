@@ -6,6 +6,7 @@ import {
   TooltipContent,
   Tooltip,
 } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/format-currency";
 import { TrendingUp, TrendingDown, RefreshCw, Clock, Info } from "lucide-react";
 import {} from "radix-ui";
 
@@ -17,12 +18,6 @@ export type ThisMonthCardProps = {
   inventoryTurnoverRatio: number;
   averageInventoryDays: number;
 };
-
-function formatCurrency(value: number) {
-  if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`;
-  if (value >= 1000) return `₹${(value / 1000).toFixed(1)}K`;
-  return `₹${value}`;
-}
 
 function GrowthBadge({
   value,

@@ -162,6 +162,14 @@ export function CreateProductForm() {
                   helperText="Largest quantity expected in a single purchase."
                   required
                 />
+
+                <RHFInput<CreateProductFormType>
+                  name="unitCost"
+                  label="Unit Cost"
+                  type="number"
+                  step="0.01"
+                  helperText="Cost price per unit, used for inventory valuation."
+                />
               </div>
             </section>
 

@@ -41,6 +41,7 @@ export async function getProductById(
       reorderQty: product.reorderQty,
       openingStock: product.openingStock,
       currentStock: product.currentStock,
+      unitCost: product.unitCost,
       location: product.location,
       image: product.image,
       createdAt: product.createdAt,

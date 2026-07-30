@@ -10,6 +10,8 @@ export type DashboardStats = {
   totalProducts: number;
   totalStockUnits: number;
   totalSuppliers: number;
+  totalInventoryValue: number;
+  productsWithUnitCostCount: number;
 
   lowStockCount: number;
   outOfStockCount: number;

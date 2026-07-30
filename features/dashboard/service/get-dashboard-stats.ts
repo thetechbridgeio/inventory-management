@@ -50,6 +50,8 @@ export async function getDashboardStats(
     totalProducts: inventoryOverview.totalProducts,
     totalStockUnits: inventoryOverview.totalStockUnits,
     totalSuppliers: inventoryOverview.totalSuppliers,
+    totalInventoryValue: inventoryOverview.totalInventoryValue,
+    productsWithUnitCostCount: inventoryOverview.productsWithUnitCostCount,
 
     lowStockCount: lowStock.lowStockCount,
     lowStockProducts: lowStock.lowStockProducts,

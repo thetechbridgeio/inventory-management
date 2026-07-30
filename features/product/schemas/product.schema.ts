@@ -1,6 +1,7 @@
 import {
   integer,
   index,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -25,6 +26,7 @@ export const products = pgTable(
     reorderQty: integer("reorder_qty").default(0).notNull(),
     openingStock: integer("opening_stock").default(0).notNull(),
     currentStock: integer("current_stock").default(0).notNull(),
+    unitCost: numeric("unit_cost"),
     location: text("location"),
     image: text("image"),
     createdAt: timestamp("created_at").defaultNow().notNull(),

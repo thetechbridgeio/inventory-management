@@ -203,6 +203,35 @@ export function ViewProductDialog({
                           <p className="text-sm font-medium">{data.unit}</p>
                         </div>
 
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">
+                            Unit Cost
+                          </p>
+
+                          <p className="text-sm font-medium">
+                            {data.unitCost != null
+                              ? `₹${Number(data.unitCost).toFixed(2)}`
+                              : "-"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">
+                            Total Value
+                          </p>
+
+                          <p className="text-sm font-medium">
+                            {data.unitCost != null
+                              ? `₹${(
+                                  Number(data.unitCost) * data.currentStock
+                                ).toLocaleString(undefined, {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}`
+                              : "-"}
+                          </p>
+                        </div>
+
                         {data.location && (
                           <div>
                             <p className="text-[11px] text-muted-foreground">

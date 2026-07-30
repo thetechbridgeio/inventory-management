@@ -49,6 +49,13 @@ export const CreateProductFormSchema = z.object({
     .int("Opening stock must be a whole number")
     .min(0, "Opening stock cannot be negative"),
 
+  unitCost: z
+    .number({
+      message: "Unit cost must be a valid number",
+    })
+    .min(0, "Unit cost cannot be negative")
+    .optional(),
+
   location: z
     .string()
     .trim()
@@ -124,6 +131,7 @@ export const CreateProductDTOSchema = z.object({
     })
     .int("Opening stock must be a whole number")
     .min(0, "Opening stock cannot be negative"),
+  unitCost: z.string().nullable(),
   location: z
     .string()
     .trim()

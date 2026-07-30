@@ -52,6 +52,8 @@ const DashboardPage = () => {
         totalProducts={data.totalProducts}
         totalStockUnits={data.totalStockUnits}
         totalSuppliers={data.totalSuppliers}
+        totalInventoryValue={data.totalInventoryValue}
+        productsWithUnitCostCount={data.productsWithUnitCostCount}
         lowStockCount={data.lowStockCount}
         outOfStockCount={data.outOfStockCount}
         activeProcessUnitCount={data.activeProcessUnitCount}

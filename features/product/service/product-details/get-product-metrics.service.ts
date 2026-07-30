@@ -12,6 +12,7 @@ export async function getProductMetrics(productId: string, companyId: string) {
       columns: {
         openingStock: true,
         currentStock: true,
+        unitCost: true,
       },
     }),
     getProductPurchaseMetrics(productId, companyId),
@@ -25,6 +26,7 @@ export async function getProductMetrics(productId: string, companyId: string) {
   return {
     openingStock: product.openingStock,
     currentStock: product.currentStock,
+    unitCost: product.unitCost !== null ? Number(product.unitCost) : null,
 
     totalPurchasedQty: purchaseMetrics.totalPurchasedQty,
     totalPurchaseValue: purchaseMetrics.totalPurchaseValue,

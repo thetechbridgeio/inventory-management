@@ -9,6 +9,7 @@ type RHFInputProps<T extends FieldValues> = {
   placeholder?: string;
   helperText?: string;
   type?: React.HTMLInputTypeAttribute;
+  step?: string | number;
   disabled?: boolean;
   required?: boolean;
 };
@@ -20,6 +21,7 @@ export function RHFInput<T extends FieldValues>({
   helperText,
   disabled = false,
   type = "text",
+  step,
   required = false,
 }: RHFInputProps<T>) {
   const {
@@ -54,6 +56,7 @@ export function RHFInput<T extends FieldValues>({
       <Input
         id={name}
         type={type}
+        step={step}
         placeholder={placeholder}
         disabled={disabled}
         aria-required={required}

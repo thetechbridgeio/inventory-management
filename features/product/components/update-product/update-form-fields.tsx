@@ -130,6 +130,14 @@ export function UpdateProductFormFields({ productId, suppliers }: Props) {
                 type="number"
                 required
               />
+
+              <RHFInput<UpdateProductFormType>
+                name="unitCost"
+                label="Unit Cost"
+                type="number"
+                step="0.01"
+                helperText="Cost price per unit, used for inventory valuation."
+              />
             </div>
           </section>
 

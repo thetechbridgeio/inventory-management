@@ -28,6 +28,7 @@ export type ProductMetrics = {
   // Inventory
   openingStock: number;
   currentStock: number;
+  unitCost: number | null;
 
   // Purchases
   totalPurchasedQty: number;

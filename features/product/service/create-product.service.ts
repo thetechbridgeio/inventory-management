@@ -63,6 +63,7 @@ export async function createProduct(
         reorderQty: data.reorderQty,
         openingStock: data.openingStock,
         currentStock: data.openingStock,
+        unitCost: data.unitCost !== undefined ? data.unitCost.toFixed(2) : null,
         location: data.location?.trim() || null,
       });
 
