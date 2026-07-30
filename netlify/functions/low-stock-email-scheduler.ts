@@ -29,20 +29,38 @@ export default async () => {
       headers: {
         Authorization: `Bearer ${CRON_SECRET}`,
       },
-      timeout: 30_000,
+      timeout: 60_000,
     });
 
-    console.log("[Low Stock Scheduler] Completed successfully.");
+    const result = response.data?.data;
 
-    const sentTo = response.data?.data?.sentTo;
+    console.log(
+      `[Low Stock Scheduler] Completed: ${result?.sentCount ?? 0} sent, ` +
+        `${result?.skippedCount ?? 0} skipped, ${result?.failedCount ?? 0} failed ` +
+        `(${result?.totalCompanies ?? 0} companies).`,
+    );
 
-    if (Array.isArray(sentTo)) {
-      console.log("Emails sent to:");
-      sentTo.forEach(({ email }: { email: string }) => {
-        console.log(`✓ ${email}`);
-      });
-    } else {
-      console.log("No recipient list returned.");
+    const summary: Array<{
+      companyName: string;
+      email: string;
+      status: "sent" | "skipped" | "failed";
+      reason?: string;
+    }> = result?.summary ?? [];
+
+    summary.forEach(({ companyName, email, status, reason }) => {
+      if (status === "sent") {
+        console.log(`✓ sent — ${companyName} <${email}>`);
+      } else if (status === "skipped") {
+        console.log(`- skipped — ${companyName} <${email}> (${reason})`);
+      } else {
+        console.error(`✗ FAILED — ${companyName} <${email}>: ${reason}`);
+      }
+    });
+
+    if ((result?.failedCount ?? 0) > 0) {
+      console.error(
+        `[Low Stock Scheduler] ${result.failedCount} email(s) failed to send — see FAILED lines above.`,
+      );
     }
   } catch (error) {
     if (axios.isAxiosError(error)) {

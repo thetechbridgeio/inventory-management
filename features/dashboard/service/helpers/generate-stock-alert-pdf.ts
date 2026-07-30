@@ -70,7 +70,7 @@ async function loadLogo(url: string | null): Promise<LoadedLogo | null> {
   if (!url) return null;
 
   try {
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(5_000) });
     if (!res.ok) return null;
 
     const contentType = res.headers.get("content-type") ?? "";

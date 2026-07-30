@@ -12,6 +12,9 @@ export const companies = pgTable("companies", {
   contactPersonEmail: text("contact_person_email"),
   contactPersonPhone: text("contact_person_phone"),
   isActive: boolean("is_active").notNull().default(true),
+  lastLowStockAlertSentAt: timestamp("last_low_stock_alert_sent_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", {
     withTimezone: true,
   })

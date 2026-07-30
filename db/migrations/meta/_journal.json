@@ -155,6 +155,13 @@
       "when": 1785433341255,
       "tag": "0021_worthless_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1785436468624,
+      "tag": "0022_nostalgic_frank_castle",
+      "breakpoints": true
     }
   ]
 }
