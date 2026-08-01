@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers/use-auth.provider";
 import { useLogin } from "../hooks/use-login";
+import { ForgotPasswordDialog } from "./forgot-password-dialog";
 
 interface LoginFormData {
   email: string;
@@ -110,7 +111,7 @@ export function LoginForm() {
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
 
-              {/* <ForgotPasswordDialog /> */}
+              <ForgotPasswordDialog />
             </div>
 
             <div className="relative">
