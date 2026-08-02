@@ -169,6 +169,27 @@
       "when": 1785438653196,
       "tag": "0023_purple_loa",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1785696716822,
+      "tag": "0024_restore_last_low_stock_alert_sent_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1785703209941,
+      "tag": "0025_products_unique_name_category_unit",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1785703715239,
+      "tag": "0026_products_unique_name_category_only",
+      "breakpoints": true
     }
   ]
 }

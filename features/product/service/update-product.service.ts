@@ -13,6 +13,8 @@ import { deleteImage } from "@/lib/storage/delete-image.service";
 import { products } from "../schemas/product.schema";
 import { productSuppliers } from "../schemas/product-supplier.schema";
 
+import { assertNoDuplicateProduct } from "./check-duplicate-product.service";
+
 import {
   UpdateProductDTO,
   UpdateProductFormType,
@@ -21,6 +23,7 @@ import {
 import { NotFoundError } from "@/lib/errors/not-found-error";
 import { BusinessRuleError } from "@/lib/errors/business-rule-error";
 import { ExternalServiceError } from "@/lib/errors/external-service-error";
+import { ConflictError } from "@/lib/errors/conflict-error";
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
 import { UpdateProductDTOSchema } from "../validations/product.validation";
 
@@ -56,6 +59,14 @@ export async function updateProduct(
       if (!existingProduct) {
         throw new NotFoundError("Product not found");
       }
+
+      await assertNoDuplicateProduct(
+        tx,
+        companyId,
+        data.name,
+        data.category,
+        productId,
+      );
 
       let imageUrl = existingProduct.image;
 
@@ -137,7 +148,8 @@ export async function updateProduct(
     if (
       error instanceof NotFoundError ||
       error instanceof BusinessRuleError ||
-      error instanceof ExternalServiceError
+      error instanceof ExternalServiceError ||
+      error instanceof ConflictError
     ) {
       throw error;
     }

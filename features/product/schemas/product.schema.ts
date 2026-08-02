@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   integer,
   index,
@@ -5,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 
@@ -37,6 +39,13 @@ export const products = pgTable(
     companyNameIdx: index("products_company_name_idx").on(
       table.companyId,
       table.name,
+    ),
+    companyNameCategoryUnique: uniqueIndex(
+      "products_company_name_category_unique_idx",
+    ).on(
+      table.companyId,
+      sql`lower(trim(${table.name}))`,
+      sql`lower(trim(${table.category}))`,
     ),
   }),
 );

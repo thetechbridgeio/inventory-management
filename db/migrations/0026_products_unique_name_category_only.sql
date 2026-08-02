@@ -1,0 +1,2 @@
+DROP INDEX "products_company_name_category_unit_unique_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX "products_company_name_category_unique_idx" ON "products" USING btree ("company_id",lower(trim("name")),lower(trim("category")));

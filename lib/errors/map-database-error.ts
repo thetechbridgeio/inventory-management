@@ -37,6 +37,13 @@ export function mapDatabaseError(error: unknown): never {
 
     // Conflict errors
     case "23505":
+      if (dbError.constraint === "products_company_name_category_unique_idx") {
+        throw new ConflictError(
+          "A product with the same name and category already exists.",
+          error,
+        );
+      }
+
       throw new ConflictError(
         "A record with the same details already exists.",
         error,

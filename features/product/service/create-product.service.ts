@@ -10,6 +10,8 @@ import {
 import { products } from "../schemas/product.schema";
 import { productSuppliers } from "../schemas/product-supplier.schema";
 
+import { assertNoDuplicateProduct } from "./check-duplicate-product.service";
+
 import {
   CreateProductDTO,
   CreateProductFormType,
@@ -18,6 +20,7 @@ import {
 import { mapDatabaseError } from "@/lib/errors/map-database-error";
 import { ExternalServiceError } from "@/lib/errors/external-service-error";
 import { BusinessRuleError } from "@/lib/errors/business-rule-error";
+import { ConflictError } from "@/lib/errors/conflict-error";
 
 import { CreateProductDTOSchema } from "../validations/product.validation";
 
@@ -39,6 +42,8 @@ export async function createProduct(
     const imageFolder = `${companyId}/PRODUCTS`;
 
     return await db.transaction(async (tx) => {
+      await assertNoDuplicateProduct(tx, companyId, data.name, data.category);
+
       let imageUrl: string | null = null;
 
       if (data.image instanceof File) {
@@ -84,7 +89,11 @@ export async function createProduct(
   } catch (error) {
     await rollbackUploadedFiles(transactionContext);
 
-    if (error instanceof ExternalServiceError) {
+    if (
+      error instanceof ExternalServiceError ||
+      error instanceof BusinessRuleError ||
+      error instanceof ConflictError
+    ) {
       throw error;
     }
 
