@@ -1,6 +1,7 @@
 import { deleteSale } from "@/features/sales/service/delete-sale.service";
 import { getSaleById } from "@/features/sales/service/get-sale-by-id.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
+import { assertPermission } from "@/features/auth/constants/permissions";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import { NextRequest } from "next/server";
 
@@ -24,7 +25,9 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   const { saleId } = await context.params;
 
   return routeHandler(async () => {
-    const { companyId } = await getCurrentUser();
+    const { companyId, role } = await getCurrentUser();
+
+    assertPermission(role, "sale:delete");
 
     return deleteSale(saleId, companyId);
   })(request);

@@ -2,7 +2,7 @@
 "use client";
 
 import { useAuth } from "@/features/auth/providers/use-auth.provider";
-import { ROLES } from "@/features/auth/constants/user-role";
+import { can } from "@/features/auth/constants/permissions";
 import { PurchaseRequestHeader } from "./PR-header";
 import { ViewPurchaseRequestType } from "../../../types/purchase-request.type";
 import PurchaseRequestApprovalSection from "./purchase-request-approval-section";
@@ -20,7 +20,8 @@ export default function ViewPRMain({
 }) {
   const { user } = useAuth();
 
-  const canManagePurchaseRequest = user?.role === ROLES.SUPER_ADMIN;
+  const canManagePurchaseRequest =
+    !!user && can(user.role, "purchase-request:approve");
 
   const { products, ...purchaseRequest } = purchaseRequestTotal;
 

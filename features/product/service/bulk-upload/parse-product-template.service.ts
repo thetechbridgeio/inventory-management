@@ -1,45 +1,34 @@
-import {
-  getCellValue,
-  getOptionalCellValue,
-} from "@/lib/bulk-upload/get-cell-value.service";
+import { getOptionalCellValue } from "@/lib/bulk-upload/get-cell-value.service";
 import { parseExcelSheet } from "@/lib/bulk-upload/parse-template.service";
 
 import { ParsedProductRow } from "../../types/parsed-product-row";
+import { PRODUCT_IMPORT_FIELDS } from "./product-import-fields";
 
-const requiredHeaders = [
-  "Product Name",
-  "Category",
-  "Unit",
-  "Min Order Qty",
-  "Max Order Qty",
-  "Reorder Qty",
-  "Opening Stock",
-];
+const requiredHeaders = PRODUCT_IMPORT_FIELDS.filter(
+  (field) => field.required,
+).map((field) => field.header);
 
 export async function parseProductTemplate(file: File) {
   return parseExcelSheet<ParsedProductRow>({
     file,
     sheetName: "Product Import",
     requiredHeaders,
-    mapRow: (row, rowNumber, headers) => ({
-      rowNumber,
-      name: getCellValue(row.getCell(headers["Product Name"])),
-      description: getOptionalCellValue(
-        row.getCell(headers["Description"]),
-      ),
-      category: getCellValue(row.getCell(headers["Category"])),
-      unit: getCellValue(row.getCell(headers["Unit"])),
-      minOrderQty: Number(
-        getCellValue(row.getCell(headers["Min Order Qty"])),
-      ),
-      maxOrderQty: Number(
-        getCellValue(row.getCell(headers["Max Order Qty"])),
-      ),
-      reorderQty: Number(getCellValue(row.getCell(headers["Reorder Qty"]))),
-      openingStock: Number(
-        getCellValue(row.getCell(headers["Opening Stock"])),
-      ),
-      location: getOptionalCellValue(row.getCell(headers["Location"])),
-    }),
+    mapRow: (row, rowNumber, headers) => {
+      const parsed: Record<string, unknown> = { rowNumber };
+
+      for (const field of PRODUCT_IMPORT_FIELDS) {
+        const colNumber = headers[field.header];
+        const cell = colNumber ? row.getCell(colNumber) : undefined;
+        const raw = cell ? getOptionalCellValue(cell) : undefined;
+
+        if (field.type === "number") {
+          parsed[field.key] = raw === undefined ? undefined : Number(raw);
+        } else {
+          parsed[field.key] = field.required ? (raw ?? "") : raw;
+        }
+      }
+
+      return parsed as unknown as ParsedProductRow;
+    },
   });
 }

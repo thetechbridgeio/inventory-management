@@ -15,7 +15,8 @@ import {
 
 import { DeletePurchaseDialog } from "../delete-purchase-dialog";
 import { ViewPurchaseDialog } from "../view-purchase-dialog";
-import { ROLES } from "@/features/auth/constants/user-role";
+import { can } from "@/features/auth/constants/permissions";
+import { UserRole } from "@/features/auth/constants/user-role";
 
 export type PurchaseRow = {
   id: string;
@@ -28,7 +29,7 @@ export type PurchaseRow = {
 };
 
 export function getPurchaseColumns(
-  role?: string
+  role?: UserRole
 ): ColumnDef<PurchaseRow>[] {
   return [
     {
@@ -90,9 +91,7 @@ export function getPurchaseColumns(
       cell: ({ row }) => {
         const purchase = row.original;
 
-        const canDelete =
-          role === ROLES.SUPER_ADMIN ||
-          role === ROLES.PURCHASE_ADMIN;
+        const canDelete = can(role, "purchase:delete");
 
         return (
           <DropdownMenu>

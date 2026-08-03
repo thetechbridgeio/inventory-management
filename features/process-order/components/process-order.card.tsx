@@ -5,7 +5,6 @@ import {
   ProcessOrderStatus,
 } from "../constants/process-order-status";
 import { DeleteProcessOrderDialog } from "./delete-process-order-dialog";
-import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/format-date";
 
 const statusConfig: Record<
@@ -35,7 +34,6 @@ interface ProcessOrderCardProps {
 
 export function ProcessOrderCard({ order }: ProcessOrderCardProps) {
   const status = statusConfig[order.status];
-  const router = useRouter();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -140,7 +138,13 @@ export function ProcessOrderCard({ order }: ProcessOrderCardProps) {
           <div className="flex justify-end items-center gap-4">
             <Eye
               className="h-4 w-4"
-              onClick={() => router.push(`/process-orders/${order.id}`)}
+              onClick={() =>
+                window.open(
+                  `/process-orders/${order.id}`,
+                  "_blank",
+                  "noopener,noreferrer",
+                )
+              }
             />
             <DeleteProcessOrderDialog
               processOrderId={order.id}

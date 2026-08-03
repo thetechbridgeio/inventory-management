@@ -1,5 +1,4 @@
 import { Calendar, Eye, Layers, Package, User } from "lucide-react";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format-date";
@@ -51,8 +50,6 @@ function Stat({
 export default function PurchaseRequestCard({
   request,
 }: PurchaseRequestCardProps) {
-  const router = useRouter();
-
   const status = PURCHASE_REQUEST_STATUS_CONFIG[request.status];
 
   const isProcessed =
@@ -140,7 +137,13 @@ export default function PurchaseRequestCard({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => router.push(`/purchase-request/${request.id}`)}
+          onClick={() =>
+            window.open(
+              `/purchase-request/${request.id}`,
+              "_blank",
+              "noopener,noreferrer",
+            )
+          }
         >
           <Eye className="mr-1.5 h-3.5 w-3.5" />
           View

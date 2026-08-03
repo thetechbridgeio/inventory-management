@@ -8,5 +8,6 @@ export type ParsedProductRow = {
   maxOrderQty: number;
   reorderQty: number;
   openingStock: number;
+  unitCost?: number;
   location?: string;
 };

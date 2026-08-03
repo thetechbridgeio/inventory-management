@@ -2,7 +2,7 @@ import { getPurchaseRequestById } from "@/features/purchase-request-order/servic
 import { approvePurchaseRequest } from "@/features/purchase-request-order/service/purchase-request/handle-pr/approve-pr.service";
 import { rejectPurchaseRequest } from "@/features/purchase-request-order/service/purchase-request/handle-pr/reject-pr.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
-import { AuthorizationError } from "@/lib/errors";
+import { assertPermission } from "@/features/auth/constants/permissions";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import { NextRequest } from "next/server";
 
@@ -28,9 +28,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   return routeHandler(async () => {
     const { companyId, role, id } = await getCurrentUser();
 
-    if (role !== "SUPER_ADMIN") {
-      throw new AuthorizationError("User is not authorized");
-    }
+    assertPermission(role, "purchase-request:approve");
 
     const body = await request.json();
 
@@ -44,10 +42,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   return routeHandler(async () => {
     const { companyId, role } = await getCurrentUser();
 
-    if (role === "SUPER_ADMIN") {
-      return rejectPurchaseRequest(companyId, prId);
-    } else {
-      throw new AuthorizationError("User is not authorized");
-    }
+    assertPermission(role, "purchase-request:reject");
+
+    return rejectPurchaseRequest(companyId, prId);
   })(request);
 }

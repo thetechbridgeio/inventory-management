@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createBulkProducts } from "@/features/product/service/bulk-upload/create-bulk-products.service";
 import { parseProductTemplate } from "@/features/product/service/bulk-upload/parse-product-template.service";
 import { validateProductRows } from "@/features/product/service/bulk-upload/validate-product-rows.service";
+import { checkDuplicateProductRows } from "@/features/product/service/bulk-upload/check-duplicate-product-rows.service";
 import { getCurrentUser } from "@/features/users/service/get-current-user.service";
 import { ValidationError } from "@/lib/errors";
 import { handleApiError } from "@/lib/errors/handle-api-error";
@@ -27,6 +28,22 @@ export async function POST(request: NextRequest) {
           success: false,
           message: "Validation failed.",
           errors: validationErrors,
+        },
+        { status: 400 },
+      );
+    }
+
+    const duplicateErrors = await checkDuplicateProductRows(
+      productRows,
+      companyId,
+    );
+
+    if (duplicateErrors.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed.",
+          errors: duplicateErrors,
         },
         { status: 400 },
       );

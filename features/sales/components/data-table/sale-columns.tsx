@@ -15,7 +15,8 @@ import {
 
 import { DeleteSaleDialog } from "../delete-sale-dialog";
 import { ViewSaleDialog } from "../view-sale-dialog";
-import { ROLES } from "@/features/auth/constants/user-role";
+import { can } from "@/features/auth/constants/permissions";
+import { UserRole } from "@/features/auth/constants/user-role";
 
 export type SaleRow = {
   id: string;
@@ -26,7 +27,7 @@ export type SaleRow = {
   itemsCount: number;
 };
 
-export function getSaleColumns(role?: string): ColumnDef<SaleRow>[] {
+export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
   return [
     {
       accessorKey: "saleNumber",
@@ -80,8 +81,7 @@ export function getSaleColumns(role?: string): ColumnDef<SaleRow>[] {
       cell: ({ row }) => {
         const sale = row.original;
 
-        const canDelete =
-          role === ROLES.SUPER_ADMIN || role === ROLES.STORE_ADMIN;
+        const canDelete = can(role, "sale:delete");
 
         return (
           <DropdownMenu>

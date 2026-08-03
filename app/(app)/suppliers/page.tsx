@@ -22,7 +22,13 @@ const SupplierPage = () => {
           {/* ACTIONS */}
           <div className="flex items-center gap-3">
             <Button asChild>
-              <Link href={"/suppliers/create"}>Add Supplier</Link>
+              <Link
+                href={"/suppliers/create"}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Add Supplier
+              </Link>
             </Button>
           </div>
         </div>

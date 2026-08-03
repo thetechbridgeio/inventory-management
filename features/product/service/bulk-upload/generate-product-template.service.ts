@@ -2,6 +2,22 @@ import "server-only";
 
 import ExcelJS from "exceljs";
 
+import {
+  PRODUCT_IMPORT_FIELDS,
+  ProductImportNumberField,
+} from "./product-import-fields";
+import {
+  getInvalidNumberMessage,
+  PRODUCT_ROW_STATIC_MESSAGES,
+  ProductRowValidationError,
+} from "./product-validation-error";
+
+function isNumberField(
+  field: (typeof PRODUCT_IMPORT_FIELDS)[number],
+): field is ProductImportNumberField {
+  return field.type === "number";
+}
+
 export async function generateProductTemplate() {
   const workbook = new ExcelJS.Workbook();
 
@@ -17,17 +33,11 @@ export async function generateProductTemplate() {
 function createProductImportSheet(workbook: ExcelJS.Workbook) {
   const sheet = workbook.addWorksheet("Product Import");
 
-  sheet.columns = [
-    { header: "Product Name", key: "name", width: 35 },
-    { header: "Description", key: "description", width: 40 },
-    { header: "Category", key: "category", width: 20 },
-    { header: "Unit", key: "unit", width: 15 },
-    { header: "Min Order Qty", key: "minOrderQty", width: 16 },
-    { header: "Max Order Qty", key: "maxOrderQty", width: 16 },
-    { header: "Reorder Qty", key: "reorderQty", width: 16 },
-    { header: "Opening Stock", key: "openingStock", width: 16 },
-    { header: "Location", key: "location", width: 25 },
-  ];
+  sheet.columns = PRODUCT_IMPORT_FIELDS.map((field) => ({
+    header: field.header,
+    key: field.key,
+    width: field.width,
+  }));
 
   styleHeader(sheet);
 
@@ -44,26 +54,33 @@ function createInstructionsSheet(workbook: ExcelJS.Workbook) {
 
   sheet.columns = [{ width: 120 }];
 
+  const requiredColumnRows = PRODUCT_IMPORT_FIELDS.filter(
+    (field) => field.required,
+  ).map((field) => [`• ${field.header}`]);
+
+  const optionalColumnRows = PRODUCT_IMPORT_FIELDS.filter(
+    (field) => !field.required,
+  ).map((field) => [`• ${field.header}`]);
+
+  const numericRuleRows = PRODUCT_IMPORT_FIELDS.filter(isNumberField).map(
+    (field) => [`• ${getInvalidNumberMessage(field)}`],
+  );
+
   sheet.addRows([
     ["Product Import Instructions"],
     [],
     ["Required Columns"],
-    ["• Product Name"],
-    ["• Category"],
-    ["• Unit"],
-    ["• Min Order Qty"],
-    ["• Max Order Qty"],
-    ["• Reorder Qty"],
-    ["• Opening Stock"],
+    ...requiredColumnRows,
     [],
     ["Optional Columns"],
-    ["• Description"],
-    ["• Location"],
+    ...optionalColumnRows,
     [],
     ["Rules"],
     ["• Do not rename or remove column headers."],
-    ["• Min/Max/Reorder Qty and Opening Stock must be whole numbers greater than or equal to 0."],
-    ["• Max Order Qty cannot be less than Min Order Qty."],
+    ...numericRuleRows,
+    [
+      `• ${PRODUCT_ROW_STATIC_MESSAGES[ProductRowValidationError.MAX_LESS_THAN_MIN]}`,
+    ],
   ]);
 
   sheet.getCell("A1").font = {

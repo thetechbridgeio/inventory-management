@@ -62,7 +62,11 @@ export function PurchaseRequestBanner() {
           size="lg"
           className="rounded-lg bg-red-600 px-6 shadow-md transition-all hover:bg-red-700 hover:shadow-lg"
         >
-          <Link href="/purchase-request/create">
+          <Link
+            href="/purchase-request/create"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Create Purchase Request
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>

@@ -8,7 +8,6 @@ import PurchaseRequestCard from "@/features/purchase-request-order/components/pu
 import { useGetPR } from "@/features/purchase-request-order/hooks/use-get-PR";
 import { useGetPRProduct } from "@/features/purchase-request-order/hooks/use-get-low-stock-products";
 import { Badge } from "@/components/ui/badge";
-import { useRouter } from "next/navigation";
 
 function PurchaseRequestCardSkeleton() {
   return (
@@ -43,7 +42,6 @@ export default function PurchaseRequestPage() {
     refetch,
   } = useGetPR();
   const { data: lowStockProducts = [], isLoading } = useGetPRProduct();
-  const router = useRouter();
   const lowStockCount = lowStockProducts.length;
 
   return (
@@ -62,7 +60,11 @@ export default function PurchaseRequestPage() {
           <Button
             disabled={isLoading || lowStockCount === 0}
             onClick={() => {
-              router.push("/purchase-request/create");
+              window.open(
+                "/purchase-request/create",
+                "_blank",
+                "noopener,noreferrer",
+              );
             }}
           >
             Create Purchase Request

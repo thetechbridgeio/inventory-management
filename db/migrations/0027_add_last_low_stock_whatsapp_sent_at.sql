@@ -1,0 +1,1 @@
+ALTER TABLE "companies" ADD COLUMN "last_low_stock_whatsapp_sent_at" timestamp with time zone;

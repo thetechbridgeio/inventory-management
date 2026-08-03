@@ -14,7 +14,8 @@ const InventoryPage = () => {
 
   const canViewPurchaseRequestBanner =
     user?.role === ROLES.PURCHASE_ADMIN ||
-    user?.role === ROLES.SUPER_ADMIN;
+    user?.role === ROLES.SUPER_ADMIN ||
+    user?.role === ROLES.OPERATIONS_ADMIN;
 
   return (
       <div className="space-y-6">
@@ -34,7 +35,9 @@ const InventoryPage = () => {
             <BulkUploadDialog />
 
             <Button asChild>
-              <Link href="/inventory/create">Add Product</Link>
+              <Link href="/inventory/create" target="_blank" rel="noopener noreferrer">
+                Add Product
+              </Link>
             </Button>
           </div>
         </div>

@@ -1,19 +1,19 @@
 import { NextRequest } from "next/server";
 
-import { getReceiverEmails } from "@/features/company/service/get-company-user-email.service";
+import { getReceiverPhones } from "@/features/company/service/get-company-user-phone.service";
 import { AuthorizationError } from "@/lib/errors";
 import { routeHandler } from "@/lib/route-helpers/route-handlers";
 import {
-  buildStockAlertForCompany,
-  markStockAlertSentToday,
-  sendStockAlertEmail,
-  wasStockAlertAlreadySentToday,
-} from "@/features/company/service/send-stock-alert.service";
+  buildStockAlertForCompanyWhatsApp,
+  markStockAlertWhatsAppSentToday,
+  sendStockAlertWhatsApp,
+  wasStockAlertWhatsAppAlreadySentToday,
+} from "@/features/company/service/send-stock-alert-whatsapp.service";
 
 type RecipientResult = {
   companyId: string;
   companyName: string;
-  email: string;
+  phone: string;
   status: "sent" | "skipped" | "failed";
   reason?: string;
 };
@@ -25,23 +25,25 @@ export const POST = routeHandler(async (req: NextRequest) => {
     throw new AuthorizationError("Invalid cron secret");
   }
 
-  const targets = await getReceiverEmails();
+  const targets = await getReceiverPhones();
 
   const companyGroups = new Map<
     string,
-    { companyName: string; companyLogo: string | null; emails: string[] }
+    { companyName: string; companyLogo: string | null; phones: string[] }
   >();
 
   for (const target of targets) {
+    if (!target.phone) continue;
+
     const group = companyGroups.get(target.companyId);
 
     if (group) {
-      group.emails.push(target.email);
+      group.phones.push(target.phone);
     } else {
       companyGroups.set(target.companyId, {
         companyName: target.companyName,
         companyLogo: target.companyLogo,
-        emails: [target.email],
+        phones: [target.phone],
       });
     }
   }
@@ -50,54 +52,56 @@ export const POST = routeHandler(async (req: NextRequest) => {
     companyId: string,
     companyName: string,
     companyLogo: string | null,
-    emails: string[],
+    phones: string[],
   ): Promise<RecipientResult[]> {
-    const alreadySentToday = await wasStockAlertAlreadySentToday(companyId);
+    const alreadySentToday = await wasStockAlertWhatsAppAlreadySentToday(
+      companyId,
+    );
 
     if (alreadySentToday) {
-      return emails.map((email) => ({
+      return phones.map((phone) => ({
         companyId,
         companyName,
-        email,
+        phone,
         status: "skipped",
         reason: "Alert already sent today",
       }));
     }
 
-    const content = await buildStockAlertForCompany(
+    const content = await buildStockAlertForCompanyWhatsApp(
       companyId,
       companyName,
       companyLogo,
     );
 
     if (!content.shouldSend) {
-      return emails.map((email) => ({
+      return phones.map((phone) => ({
         companyId,
         companyName,
-        email,
+        phone,
         status: "skipped",
         reason: content.reason,
       }));
     }
 
     const sendResults = await Promise.allSettled(
-      emails.map((email) => sendStockAlertEmail(email, content)),
+      phones.map((phone) => sendStockAlertWhatsApp(phone, content)),
     );
 
     const companyResults: RecipientResult[] = [];
     let anySucceeded = false;
 
     sendResults.forEach((result, index) => {
-      const email = emails[index];
+      const phone = phones[index];
 
       if (result.status === "fulfilled") {
         anySucceeded = true;
-        companyResults.push({ companyId, companyName, email, status: "sent" });
+        companyResults.push({ companyId, companyName, phone, status: "sent" });
       } else {
         companyResults.push({
           companyId,
           companyName,
-          email,
+          phone,
           status: "failed",
           reason: String(result.reason),
         });
@@ -105,7 +109,7 @@ export const POST = routeHandler(async (req: NextRequest) => {
     });
 
     if (anySucceeded) {
-      await markStockAlertSentToday(companyId);
+      await markStockAlertWhatsAppSentToday(companyId);
     }
 
     return companyResults;
@@ -113,8 +117,8 @@ export const POST = routeHandler(async (req: NextRequest) => {
 
   const perCompanyResults = await Promise.all(
     Array.from(companyGroups.entries()).map(
-      ([companyId, { companyName, companyLogo, emails }]) =>
-        processCompany(companyId, companyName, companyLogo, emails),
+      ([companyId, { companyName, companyLogo, phones }]) =>
+        processCompany(companyId, companyName, companyLogo, phones),
     ),
   );
 
@@ -131,6 +135,6 @@ export const POST = routeHandler(async (req: NextRequest) => {
     failedCount: failed.length,
     skippedCount: skipped.length,
     summary: results,
-    sentTo: sent.map(({ companyName, email }) => ({ companyName, email })),
+    sentTo: sent.map(({ companyName, phone }) => ({ companyName, phone })),
   };
 });

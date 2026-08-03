@@ -60,7 +60,13 @@ export default function AdminPage() {
                 size="lg"
                 className="h-14 rounded-2xl px-8 text-base shadow-lg"
               >
-                <Link href="/admin/onboard-company">Onboard Client</Link>
+                <Link
+                  href="/admin/onboard-company"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Onboard Client
+                </Link>
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>

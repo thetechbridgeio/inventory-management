@@ -16,7 +16,11 @@ export async function sendPurchaseOrderEmail(
     throw new Error("Supplier email is not configured.");
   }
 
-  const recipients = await getUsersByRoles(companyId, [ROLES.SUPER_ADMIN, ROLES.PURCHASE_ADMIN]);
+  const recipients = await getUsersByRoles(companyId, [
+    ROLES.SUPER_ADMIN,
+    ROLES.PURCHASE_ADMIN,
+    ROLES.OPERATIONS_ADMIN,
+  ]);
 
   const cc = recipients
     .map((user) => user.email)

@@ -22,4 +22,10 @@ export const companies = pgTable("companies", {
   })
     .notNull()
     .defaultNow(),
+  lastLowStockAlertSentAt: timestamp("last_low_stock_alert_sent_at", {
+    withTimezone: true,
+  }),
+  lastLowStockWhatsappSentAt: timestamp("last_low_stock_whatsapp_sent_at", {
+    withTimezone: true,
+  }),
 });

@@ -15,7 +15,8 @@ import { ViewProductDialog } from "../view-product-dialog";
 import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
 import Link from "next/link";
 import { Product } from "../../types/product.types";
-import { ROLES } from "@/features/auth/constants/user-role";
+import { can } from "@/features/auth/constants/permissions";
+import { UserRole } from "@/features/auth/constants/user-role";
 import { CategoryBadge } from "@/lib/category-badge";
 import { getStockStatus } from "./get-stock-status";
 import {
@@ -23,7 +24,7 @@ import {
   STOCK_STATUS_LABELS,
 } from "../../constants/product-stock-status";
 
-export function getProductColumns(role?: string): ColumnDef<Product>[] {
+export function getProductColumns(role?: UserRole): ColumnDef<Product>[] {
   return [
     {
       accessorKey: "name",
@@ -88,12 +89,11 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
       enableSorting: false,
       cell: ({ row }) => {
         const product = row.original;
-        const canUpdate = role === ROLES.SUPER_ADMIN;
+        const canUpdate = can(role, "product:update");
 
-        const canDelete = role === ROLES.SUPER_ADMIN;
+        const canDelete = can(role, "product:delete");
 
-        const canAddSupplier =
-          role === ROLES.SUPER_ADMIN || role === ROLES.PURCHASE_ADMIN;
+        const canAddSupplier = can(role, "product:add-supplier");
 
         return (
           <DropdownMenu>
@@ -111,14 +111,22 @@ export function getProductColumns(role?: string): ColumnDef<Product>[] {
                 </DropdownMenuItem>
               </ViewProductDialog>
               <DropdownMenuItem asChild>
-                <Link href={`/inventory/${product.id}`}>
+                <Link
+                  href={`/inventory/${product.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <View className="mr-2 h-4 w-4" /> View Detail
                 </Link>
               </DropdownMenuItem>
 
               {canUpdate && (
                 <DropdownMenuItem asChild>
-                  <Link href={`/inventory/update/${product.id}`}>
+                  <Link
+                    href={`/inventory/update/${product.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Pencil className="mr-2 h-4 w-4" />
                     Update
                   </Link>

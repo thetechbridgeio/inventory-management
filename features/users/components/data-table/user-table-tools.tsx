@@ -129,6 +129,12 @@ export function UserTableTools({
                   >
                     Store Admin
                   </SelectItem>
+
+                  <SelectItem
+                    value={ROLES.OPERATIONS_ADMIN}
+                  >
+                    Operations Admin
+                  </SelectItem>
                 </SelectContent>
               </Select>
 
