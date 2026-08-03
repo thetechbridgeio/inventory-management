@@ -43,6 +43,7 @@ export async function getProductById(
       currentStock: product.currentStock,
       unitCost: product.unitCost,
       location: product.location,
+      stockMovement: product.stockMovement,
       image: product.image,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,

@@ -20,6 +20,7 @@ export async function getProducts(
     categories,
     locations,
     stockStatuses,
+    stockMovements,
     units,
   }: GetProductsParams,
 ): Promise<GetProductsResponse> {
@@ -30,6 +31,7 @@ export async function getProducts(
       locations,
       units,
       stockStatuses,
+      stockMovements,
     });
 
     const [data, [{ total }]] = await Promise.all([

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFMultiSelect } from "@/components/react-hook-form-fields/rhf-multiselect";
+import { RHFSelect } from "@/components/react-hook-form-fields/rhf-select";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
 import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
@@ -13,6 +14,7 @@ import { Supplier } from "@/features/suppliers/types/suppliers.type";
 
 import { UpdateProductFormType } from "../../types/product.types";
 import { useUpdateProduct } from "../../hooks/use-update-product";
+import { STOCK_MOVEMENT_OPTIONS } from "../../constants/product-stock-movement";
 
 type Props = {
   productId: string;
@@ -137,6 +139,17 @@ export function UpdateProductFormFields({ productId, suppliers }: Props) {
                 type="number"
                 step="0.01"
                 helperText="Cost price per unit, used for inventory valuation."
+              />
+
+              <RHFSelect<UpdateProductFormType>
+                name="stockMovement"
+                label="Stock Movement"
+                placeholder="Select stock movement"
+                helperText="How this product typically moves through inventory."
+                options={STOCK_MOVEMENT_OPTIONS.map((option) => ({
+                  value: option,
+                  label: option,
+                }))}
               />
             </div>
           </section>

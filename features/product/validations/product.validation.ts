@@ -1,5 +1,11 @@
 import z from "zod";
 
+import { STOCK_MOVEMENT_OPTIONS } from "../constants/product-stock-movement";
+
+const stockMovementEnum = z.enum(
+  STOCK_MOVEMENT_OPTIONS as [string, ...string[]],
+);
+
 export const CreateProductFormSchema = z.object({
   name: z
     .string("Product name is required")
@@ -61,6 +67,8 @@ export const CreateProductFormSchema = z.object({
     .trim()
     .max(255, "Location cannot exceed 255 characters")
     .optional(),
+
+  stockMovement: stockMovementEnum.optional(),
 
   image: z
     .instanceof(File, {
@@ -137,6 +145,7 @@ export const CreateProductDTOSchema = z.object({
     .trim()
     .max(255, "Location cannot exceed 255 characters")
     .nullable(),
+  stockMovement: stockMovementEnum.nullable(),
   image: z.string().nullable(),
 });
 

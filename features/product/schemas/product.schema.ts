@@ -31,6 +31,7 @@ export const products = pgTable(
     unitCost: numeric("unit_cost"),
     location: text("location"),
     image: text("image"),
+    stockMovement: text("stock_movement"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },

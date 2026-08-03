@@ -9,6 +9,7 @@ import { ProductPagination } from "./product-pagination";
 import { useProductFilters } from "../../hooks/use-product-filters";
 import { useProducts } from "../../hooks/use-products";
 import { STOCK_STATUSES, StockStatus } from "../../constants/product-stock-status";
+import { StockMovement } from "../../constants/product-stock-movement";
 
 export function ProductList() {
   const [page, setPage] = useState(1);
@@ -17,6 +18,7 @@ export function ProductList() {
   const [locations, setLocations] = useState<string[]>([]);
   const [units, setUnits] = useState<string[]>([]);
   const [selectedStockStatuses, setSelectedStockStatuses] = useState<StockStatus[]>([]);
+  const [selectedStockMovements, setSelectedStockMovements] = useState<StockMovement[]>([]);
 
   const [debouncedSearch] = useDebounce(search, 500);
 
@@ -31,11 +33,19 @@ export function ProductList() {
     locations,
     units,
     stockStatuses: selectedStockStatuses,
+    stockMovements: selectedStockMovements,
   });
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, categories, locations, units, selectedStockStatuses]);
+  }, [
+    debouncedSearch,
+    categories,
+    locations,
+    units,
+    selectedStockStatuses,
+    selectedStockMovements,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -53,6 +63,8 @@ export function ProductList() {
         onUnitChange={setUnits}
         selectedStockStatuses={selectedStockStatuses}
         onStockStatusChange={setSelectedStockStatuses}
+        selectedStockMovements={selectedStockMovements}
+        onStockMovementChange={setSelectedStockMovements}
       />
 
       <ProductTable data={data?.data ?? []} isLoading={isLoading} />

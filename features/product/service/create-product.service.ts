@@ -70,6 +70,7 @@ export async function createProduct(
         currentStock: data.openingStock,
         unitCost: data.unitCost !== undefined ? data.unitCost.toFixed(2) : null,
         location: data.location?.trim() || null,
+        stockMovement: data.stockMovement ?? null,
       });
 
       const [product] = await tx.insert(products).values(dto).returning();

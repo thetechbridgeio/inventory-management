@@ -17,6 +17,7 @@ export function useProducts({
   locations,
   units,
   stockStatuses,
+  stockMovements,
 }: GetProductsParams = {}) {
   return useQuery({
     queryKey: [
@@ -28,6 +29,7 @@ export function useProducts({
         locations,
         units,
         stockStatuses,
+        stockMovements,
       },
     ],
 
@@ -48,6 +50,9 @@ export function useProducts({
             units: units?.length ? units.join(",") : undefined,
             stockStatuses: stockStatuses?.length
               ? stockStatuses.join(",")
+              : undefined,
+            stockMovements: stockMovements?.length
+              ? stockMovements.join(",")
               : undefined,
           },
         });

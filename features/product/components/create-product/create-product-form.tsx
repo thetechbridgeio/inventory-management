@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFMultiSelect } from "@/components/react-hook-form-fields/rhf-multiselect";
+import { RHFSelect } from "@/components/react-hook-form-fields/rhf-select";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
 
 import { useSuppliers } from "@/features/suppliers/hooks/use-get-suppliers";
 import { Supplier } from "@/features/suppliers/types/suppliers.type";
 
 import { CREATE_PRODUCT_DEFAULT_VALUES } from "../../constants/form-default";
+import { STOCK_MOVEMENT_OPTIONS } from "../../constants/product-stock-movement";
 
 import { useCreateProduct } from "../../hooks/use-create-product";
 
@@ -169,6 +171,17 @@ export function CreateProductForm() {
                   type="number"
                   step="0.01"
                   helperText="Cost price per unit, used for inventory valuation."
+                />
+
+                <RHFSelect<CreateProductFormType>
+                  name="stockMovement"
+                  label="Stock Movement"
+                  placeholder="Select stock movement"
+                  helperText="How this product typically moves through inventory."
+                  options={STOCK_MOVEMENT_OPTIONS.map((option) => ({
+                    value: option,
+                    label: option,
+                  }))}
                 />
               </div>
             </section>

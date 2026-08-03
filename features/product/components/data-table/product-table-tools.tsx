@@ -16,6 +16,10 @@ import {
   STOCK_STATUSES,
   StockStatus,
 } from "../../constants/product-stock-status";
+import {
+  STOCK_MOVEMENT_OPTIONS,
+  StockMovement,
+} from "../../constants/product-stock-movement";
 import { useExportProductsPdf } from "../../hooks/use-export-product";
 
 type ProductTableToolsProps = {
@@ -35,6 +39,8 @@ type ProductTableToolsProps = {
   onUnitChange: (values: string[]) => void;
   selectedStockStatuses: string[];
   onStockStatusChange: (values: StockStatus[]) => void;
+  selectedStockMovements: string[];
+  onStockMovementChange: (values: StockMovement[]) => void;
 };
 
 export function ProductTableTools({
@@ -51,13 +57,16 @@ export function ProductTableTools({
   onUnitChange,
   selectedStockStatuses,
   onStockStatusChange,
+  selectedStockMovements,
+  onStockMovementChange,
 }: ProductTableToolsProps) {
   const { mutate: exportPdf, isPending } = useExportProductsPdf();
   const hasFilters =
     selectedCategories.length > 0 ||
     selectedLocations.length > 0 ||
     selectedUnits.length > 0 ||
-    selectedStockStatuses.length > 0;
+    selectedStockStatuses.length > 0 ||
+    selectedStockMovements.length > 0;
 
   return (
     <div className="flex items-center justify-between gap-4 bg-white p-4 shadow-sm rounded-xl">
@@ -80,6 +89,7 @@ export function ProductTableTools({
               locations: selectedLocations,
               units: selectedUnits,
               stockStatuses: selectedStockStatuses as StockStatus[],
+              stockMovements: selectedStockMovements as StockMovement[],
             })
           }
           disabled={isPending}
@@ -107,6 +117,13 @@ export function ProductTableTools({
               options={STOCK_STATUS_OPTIONS}
               selected={selectedStockStatuses}
               onChange={onStockStatusChange}
+            />
+            <div className="my-4 border-t" />
+            <FilterSection
+              title="Stock Movement"
+              options={STOCK_MOVEMENT_OPTIONS}
+              selected={selectedStockMovements}
+              onChange={onStockMovementChange}
             />
             <div className="my-4 border-t" />
             <FilterSection
@@ -143,6 +160,7 @@ export function ProductTableTools({
             onLocationChange([]);
             onUnitChange([]);
             onStockStatusChange([]);
+            onStockMovementChange([]);
           }}
         >
           <X />

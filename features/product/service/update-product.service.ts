@@ -97,6 +97,7 @@ export async function updateProduct(
         currentStock: data.currentStock,
         unitCost: data.unitCost !== undefined ? data.unitCost.toFixed(2) : null,
         location: data.location?.trim() || null,
+        stockMovement: data.stockMovement ?? null,
       });
 
       const [product] = await tx

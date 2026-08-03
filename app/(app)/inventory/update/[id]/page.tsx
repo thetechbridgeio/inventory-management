@@ -49,6 +49,7 @@ const UpdateProductPage = () => {
       unitCost:
         product.unitCost !== null ? Number(product.unitCost) : undefined,
       location: product.location ?? undefined,
+      stockMovement: product.stockMovement ?? undefined,
       image: product.image,
       supplierIds: product.suppliers?.map((supplier) => supplier.id) ?? [],
     });

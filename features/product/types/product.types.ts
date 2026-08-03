@@ -9,6 +9,7 @@ import {
 import { products } from "../schemas/product.schema";
 import { PaginatedResponse } from "@/lib/common-types";
 import { StockStatus } from "../constants/product-stock-status";
+import { StockMovement } from "../constants/product-stock-movement";
 
 export type CreateProductFormType = z.infer<typeof CreateProductFormSchema>;
 
@@ -44,6 +45,7 @@ export type GetProductsParams = {
   search?: string;
   categories?: string[];
   stockStatuses?: StockStatus[]
+  stockMovements?: StockMovement[];
   locations?: string[];
   units?: string[];
 };

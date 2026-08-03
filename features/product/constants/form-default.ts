@@ -9,6 +9,7 @@ export const CREATE_PRODUCT_DEFAULT_VALUES = {
   openingStock: undefined,
   unitCost: undefined,
   location: undefined,
+  stockMovement: undefined,
   image: undefined,
   supplierIds: [],
 };
@@ -27,6 +28,7 @@ export const UPDATE_PRODUCT_DEFAULT_VALUES: UpdateProductFormType = {
   currentStock: 0,
   unitCost: undefined,
   location: "",
+  stockMovement: undefined,
   image: undefined,
   supplierIds: [],
 };

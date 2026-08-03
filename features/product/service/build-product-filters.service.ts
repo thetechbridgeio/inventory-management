@@ -13,6 +13,7 @@ export function buildProductWhereClause(
     locations,
     units,
     stockStatuses,
+    stockMovements,
   }: GetProductsParams,
 ): SQL {
   const filters: SQL[] = [eq(products.companyId, companyId)];
@@ -31,6 +32,10 @@ export function buildProductWhereClause(
 
   if (units?.length) {
     filters.push(inArray(products.unit, units));
+  }
+
+  if (stockMovements?.length) {
+    filters.push(inArray(products.stockMovement, stockMovements));
   }
 
   const stockFilter = buildStockStatusFilter(stockStatuses);

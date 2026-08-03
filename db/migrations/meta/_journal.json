@@ -197,6 +197,13 @@
       "when": 1785704281057,
       "tag": "0027_add_last_low_stock_whatsapp_sent_at",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1785747878289,
+      "tag": "0028_ordinary_terrax",
+      "breakpoints": true
     }
   ]
 }
