@@ -20,6 +20,8 @@ export const PERMISSIONS = {
   ],
   "purchase-request:approve": [ROLES.SUPER_ADMIN],
   "purchase-request:reject": [ROLES.SUPER_ADMIN],
+  "user:update-role": [ROLES.SUPER_ADMIN],
+  "user:delete": [ROLES.SUPER_ADMIN],
 } satisfies Record<string, readonly UserRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;
