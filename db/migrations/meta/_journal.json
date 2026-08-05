@@ -204,6 +204,13 @@
       "when": 1785747878289,
       "tag": "0028_ordinary_terrax",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1785755509474,
+      "tag": "0029_narrow_giant_man",
+      "breakpoints": true
     }
   ]
 }

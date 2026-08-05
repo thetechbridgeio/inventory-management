@@ -27,6 +27,8 @@ export const saleItems = pgTable(
       precision: 12,
       scale: 2,
     }).notNull(),
+
+    returnedQty: integer("returned_qty").default(0).notNull(),
   },
   (table) => [
     index("sale_items_sale_idx").on(table.saleId),

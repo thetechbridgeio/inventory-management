@@ -13,6 +13,8 @@ import {
   purchaseRequests,
   purchases,
   saleItems,
+  saleReturnItems,
+  saleReturns,
   sales,
   suppliers,
   users,
@@ -45,6 +47,14 @@ export const usersRelations = relations(users, ({ one, many }) => ({
 
   approvedPurchaseRequests: many(purchaseRequests, {
     relationName: "purchaseRequestApprovedBy",
+  }),
+
+  createdSaleReturns: many(saleReturns, {
+    relationName: "saleReturnCreatedBy",
+  }),
+
+  approvedSaleReturns: many(saleReturns, {
+    relationName: "saleReturnApprovedBy",
   }),
 }));
 
@@ -138,9 +148,10 @@ export const salesRelations = relations(sales, ({ one, many }) => ({
   }),
 
   items: many(saleItems),
+  returns: many(saleReturns),
 }));
 
-export const saleItemsRelations = relations(saleItems, ({ one }) => ({
+export const saleItemsRelations = relations(saleItems, ({ one, many }) => ({
   sale: one(sales, {
     fields: [saleItems.saleId],
     references: [sales.id],
@@ -150,7 +161,58 @@ export const saleItemsRelations = relations(saleItems, ({ one }) => ({
     fields: [saleItems.productId],
     references: [products.id],
   }),
+
+  returnItems: many(saleReturnItems),
 }));
+
+export const saleReturnsRelations = relations(
+  saleReturns,
+  ({ one, many }) => ({
+    company: one(companies, {
+      fields: [saleReturns.companyId],
+      references: [companies.id],
+    }),
+
+    sale: one(sales, {
+      fields: [saleReturns.saleId],
+      references: [sales.id],
+    }),
+
+    createdByUser: one(users, {
+      fields: [saleReturns.createdByUserId],
+      references: [users.id],
+      relationName: "saleReturnCreatedBy",
+    }),
+
+    approvedByUser: one(users, {
+      fields: [saleReturns.approvedByUserId],
+      references: [users.id],
+      relationName: "saleReturnApprovedBy",
+    }),
+
+    items: many(saleReturnItems),
+  }),
+);
+
+export const saleReturnItemsRelations = relations(
+  saleReturnItems,
+  ({ one }) => ({
+    saleReturn: one(saleReturns, {
+      fields: [saleReturnItems.saleReturnId],
+      references: [saleReturns.id],
+    }),
+
+    saleItem: one(saleItems, {
+      fields: [saleReturnItems.saleItemId],
+      references: [saleItems.id],
+    }),
+
+    product: one(products, {
+      fields: [saleReturnItems.productId],
+      references: [products.id],
+    }),
+  }),
+);
 
 export const purchaseOrderItemsRelations = relations(
   purchaseOrderItems,

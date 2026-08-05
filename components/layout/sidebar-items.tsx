@@ -8,6 +8,7 @@ import {
   PackagePlus,
   PackageSearch,
   ShoppingCart,
+  Undo2,
   Workflow,
 } from "lucide-react";
 
@@ -38,6 +39,12 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     href: "/sales",
     icon: PackageSearch,
     access: "sales",
+  },
+  {
+    title: "Returns",
+    href: "/returns",
+    icon: Undo2,
+    access: "returns",
   },
     {
     title: "Process Orders",

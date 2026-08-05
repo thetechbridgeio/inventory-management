@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Eye, MoreHorizontal, Trash2 } from "lucide-react";
+import { Eye, MoreHorizontal, Trash2, Undo2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,13 @@ import {
 
 import { DeleteSaleDialog } from "../delete-sale-dialog";
 import { ViewSaleDialog } from "../view-sale-dialog";
+import { CreateReturnDialog } from "@/features/returns/components/create-return-dialog";
 import { can } from "@/features/auth/constants/permissions";
 import { UserRole } from "@/features/auth/constants/user-role";
+import {
+  SALE_RETURN_FLAG_CONFIG,
+  SaleReturnFlag,
+} from "../../constants/sale-return-flag";
 
 export type SaleRow = {
   id: string;
@@ -25,6 +30,7 @@ export type SaleRow = {
   grandTotal: number;
   createdAt: string;
   itemsCount: number;
+  returnFlag: SaleReturnFlag | null;
 };
 
 export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
@@ -32,9 +38,24 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
     {
       accessorKey: "saleNumber",
       header: "Sale #",
-      cell: ({ row }) => (
-        <span className="font-mono font-medium">{row.original.saleNumber}</span>
-      ),
+      cell: ({ row }) => {
+        const returnFlag = row.original.returnFlag;
+        const flagConfig = returnFlag ? SALE_RETURN_FLAG_CONFIG[returnFlag] : null;
+
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-mono font-medium">
+              {row.original.saleNumber}
+            </span>
+
+            {flagConfig && (
+              <Badge variant="outline" className={flagConfig.className}>
+                {flagConfig.label}
+              </Badge>
+            )}
+          </div>
+        );
+      },
     },
 
     {
@@ -82,6 +103,7 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
         const sale = row.original;
 
         const canDelete = can(role, "sale:delete");
+        const canReturn = can(role, "return:create");
 
         return (
           <DropdownMenu>
@@ -98,6 +120,15 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
                   View
                 </DropdownMenuItem>
               </ViewSaleDialog>
+
+              {canReturn && (
+                <CreateReturnDialog saleId={sale.id} saleNumber={sale.saleNumber}>
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Undo2 className="mr-2 h-4 w-4" />
+                    Return
+                  </DropdownMenuItem>
+                </CreateReturnDialog>
+              )}
 
               {canDelete && (
                 <DeleteSaleDialog saleId={sale.id} saleNumber={sale.saleNumber}>

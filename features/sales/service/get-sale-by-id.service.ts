@@ -1,8 +1,12 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
+import { saleReturnItems } from "@/features/returns/schemas/sale-return-item.schema";
+import { saleReturns } from "@/features/returns/schemas/sale-return.schema";
+import { SALE_RETURN_STATUS } from "@/features/returns/constants/sale-return-status";
+
 import { sales } from "../schemas/sales.schema";
 
 export async function getSaleById(saleId: string, companyId: string) {
@@ -29,6 +33,7 @@ export async function getSaleById(saleId: string, companyId: string) {
           quantity: true,
           sellingPrice: true,
           lineTotal: true,
+          returnedQty: true,
         },
 
         with: {
@@ -49,6 +54,25 @@ export async function getSaleById(saleId: string, companyId: string) {
     throw new Error("Sale not found");
   }
 
+  const pendingQtyRows = await db
+    .select({
+      saleItemId: saleReturnItems.saleItemId,
+      pendingQty: sql<number>`SUM(${saleReturnItems.quantity})`,
+    })
+    .from(saleReturnItems)
+    .innerJoin(saleReturns, eq(saleReturnItems.saleReturnId, saleReturns.id))
+    .where(
+      and(
+        eq(saleReturns.saleId, saleId),
+        eq(saleReturns.status, SALE_RETURN_STATUS.PENDING_APPROVAL),
+      ),
+    )
+    .groupBy(saleReturnItems.saleItemId);
+
+  const pendingQtyBySaleItemId = new Map(
+    pendingQtyRows.map((row) => [row.saleItemId, Number(row.pendingQty)]),
+  );
+
   return {
     id: sale.id,
     saleNumber: sale.saleNumber,
@@ -60,15 +84,25 @@ export async function getSaleById(saleId: string, companyId: string) {
     challanNumber: sale.challanNumber,
     invoiceNumber: sale.invoiceNumber,
     createdAt: sale.createdAt,
-    items: sale.items.map((item) => ({
-      id: item.id,
-      productId: item.product.id,
-      productName: item.product.name,
-      unit: item.product.unit,
-      category: item.product.category,
-      quantity: item.quantity,
-      sellingPrice: item.sellingPrice,
-      lineTotal: item.lineTotal,
-    })),
+    items: sale.items.map((item) => {
+      const pendingReturnQty = pendingQtyBySaleItemId.get(item.id) ?? 0;
+
+      return {
+        id: item.id,
+        productId: item.product.id,
+        productName: item.product.name,
+        unit: item.product.unit,
+        category: item.product.category,
+        quantity: item.quantity,
+        sellingPrice: item.sellingPrice,
+        lineTotal: item.lineTotal,
+        returnedQty: item.returnedQty,
+        pendingReturnQty,
+        returnableQty: Math.max(
+          0,
+          item.quantity - item.returnedQty - pendingReturnQty,
+        ),
+      };
+    }),
   };
 }

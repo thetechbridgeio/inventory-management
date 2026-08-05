@@ -13,5 +13,7 @@ export * from "@/features/purchase-request-order/schemas/purchase-order-item.sch
 export * from "@/features/purchase-request-order/schemas/purchase-order.schema";
 export * from "@/features/process-order/schemas/process-orders.schema";
 export * from "@/features/process-order/schemas/process-order-item.schema";
+export * from "@/features/returns/schemas/sale-return.schema";
+export * from "@/features/returns/schemas/sale-return-item.schema";
 
 export * from "./relation";
