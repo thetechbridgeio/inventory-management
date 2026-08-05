@@ -4,17 +4,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 
-import { buildFormData } from "@/lib/build-payload";
 import { getApiErrorMessage } from "@/lib/api-error";
 
 import { CreateProductFormType } from "../types/product.types";
+import { buildProductFormData } from "../utils/build-product-form-data";
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CreateProductFormType) => {
-      const formData = buildFormData(data);
+      const formData = buildProductFormData(data);
 
       return (
         await axios.post("/api/product", formData, {

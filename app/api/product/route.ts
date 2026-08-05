@@ -10,7 +10,9 @@ import {
 export const POST = routeHandler(async (request) => {
   const formData = await request.formData();
 
-  const image = formData.get("image") as File | null;
+  const images = formData
+    .getAll("images")
+    .filter((value): value is File => value instanceof File);
   const payloadRaw = formData.get("payload");
 
   if (!payloadRaw || typeof payloadRaw !== "string") {
@@ -21,7 +23,7 @@ export const POST = routeHandler(async (request) => {
   return createProduct(
     {
       ...payload,
-      image,
+      images,
     },
     companyId,
   );

@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Share2 } from "lucide-react";
+import { ArrowLeft, Download, ImageOff, Share2 } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 import { ProductDashboard } from "../../types/product-details.type";
 
 interface ProductHeaderProps {
@@ -13,6 +15,10 @@ interface ProductHeaderProps {
 export function ProductHeader({ product }: ProductHeaderProps) {
   const { productOverview, metrics } = product;
   const isLowStock = metrics.currentStock < productOverview.minOrderQty;
+
+  const images = productOverview.images ?? [];
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const activeImage = images[activeImageIndex] ?? images[0];
 
   const stockStatus =
     metrics.currentStock > productOverview.maxOrderQty
@@ -34,18 +40,47 @@ export function ProductHeader({ product }: ProductHeaderProps) {
     <div className="border-b border-border bg-card">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex gap-6">
-          {/* Product Image */}
-          <div className="flex-shrink-0">
+          {/* Product Images */}
+          <div className="flex-shrink-0 space-y-2">
             <div className="relative h-24 w-24 rounded-lg overflow-hidden bg-muted border border-border">
-              {productOverview.image && (
+              {activeImage ? (
                 <Image
-                  src={productOverview.image}
+                  src={activeImage}
                   alt={productOverview.name}
                   fill
                   className="object-cover"
                 />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  <ImageOff className="h-6 w-6 text-muted-foreground" />
+                </div>
               )}
             </div>
+
+            {images.length > 1 && (
+              <div className="flex gap-1.5">
+                {images.map((image, index) => (
+                  <button
+                    key={image + index}
+                    type="button"
+                    onClick={() => setActiveImageIndex(index)}
+                    className={cn(
+                      "relative h-10 w-10 shrink-0 overflow-hidden rounded-md border transition-colors",
+                      index === activeImageIndex
+                        ? "border-primary ring-1 ring-primary"
+                        : "border-border hover:border-primary/50",
+                    )}
+                  >
+                    <Image
+                      src={image}
+                      alt={`${productOverview.name} ${index + 1}`}
+                      fill
+                      className="object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}

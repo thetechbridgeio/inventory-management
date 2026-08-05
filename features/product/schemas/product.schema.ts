@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  check,
   integer,
   index,
   numeric,
@@ -30,7 +31,10 @@ export const products = pgTable(
     currentStock: integer("current_stock").default(0).notNull(),
     unitCost: numeric("unit_cost"),
     location: text("location"),
-    image: text("image"),
+    images: text("images")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     stockMovement: text("stock_movement"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -47,6 +51,10 @@ export const products = pgTable(
       table.companyId,
       sql`lower(trim(${table.name}))`,
       sql`lower(trim(${table.category}))`,
+    ),
+    imagesMaxCountCheck: check(
+      "products_images_max_count_check",
+      sql`array_length(${table.images}, 1) IS NULL OR array_length(${table.images}, 1) <= 5`,
     ),
   }),
 );

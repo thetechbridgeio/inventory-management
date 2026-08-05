@@ -34,6 +34,12 @@ export async function createProduct(
     );
   }
 
+  if (data.images && data.images.length > 5) {
+    throw new BusinessRuleError(
+      "A product can have a maximum of 5 images.",
+    );
+  }
+
   const transactionContext = {
     uploadedFiles: [],
   };
@@ -44,21 +50,21 @@ export async function createProduct(
     return await db.transaction(async (tx) => {
       await assertNoDuplicateProduct(tx, companyId, data.name, data.category);
 
-      let imageUrl: string | null = null;
+      const imageUrls: string[] = [];
 
-      if (data.image instanceof File) {
+      for (const file of data.images ?? []) {
         const uploadedImage = await uploadImage({
-          file: data.image,
+          file,
           folder: imageFolder,
           transactionContext,
         });
 
-        imageUrl = uploadedImage.publicUrl;
+        imageUrls.push(uploadedImage.publicUrl);
       }
 
       const dto: CreateProductDTO = CreateProductDTOSchema.parse({
         companyId,
-        image: imageUrl,
+        images: imageUrls,
         name: data.name.trim(),
         description: data.description?.trim() || null,
         category: data.category,

@@ -55,7 +55,7 @@ export type ProductOverview = {
   maxOrderQty: number;
   reorderQty: number;
   location?: string;
-  image?: string;
+  images?: string[];
   lastUpdatedAt?: Date;
 };
 

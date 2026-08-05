@@ -70,16 +70,19 @@ export const CreateProductFormSchema = z.object({
 
   stockMovement: stockMovementEnum.optional(),
 
-  image: z
-    .instanceof(File, {
-      message: "Please select a valid image file",
-    })
+  images: z
+    .array(
+      z.instanceof(File, {
+        message: "Please select valid image files",
+      }),
+    )
+    .max(5, "You can upload up to 5 images per product")
     .optional(),
   supplierIds: z.array(z.uuid("Invalid supplier ID")),
 });
 
 export const UpdateProductFormSchema = CreateProductFormSchema.omit({
-  image: true,
+  images: true,
   openingStock: true,
 }).extend({
   currentStock: z
@@ -88,14 +91,16 @@ export const UpdateProductFormSchema = CreateProductFormSchema.omit({
     })
     .int("Current stock must be a whole number")
     .min(0, "Current stock cannot be negative"),
-  image: z
-    .union([
-      z.instanceof(File, {
-        message: "Please select a valid image file",
-      }),
-      z.url(),
-      z.null(),
-    ])
+  images: z
+    .array(
+      z.union([
+        z.instanceof(File, {
+          message: "Please select valid image files",
+        }),
+        z.url(),
+      ]),
+    )
+    .max(5, "You can upload up to 5 images per product")
     .optional(),
 });
 
@@ -146,7 +151,7 @@ export const CreateProductDTOSchema = z.object({
     .max(255, "Location cannot exceed 255 characters")
     .nullable(),
   stockMovement: stockMovementEnum.nullable(),
-  image: z.string().nullable(),
+  images: z.array(z.string()).max(5, "A product can have at most 5 images"),
 });
 
 export const UpdateProductDTOSchema = CreateProductDTOSchema.omit({

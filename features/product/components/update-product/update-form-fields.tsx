@@ -8,7 +8,7 @@ import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFMultiSelect } from "@/components/react-hook-form-fields/rhf-multiselect";
 import { RHFSelect } from "@/components/react-hook-form-fields/rhf-select";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
-import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
+import { MultiImageUpload } from "@/components/react-hook-form-fields/multi-image-upload";
 
 import { Supplier } from "@/features/suppliers/types/suppliers.type";
 
@@ -31,8 +31,6 @@ export function UpdateProductFormFields({ productId, suppliers }: Props) {
       await mutateAsync(values);
     } catch {}
   }
-
-  const imageValue = form.watch("image");
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -154,44 +152,27 @@ export function UpdateProductFormFields({ productId, suppliers }: Props) {
             </div>
           </section>
 
-          {/* Image */}
+          {/* Images */}
           <section>
             <div className="mb-5">
-              <h3 className="font-semibold">Product Image</h3>
+              <h3 className="font-semibold">Product Images</h3>
 
               <p className="text-muted-foreground text-sm">
-                Keep the current image, replace it, or remove it.
+                Keep, replace, or remove product images. Up to 5 total.
               </p>
             </div>
 
-            <ImageUpload
-              label="Product Image"
-              description="Upload a product image"
-              value={form.watch("image")}
-              onChange={(value) =>
-                form.setValue("image", value, {
+            <MultiImageUpload
+              label="Product Images"
+              description="Upload up to 5 images of the product"
+              value={form.watch("images")}
+              onChange={(images) =>
+                form.setValue("images", images, {
                   shouldDirty: true,
                   shouldValidate: true,
                 })
               }
             />
-
-            {typeof imageValue === "string" && imageValue && (
-              <div className="mt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    form.setValue("image", null, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }
-                >
-                  Remove Current Image
-                </Button>
-              </div>
-            )}
           </section>
 
           {/* Suppliers */}

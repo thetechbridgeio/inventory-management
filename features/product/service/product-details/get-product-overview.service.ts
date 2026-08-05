@@ -24,7 +24,7 @@ export async function getProductOverview(
       openingStock: true,
       currentStock: true,
       location: true,
-      image: true,
+      images: true,
       updatedAt: true,
     },
   });

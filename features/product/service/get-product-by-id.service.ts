@@ -44,7 +44,7 @@ export async function getProductById(
       unitCost: product.unitCost,
       location: product.location,
       stockMovement: product.stockMovement,
-      image: product.image,
+      images: product.images,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
       suppliers: product.suppliers.map((ps) => ({

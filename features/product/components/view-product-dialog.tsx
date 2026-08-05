@@ -97,7 +97,9 @@ export function ViewProductDialog({
                 <div className="space-y-5">
                   <div
                     className={
-                      data.image ? "grid gap-5 lg:grid-cols-[1fr_320px]" : ""
+                      data.images.length > 0
+                        ? "grid gap-5 lg:grid-cols-[1fr_320px]"
+                        : ""
                     }
                   >
                     <div className="space-y-5">
@@ -146,11 +148,11 @@ export function ViewProductDialog({
                       )}
                     </div>
 
-                    {data.image && (
+                    {data.images.length > 0 && (
                       <Card className="overflow-hidden rounded-xl">
                         <CardContent className="p-0">
                           <img
-                            src={data.image}
+                            src={data.images[0]}
                             alt={data.name}
                             className="h-full w-full object-contain"
                           />

@@ -37,17 +37,26 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   return routeHandler(async () => {
     const formData = await request.formData();
 
-    const image = formData.get("image") as File | null;
+    const newImages = formData
+      .getAll("images")
+      .filter((value): value is File => value instanceof File);
     const payloadRaw = formData.get("payload");
 
     if (!payloadRaw || typeof payloadRaw !== "string") {
       throw new ValidationError("Payload is required.");
     }
     const payload = JSON.parse(payloadRaw);
+
+    const existingImages: string[] = Array.isArray(payload.images)
+      ? payload.images.filter(
+          (value: unknown): value is string => typeof value === "string",
+        )
+      : [];
+
     const { companyId } = await getCurrentUser();
     return updateProduct(productId, companyId, {
       ...payload,
-      image,
+      images: [...existingImages, ...newImages],
     });
   })(request);
 }

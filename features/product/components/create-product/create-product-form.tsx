@@ -22,7 +22,7 @@ import { useCreateProduct } from "../../hooks/use-create-product";
 import { CreateProductFormType } from "../../types/product.types";
 
 import { CreateProductFormSchema } from "../../validations/product.validation";
-import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
+import { MultiImageUpload } from "@/components/react-hook-form-fields/multi-image-upload";
 
 export function CreateProductForm() {
   const { mutateAsync, isPending } = useCreateProduct();
@@ -186,14 +186,18 @@ export function CreateProductForm() {
               </div>
             </section>
 
-            <ImageUpload
-              label="Product Image"
-              description="Upload a product image"
-              value={form.watch("image")}
-              onChange={(file) =>
-                form.setValue("image", file, {
-                  shouldValidate: true,
-                })
+            <MultiImageUpload
+              label="Product Images"
+              description="Upload up to 5 images of the product"
+              value={form.watch("images")}
+              onChange={(images) =>
+                form.setValue(
+                  "images",
+                  images.filter((image): image is File => image instanceof File),
+                  {
+                    shouldValidate: true,
+                  },
+                )
               }
             />
 

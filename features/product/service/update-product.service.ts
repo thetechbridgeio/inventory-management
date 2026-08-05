@@ -38,11 +38,17 @@ export async function updateProduct(
     );
   }
 
+  if (data.images && data.images.length > 5) {
+    throw new BusinessRuleError(
+      "A product can have a maximum of 5 images.",
+    );
+  }
+
   const transactionContext = {
     uploadedFiles: [],
   };
 
-  let oldImageToDelete: string | null = null;
+  let oldImagesToDelete: string[] = [];
 
   try {
     const imageFolder = `${companyId}/PRODUCTS`;
@@ -68,25 +74,37 @@ export async function updateProduct(
         productId,
       );
 
-      let imageUrl = existingProduct.image;
+      let imageUrls = existingProduct.images;
 
-      if (data.image instanceof File) {
-        const uploadedImage = await uploadImage({
-          file: data.image,
-          folder: imageFolder,
-          transactionContext,
-        });
+      if (data.images !== undefined) {
+        const keptUrls = data.images.filter(
+          (image): image is string => typeof image === "string",
+        );
+        const newFiles = data.images.filter(
+          (image): image is File => image instanceof File,
+        );
 
-        imageUrl = uploadedImage.publicUrl;
-        oldImageToDelete = existingProduct.image;
-      } else if (data.image === null) {
-        imageUrl = null;
-        oldImageToDelete = existingProduct.image;
+        const uploadedUrls: string[] = [];
+
+        for (const file of newFiles) {
+          const uploadedImage = await uploadImage({
+            file,
+            folder: imageFolder,
+            transactionContext,
+          });
+
+          uploadedUrls.push(uploadedImage.publicUrl);
+        }
+
+        imageUrls = [...keptUrls, ...uploadedUrls];
+        oldImagesToDelete = existingProduct.images.filter(
+          (url) => !keptUrls.includes(url),
+        );
       }
 
       const dto: UpdateProductDTO = UpdateProductDTOSchema.parse({
         companyId,
-        image: imageUrl,
+        images: imageUrls,
         name: data.name.trim(),
         description: data.description?.trim() || null,
         category: data.category,
@@ -130,13 +148,13 @@ export async function updateProduct(
       return product;
     });
 
-    if (oldImageToDelete) {
+    for (const oldImage of oldImagesToDelete) {
       try {
-        await deleteImage(oldImageToDelete);
+        await deleteImage(oldImage);
       } catch (error) {
         console.error(
           "Failed to delete old product image:",
-          oldImageToDelete,
+          oldImage,
           error,
         );
       }
