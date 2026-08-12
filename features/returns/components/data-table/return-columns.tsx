@@ -19,6 +19,7 @@ import { ViewReturnDialog } from "../view-return-dialog";
 export type SaleReturnRow = {
   id: string;
   returnNumber: string;
+  soldTo: string;
   saleId: string;
   saleNumber: string;
   returnDate: string;
@@ -42,10 +43,10 @@ export function getReturnColumns(): ColumnDef<SaleReturnRow>[] {
 
     {
       accessorKey: "saleNumber",
-      header: "Sale #",
+      header: "Sale",
       cell: ({ row }) => (
         <span className="font-mono text-sm text-muted-foreground">
-          {row.original.saleNumber}
+          {row.original.saleNumber}<br/>{row.original.soldTo ?? "-"}
         </span>
       ),
     },

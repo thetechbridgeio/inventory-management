@@ -52,6 +52,7 @@ export async function getSaleReturns(
       createdAt: saleReturns.createdAt,
       saleId: saleReturns.saleId,
       saleNumber: sales.saleNumber,
+      soldTo: sales.soldTo,
     })
     .from(saleReturns)
     .innerJoin(sales, eq(sales.id, saleReturns.saleId))

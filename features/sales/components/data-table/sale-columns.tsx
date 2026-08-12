@@ -25,6 +25,7 @@ import {
 
 export type SaleRow = {
   id: string;
+  soldTo: string;
   saleNumber: string;
   saleDate: string;
   grandTotal: number;
@@ -40,7 +41,9 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
       header: "Sale #",
       cell: ({ row }) => {
         const returnFlag = row.original.returnFlag;
-        const flagConfig = returnFlag ? SALE_RETURN_FLAG_CONFIG[returnFlag] : null;
+        const flagConfig = returnFlag
+          ? SALE_RETURN_FLAG_CONFIG[returnFlag]
+          : null;
 
         return (
           <div className="flex items-center gap-2">
@@ -62,6 +65,11 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
       accessorKey: "saleDate",
       header: "Sale Date",
       cell: ({ row }) => format(new Date(row.original.saleDate), "dd MMM yyyy"),
+    },
+    {
+      accessorKey: "customer",
+      header: "Customer Name",
+      cell: ({ row }) => row.original.soldTo ?? "-",
     },
 
     {
@@ -122,7 +130,10 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
               </ViewSaleDialog>
 
               {canReturn && (
-                <CreateReturnDialog saleId={sale.id} saleNumber={sale.saleNumber}>
+                <CreateReturnDialog
+                  saleId={sale.id}
+                  saleNumber={sale.saleNumber}
+                >
                   <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <Undo2 className="mr-2 h-4 w-4" />
                     Return

@@ -32,6 +32,7 @@ export async function getSaleReturnById(returnId: string, companyId: string) {
         columns: {
           id: true,
           saleNumber: true,
+          soldTo: true,
         },
       },
 

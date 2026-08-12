@@ -51,7 +51,10 @@ type SaleReturnDetailItem = {
   quantity: number;
 };
 
-export function ViewReturnDialog({ returnId, children }: ViewReturnDialogProps) {
+export function ViewReturnDialog({
+  returnId,
+  children,
+}: ViewReturnDialogProps) {
   const { data, isLoading, isError, error } = useSaleReturn(returnId);
   const { user } = useAuth();
 
@@ -122,6 +125,10 @@ export function ViewReturnDialog({ returnId, children }: ViewReturnDialogProps) 
                     <p className="mt-1 text-xs text-muted-foreground">
                       Against sale{" "}
                       <span className="font-mono">{data.sale.saleNumber}</span>
+                      <span className="font-mono mt-2">
+                        {" "}
+                        / Sold To: {data.sale.soldTo ?? "N/A"}
+                      </span>
                     </p>
                   </div>
 
@@ -139,9 +146,7 @@ export function ViewReturnDialog({ returnId, children }: ViewReturnDialogProps) 
                         <p className="text-[11px] text-muted-foreground">
                           Return Date
                         </p>
-                        <p className="text-sm font-medium">
-                          {data.returnDate}
-                        </p>
+                        <p className="text-sm font-medium">{data.returnDate}</p>
                       </div>
 
                       <div>
@@ -242,7 +247,8 @@ export function ViewReturnDialog({ returnId, children }: ViewReturnDialogProps) 
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">
-                      {data.totalItems} product{data.totalItems !== 1 ? "s" : ""},{" "}
+                      {data.totalItems} product
+                      {data.totalItems !== 1 ? "s" : ""},{" "}
                       {data.totalReturnedQty} unit
                       {data.totalReturnedQty !== 1 ? "s" : ""} pending review
                     </p>
