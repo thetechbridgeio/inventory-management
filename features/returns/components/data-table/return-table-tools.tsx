@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 
 import { SALE_RETURN_STATUS_CONFIG } from "../../constants/sale-return-status";
 import { SaleReturnStatus } from "../../constants/sale-return-status";
+import { useExportSaleReturnsPdf } from "../../hooks/use-export-return";
 
 type ReturnTableToolsProps = {
   search: string;
@@ -39,6 +40,7 @@ export function ReturnTableTools({
   onEndDateChange,
 }: ReturnTableToolsProps) {
   const hasFilters = !!status || !!startDate || !!endDate;
+  const { mutate: exportPdf, isPending } = useExportSaleReturnsPdf();
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-xl bg-white p-4 shadow-sm">
@@ -54,6 +56,27 @@ export function ReturnTableTools({
       </div>
 
       <div className="flex items-center gap-3">
+        <Button
+          onClick={() =>
+            exportPdf({
+              search,
+              status,
+              startDate,
+              endDate,
+            })
+          }
+          disabled={isPending}
+        >
+          {isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            "Export PDF"
+          )}
+        </Button>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">

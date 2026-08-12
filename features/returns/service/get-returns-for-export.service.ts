@@ -1,35 +1,21 @@
 import "server-only";
 
-import { asc, count, desc, eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/pagination";
-
 import { sales } from "@/features/sales/schemas/sales.schema";
 
 import { saleReturns } from "../schemas/sale-return.schema";
 import { GetSaleReturnsParams } from "../types/return.type";
 import { buildSaleReturnWhereClause } from "./build-return-filters.service";
 
-export async function getSaleReturns(
+export async function getSaleReturnsForExport(
   companyId: string,
-  {
-    page = DEFAULT_PAGE,
-    status,
-    startDate,
-    endDate,
-    search,
-    sortOrder = "desc",
-  }: GetSaleReturnsParams = {},
+  filters: GetSaleReturnsParams,
 ) {
-  const whereClause = buildSaleReturnWhereClause(companyId, {
-    status,
-    startDate,
-    endDate,
-    search,
-  });
+  const whereClause = buildSaleReturnWhereClause(companyId, filters);
 
-  const data = await db
+  return db
     .select({
       id: saleReturns.id,
       returnNumber: saleReturns.returnNumber,
@@ -45,23 +31,5 @@ export async function getSaleReturns(
     .from(saleReturns)
     .innerJoin(sales, eq(sales.id, saleReturns.saleId))
     .where(whereClause)
-    .orderBy(
-      sortOrder === "asc" ? asc(saleReturns.createdAt) : desc(saleReturns.createdAt),
-    )
-    .limit(DEFAULT_PAGE_SIZE)
-    .offset((page - 1) * DEFAULT_PAGE_SIZE);
-
-  const [{ total }] = await db
-    .select({
-      total: count(),
-    })
-    .from(saleReturns)
-    .where(whereClause);
-
-  return {
-    data,
-    total,
-    page,
-    totalPages: Math.ceil(total / DEFAULT_PAGE_SIZE),
-  };
+    .orderBy(desc(saleReturns.createdAt));
 }
