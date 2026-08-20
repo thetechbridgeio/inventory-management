@@ -23,7 +23,7 @@ export function buildStockStatusFilter(
     filters.push(
       and(
         gt(products.currentStock, 0),
-        lte(products.currentStock, products.minOrderQty),
+        lt(products.currentStock, products.minOrderQty),
       )!,
     );
   }
@@ -31,7 +31,7 @@ export function buildStockStatusFilter(
   if (statuses.includes(STOCK_STATUSES.SUFFICIENT)) {
     filters.push(
       and(
-        gt(products.currentStock, products.minOrderQty),
+        gte(products.currentStock, products.minOrderQty),
         lte(products.currentStock, products.maxOrderQty),
       )!,
     );

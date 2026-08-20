@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, ilike, inArray, SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 
@@ -22,6 +22,7 @@ export async function getProducts(
     stockStatuses,
     stockMovements,
     units,
+    sortOrder = "desc",
   }: GetProductsParams,
 ): Promise<GetProductsResponse> {
   try {
@@ -37,7 +38,11 @@ export async function getProducts(
     const [data, [{ total }]] = await Promise.all([
       db.query.products.findMany({
         where: whereClause,
-        orderBy: [desc(products.createdAt)],
+        orderBy: [
+          sortOrder === "asc"
+            ? asc(products.createdAt)
+            : desc(products.createdAt),
+        ],
         limit: DEFAULT_PAGE_SIZE,
         offset: (page - 1) * DEFAULT_PAGE_SIZE,
       }),

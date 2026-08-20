@@ -9,7 +9,16 @@ import {
   DropdownMenu,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Eye, MoreHorizontal, Pencil, Plus, Trash2, View } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash2,
+  View,
+} from "lucide-react";
 import { DeleteProductDialog } from "../delete-product-dialog";
 import { ViewProductDialog } from "../view-product-dialog";
 import { AddSupplierToProductDialog } from "../add-product-supplier-dialog";
@@ -24,11 +33,33 @@ import {
   STOCK_STATUS_LABELS,
 } from "../../constants/product-stock-status";
 
-export function getProductColumns(role?: UserRole): ColumnDef<Product>[] {
+export function getProductColumns(
+  role?: UserRole,
+  createdAtSortOrder: "asc" | "desc" = "desc",
+  onToggleCreatedAtSort?: () => void,
+): ColumnDef<Product>[] {
   return [
     {
       accessorKey: "name",
-      header: "Product",
+      header: () => (
+        <button
+          type="button"
+          onClick={onToggleCreatedAtSort}
+          className="hover:text-foreground flex items-center gap-1"
+          title={
+            createdAtSortOrder === "asc"
+              ? "Showing oldest first — click to show newest first"
+              : "Showing newest first — click to show oldest first"
+          }
+        >
+          Product
+          {createdAtSortOrder === "asc" ? (
+            <ArrowUp className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowDown className="h-3.5 w-3.5" />
+          )}
+        </button>
+      ),
       cell: ({ row }) => (
         <div>
           <p className="font-medium">{row.original.name}</p>
@@ -82,6 +113,19 @@ export function getProductColumns(role?: UserRole): ColumnDef<Product>[] {
     {
       accessorKey: "location",
       header: "Location",
+    },
+    {
+      accessorKey: "unitCost",
+      header: "Price per Unit",
+      cell: ({ row }) => {
+        const unitCost = row.original.unitCost;
+
+        return (
+          <span>
+            {unitCost != null ? `₹${Number(unitCost).toFixed(2)}` : "N/A"}
+          </span>
+        );
+      },
     },
     {
       id: "actions",

@@ -5,8 +5,15 @@ import { GetProductsParams } from "../types/product.types";
 export function parseProductQueryParams(
   searchParams: URLSearchParams,
 ): GetProductsParams {
+  const sortOrderParam = searchParams.get("sortOrder");
+
   return {
     page: Number(searchParams.get("page")) || undefined,
+
+    sortOrder:
+      sortOrderParam === "asc" || sortOrderParam === "desc"
+        ? sortOrderParam
+        : undefined,
 
     search: searchParams.get("search")?.trim() || undefined,
 

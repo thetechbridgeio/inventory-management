@@ -25,7 +25,7 @@ export async function getLowStockProducts(companyId: string) {
         gt(products.currentStock, 0),
 
         // Current stock has fallen below min level
-        sql`${products.currentStock} <= ${products.minOrderQty}`,
+        sql`${products.currentStock} < ${products.minOrderQty}`,
       ),
     )
     .orderBy(products.currentStock);

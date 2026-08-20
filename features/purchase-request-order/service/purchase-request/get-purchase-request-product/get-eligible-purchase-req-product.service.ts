@@ -1,4 +1,4 @@
-import { and, eq, lte, notInArray } from "drizzle-orm";
+import { and, eq, lt, notInArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { products, productSuppliers, suppliers } from "@/db/schema";
@@ -30,7 +30,7 @@ export async function getEligiblePurchaseRequestProducts(
       .where(
         and(
           eq(products.companyId, companyId),
-          lte(products.currentStock, products.minOrderQty),
+          lt(products.currentStock, products.minOrderQty),
           excludedProductIds.length
             ? notInArray(products.id, excludedProductIds)
             : undefined,

@@ -9,11 +9,11 @@ export function getStockStatus(
     return STOCK_STATUSES.OUT_OF_STOCK;
   }
 
-  if (currentStock <= minOrderQty) {
+  if (currentStock < minOrderQty) {
     return STOCK_STATUSES.LOW;
   }
 
-  if (currentStock >= maxOrderQty) {
+  if (currentStock > maxOrderQty) {
     return STOCK_STATUSES.EXCESS;
   }
 

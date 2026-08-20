@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 
 import { ProductTable } from "./product-table";
@@ -19,6 +19,7 @@ export function ProductList() {
   const [units, setUnits] = useState<string[]>([]);
   const [selectedStockStatuses, setSelectedStockStatuses] = useState<StockStatus[]>([]);
   const [selectedStockMovements, setSelectedStockMovements] = useState<StockMovement[]>([]);
+  const [createdAtSortOrder, setCreatedAtSortOrder] = useState<"asc" | "desc">("desc");
 
   const [debouncedSearch] = useDebounce(search, 500);
 
@@ -34,7 +35,12 @@ export function ProductList() {
     units,
     stockStatuses: selectedStockStatuses,
     stockMovements: selectedStockMovements,
+    sortOrder: createdAtSortOrder,
   });
+
+  const toggleCreatedAtSort = useCallback(() => {
+    setCreatedAtSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -45,6 +51,7 @@ export function ProductList() {
     units,
     selectedStockStatuses,
     selectedStockMovements,
+    createdAtSortOrder,
   ]);
 
   return (
@@ -67,7 +74,12 @@ export function ProductList() {
         onStockMovementChange={setSelectedStockMovements}
       />
 
-      <ProductTable data={data?.data ?? []} isLoading={isLoading} />
+      <ProductTable
+        data={data?.data ?? []}
+        isLoading={isLoading}
+        createdAtSortOrder={createdAtSortOrder}
+        onToggleCreatedAtSort={toggleCreatedAtSort}
+      />
 
       <ProductPagination
         page={data?.page ?? 1}

@@ -48,4 +48,5 @@ export type GetProductsParams = {
   stockMovements?: StockMovement[];
   locations?: string[];
   units?: string[];
+  sortOrder?: "asc" | "desc";
 };

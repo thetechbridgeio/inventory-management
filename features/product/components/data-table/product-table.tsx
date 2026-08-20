@@ -24,12 +24,19 @@ import { useAuth } from "@/features/auth/providers/use-auth.provider";
 export function ProductTable({
   data,
   isLoading,
+  createdAtSortOrder,
+  onToggleCreatedAtSort,
 }: {
   data: Product[];
   isLoading: boolean;
+  createdAtSortOrder: "asc" | "desc";
+  onToggleCreatedAtSort: () => void;
 }) {
   const { user } = useAuth();
-  const columns = useMemo(() => getProductColumns(user?.role), [user?.role]);
+  const columns = useMemo(
+    () => getProductColumns(user?.role, createdAtSortOrder, onToggleCreatedAtSort),
+    [user?.role, createdAtSortOrder, onToggleCreatedAtSort],
+  );
   const table = useReactTable({
     data,
     columns: columns,
