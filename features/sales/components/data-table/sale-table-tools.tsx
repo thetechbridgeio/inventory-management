@@ -45,7 +45,7 @@ export function SaleTableTools({
         <Input
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search sale number..."
+          placeholder="Search sale number or customer name..."
           className="pl-9"
         />
       </div>

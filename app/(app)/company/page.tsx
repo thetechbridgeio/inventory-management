@@ -1,10 +1,15 @@
 "use client";
-import { Building2 } from "lucide-react";
+import Link from "next/link";
+import { Building2, Pencil } from "lucide-react";
 import { useCompany } from "@/features/company/hooks/use-company";
 import { CompanyProfile } from "@/features/company/components/company-profile";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { ROLES } from "@/features/auth/constants/user-role";
 
 const CompanyPage = () => {
   const { data: company, isLoading } = useCompany();
+  const { hasRole } = useAuth();
 
   if (isLoading) {
     return (
@@ -44,12 +49,23 @@ const CompanyPage = () => {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Company Profile</h1>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Company Profile</h1>
 
-        <p className="mt-1 text-muted-foreground">
-          Manage your company information and business details.
-        </p>
+          <p className="mt-1 text-muted-foreground">
+            Manage your company information and business details.
+          </p>
+        </div>
+
+        {hasRole(ROLES.SUPER_ADMIN) && (
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/company/edit">
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Company
+            </Link>
+          </Button>
+        )}
       </div>
 
       <CompanyProfile company={company} />

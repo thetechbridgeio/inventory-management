@@ -55,6 +55,24 @@ export const companySchema = z.object({
   contactPersonPhone: optionalPhone,
 });
 
+const optionalLogoFile = z
+  .union([
+    z.instanceof(File, { message: "Please select a valid image file" }),
+    z.url("Please enter a valid URL"),
+    z.null(),
+  ])
+  .optional();
+
+export const companyFormSchema = companySchema.extend({
+  logoUrl: optionalLogoFile,
+});
+
+export const updateCompanySchema = companySchema.partial();
+
+export const updateCompanyFormSchema = updateCompanySchema.extend({
+  logoUrl: optionalLogoFile,
+});
+
 export const onBoardCompanySchema = z
   .object({
     company: companySchema,

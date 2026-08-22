@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, gte, ilike, lte, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from "@/lib/pagination";
@@ -34,7 +34,14 @@ export async function getSales(
   }
 
   if (search?.trim()) {
-    filters.push(ilike(sales.saleNumber, `%${search.trim()}%`));
+    const searchTerm = `%${search.trim()}%`;
+
+    filters.push(
+      or(
+        ilike(sales.saleNumber, searchTerm),
+        ilike(sales.soldTo, searchTerm),
+      )!,
+    );
   }
 
   const whereClause = and(...filters);

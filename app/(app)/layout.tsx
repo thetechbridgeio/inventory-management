@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
   return (
     <AuthProvider initialUser={user}>
-      <div className="h-screen overflow-hidden bg-[#f6f7fb]">
+      <div className="fixed inset-0 overflow-hidden bg-[#f6f7fb]">
         <Sidebar />
 
         <div className="ml-72.5 flex h-full flex-col">

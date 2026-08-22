@@ -21,11 +21,7 @@ const SalePage = () => {
           {/* ACTIONS */}
           <div className="flex items-center gap-3">
             <Button asChild>
-              <Link
-                href={"/sales/create"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <Link href={"/sales/create"}>
                 Add Outgoing
               </Link>
             </Button>

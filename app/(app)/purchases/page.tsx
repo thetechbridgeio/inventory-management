@@ -19,11 +19,7 @@ const PurchasePage = () => {
         {/* ACTIONS */}
         <div className="flex items-center gap-3">
           <Button asChild>
-            <Link
-              href={"/purchases/create"}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <Link href={"/purchases/create"}>
               Add Incoming
             </Link>
           </Button>

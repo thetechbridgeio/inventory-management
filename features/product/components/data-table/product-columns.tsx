@@ -166,11 +166,7 @@ export function getProductColumns(
 
               {canUpdate && (
                 <DropdownMenuItem asChild>
-                  <Link
-                    href={`/inventory/update/${product.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Link href={`/inventory/update/${product.id}`}>
                     <Pencil className="mr-2 h-4 w-4" />
                     Update
                   </Link>

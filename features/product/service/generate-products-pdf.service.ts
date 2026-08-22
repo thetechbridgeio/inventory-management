@@ -191,6 +191,58 @@ export async function generateProductsPdf({
     },
   });
 
+  // jspdf-autotable augments the doc instance with this field at runtime.
+  const tableEndY = (doc as jsPDF & { lastAutoTable: { finalY: number } })
+    .lastAutoTable.finalY;
+
+  const totalValue = products.reduce(
+    (sum, product) => sum + product.currentStock * Number(product.unitCost ?? 0),
+    0,
+  );
+
+  drawTotalValue(doc, totalValue, tableEndY);
+
   const pdf = doc.output("arraybuffer");
   return new Uint8Array(pdf);
+}
+
+/**
+ * Draws a right-aligned "Total Inventory Value" line beneath the table,
+ * starting a new page first if there isn't enough room left on this one.
+ */
+function drawTotalValue(doc: jsPDF, totalValue: number, tableEndY: number): void {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  const boxWidth = 80;
+  const boxHeight = 14;
+  const boxLeft = pageWidth - PAGE_MARGIN_X - boxWidth;
+  let boxTop = tableEndY + 8;
+
+  if (boxTop + boxHeight > pageHeight - 16) {
+    doc.addPage();
+    boxTop = 20;
+  }
+
+  doc.setDrawColor(...BORDER_COLOR);
+  doc.setLineWidth(0.3);
+  doc.setFillColor(247, 249, 251);
+  doc.roundedRect(boxLeft, boxTop, boxWidth, boxHeight, 1.5, 1.5, "FD");
+
+  const textY = boxTop + boxHeight / 2 + 1.5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...DARK_TEXT);
+  doc.text("Total Value", boxLeft + 5, textY);
+
+  const formattedValue = `Rs. ${totalValue.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...PRIMARY_COLOR);
+  doc.text(formattedValue, boxLeft + boxWidth - 5, textY, { align: "right" });
 }

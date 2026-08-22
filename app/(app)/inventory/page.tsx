@@ -35,7 +35,7 @@ const InventoryPage = () => {
             <BulkUploadDialog />
 
             <Button asChild>
-              <Link href="/inventory/create" target="_blank" rel="noopener noreferrer">
+              <Link href="/inventory/create">
                 Add Product
               </Link>
             </Button>

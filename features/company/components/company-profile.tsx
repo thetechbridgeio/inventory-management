@@ -68,6 +68,7 @@ export function CompanyProfile({ company }: { company: any }) {
   const websiteSchema = z.url();
 
   const hasWebsite = websiteSchema.safeParse(company.website).success;
+  console.log(company);
 
   return (
     <div className="space-y-6">
@@ -78,10 +79,15 @@ export function CompanyProfile({ company }: { company: any }) {
 
           <CardContent className="relative p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-center">
-              <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg">
-                <Building2 className="h-10 w-10 text-white" />
-              </div>
-
+               {company.logoUrl ? (
+                  <img
+                    src={company.logoUrl}
+                    alt={company.name}
+                    className="h-24 object-contain"
+                  />
+                ) : (
+                  <Building2 className="h-24 w-24 text-muted-foreground" />
+                )}
               <div className="flex-1">
                 <div className="flex flex-wrap items-center gap-3">
                   <h2 className="text-3xl font-bold tracking-tight">

@@ -22,6 +22,7 @@ export const PERMISSIONS = {
   "purchase-request:reject": [ROLES.SUPER_ADMIN],
   "user:update-role": [ROLES.SUPER_ADMIN],
   "user:delete": [ROLES.SUPER_ADMIN],
+  "company:update": [ROLES.SUPER_ADMIN],
   "return:create": [
     ROLES.SUPER_ADMIN,
     ROLES.STORE_ADMIN,
