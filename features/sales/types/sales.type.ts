@@ -13,6 +13,7 @@ export type CreateSaleFormType = {
   workOrderNumber?: string;
   challanNumber?: string;
   invoiceNumber?: string;
+  isWarranty?: boolean;
   items: CreateSaleItemFormType[];
 };
 
@@ -26,6 +27,7 @@ export type CreateSaleType = {
   workOrderNumber: string | null;
   challanNumber: string | null;
   invoiceNumber: string | null;
+  isWarranty: boolean;
   grandTotal: string;
   createdBy: string;
 };

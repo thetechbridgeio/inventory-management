@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Check, Package, Search, X } from "lucide-react";
+import { memo, useCallback, useMemo, useState } from "react";
+import { Package, Search, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
+import { useDebouncedValue } from "../hooks/use-debounced-value";
 import { useProducts } from "../hooks/use-products";
 import { Product } from "../types/product.types";
-import { Label } from "@/components/ui/label";
 
 type ProductPickerProps = {
   value?: string;
@@ -19,7 +20,7 @@ type ProductPickerProps = {
   error?: string;
 };
 
-export function ProductPicker({
+function ProductPickerImpl({
   value,
   selectedProductIds = [],
   onChange,
@@ -28,20 +29,33 @@ export function ProductPicker({
   error,
 }: ProductPickerProps) {
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
 
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // The product a user selected is cached here directly instead of being
+  // re-derived from the live query result below: once selected, the search
+  // clears and the query switches to fetching an unfiltered product list
+  // (to resolve a pre-set `value` on mount). If the selected product isn't
+  // on that page, deriving the card from query data would make it vanish.
+  const [selectedProduct, setSelectedProduct] = useState<
+    Product | undefined
+  >(undefined);
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 300);
+  const needsResolve = Boolean(value) && selectedProduct?.id !== value;
 
-    return () => clearTimeout(timeout);
-  }, [search]);
-
-  const { data, isLoading } = useProducts({
+  const { data, isLoading, isFetching, isError } = useProducts({
     search: debouncedSearch,
+    enabled: Boolean(debouncedSearch) || needsResolve,
   });
+
+  if (!value && selectedProduct) {
+    setSelectedProduct(undefined);
+  } else if (needsResolve) {
+    const resolved = data?.data?.find((product) => product.id === value);
+
+    if (resolved) {
+      setSelectedProduct(resolved);
+    }
+  }
 
   const products = useMemo(() => {
     return (data?.data ?? []).filter((product: Product) => {
@@ -53,35 +67,35 @@ export function ProductPicker({
     });
   }, [data?.data, selectedProductIds, value]);
 
-  const selectedProduct = useMemo(() => {
-    if (!value) {
-      return undefined;
-    }
+  const handleSelect = useCallback(
+    (product: Product) => {
+      setSelectedProduct(product);
+      onChange(product);
+      setSearch("");
+    },
+    [onChange],
+  );
 
-    return (
-      products.find((product: Product) => product.id === value) ??
-      data?.data?.find((product: Product) => product.id === value)
-    );
-  }, [value, products, data?.data]);
+  const handleClear = useCallback(() => {
+    setSelectedProduct(undefined);
+    setSearch("");
+    onClear?.();
+  }, [onClear]);
 
   if (selectedProduct) {
     return (
       <div className="rounded-xl border bg-card px-4 py-2 shadow-sm">
         <div className="flex items-start justify-between">
           <div className="flex min-w-0 flex-1 gap-1">
-            {/* <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
-              <Check className="size-5 text-primary" />
-            </div> */}
-
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{selectedProduct.name}</p>
 
-              <div className=" flex flex-wrap gap-2">
-                <span className="text-muted-foreground text-sm">
+              <div className="flex flex-wrap gap-2">
+                <span className="text-sm text-muted-foreground">
                   Stock: {selectedProduct.currentStock}
                 </span>
 
-                <span className="text-muted-foreground text-sm">
+                <span className="text-sm text-muted-foreground">
                   Unit: {selectedProduct.unit}
                 </span>
               </div>
@@ -93,11 +107,7 @@ export function ProductPicker({
             variant="ghost"
             size="icon"
             className="shrink-0"
-            onClick={() => {
-              setSearch("");
-              setDebouncedSearch("");
-              onClear?.();
-            }}
+            onClick={handleClear}
           >
             <X className="size-4" />
           </Button>
@@ -126,22 +136,33 @@ export function ProductPicker({
             <div className="p-4 text-sm text-muted-foreground">
               Searching products...
             </div>
+          ) : isError ? (
+            <div className="p-4 text-sm text-destructive">
+              Failed to load products. Try searching again.
+            </div>
           ) : products.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground">
               No products found
             </div>
           ) : (
-            <div className="max-h-72 overflow-y-auto">
+            <div
+              role="listbox"
+              aria-busy={isFetching}
+              className="max-h-72 overflow-y-auto"
+            >
               {products.map((product: Product) => (
                 <button
                   key={product.id}
                   type="button"
-                  onClick={() => {
-                    onChange(product);
-
-                    setSearch("");
-
-                    setDebouncedSearch("");
+                  role="option"
+                  aria-selected={false}
+                  onMouseDown={(e) => {
+                    // Commit the selection on press, not on click, so a
+                    // re-render between press and release (e.g. from a
+                    // background refetch) can't cause the release to land
+                    // on a moved/removed item and drop the selection.
+                    e.preventDefault();
+                    handleSelect(product);
                   }}
                   className="flex w-full items-start gap-3 border-b p-4 text-left transition-colors last:border-b-0 hover:bg-muted/50"
                 >
@@ -151,7 +172,7 @@ export function ProductPicker({
 
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{product.name}</p>
-                    <p className="text-xs truncate">{product.description}</p>
+                    <p className="truncate text-xs">{product.description}</p>
 
                     <div className="mt-2 flex flex-wrap gap-2">
                       <span className="rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
@@ -175,3 +196,5 @@ export function ProductPicker({
     </div>
   );
 }
+
+export const ProductPicker = memo(ProductPickerImpl);

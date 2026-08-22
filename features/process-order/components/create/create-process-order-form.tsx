@@ -1,6 +1,13 @@
 "use client";
 
-import { FormProvider, useFieldArray, useForm } from "react-hook-form";
+import { useMemo } from "react";
+import {
+  Controller,
+  FormProvider,
+  useFieldArray,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
@@ -28,10 +35,26 @@ const CreateProcessOrderForm = () => {
     control: form.control,
     name: "items",
   });
-  const selectedSentProducts = form.watch("items").map((i) => i.sentProductId);
-  const selectedReceivedProducts = form
-    .watch("items")
-    .map((i) => i.receivedProductId);
+  const sentProductIdPaths = useMemo(
+    () => fields.map((_, index) => `items.${index}.sentProductId` as const),
+    [fields],
+  );
+
+  const receivedProductIdPaths = useMemo(
+    () =>
+      fields.map((_, index) => `items.${index}.receivedProductId` as const),
+    [fields],
+  );
+
+  const watchedSentProductIds = useWatch({
+    control: form.control,
+    name: sentProductIdPaths,
+  });
+
+  const watchedReceivedProductIds = useWatch({
+    control: form.control,
+    name: receivedProductIdPaths,
+  });
 
   const onSubmit = async (data: ProcessOrderCreatePayload) => {
     try {
@@ -82,52 +105,42 @@ const CreateProcessOrderForm = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
-                      <ProductPicker
-                        error={
-                          form.formState.errors.items?.[index]?.sentProductId
-                            ?.message
-                        }
-                        label="Sent Product"
-                        value={form.watch(`items.${index}.sentProductId`)}
-                        selectedProductIds={selectedSentProducts.filter(
-                          (_, i) => i !== index,
+                      <Controller
+                        control={form.control}
+                        name={`items.${index}.sentProductId`}
+                        render={({ field, fieldState }) => (
+                          <ProductPicker
+                            error={fieldState.error?.message}
+                            label="Sent Product"
+                            value={field.value}
+                            selectedProductIds={
+                              watchedSentProductIds.filter(
+                                (id, i) => i !== index && Boolean(id),
+                              ) as string[]
+                            }
+                            onChange={(product) => field.onChange(product.id)}
+                            onClear={() => field.onChange("")}
+                          />
                         )}
-                        onChange={(product) => {
-                          form.setValue(
-                            `items.${index}.sentProductId`,
-                            product.id,
-                            {
-                              shouldValidate: true,
-                            },
-                          );
-                        }}
-                        onClear={() =>
-                          form.setValue(`items.${index}.sentProductId`, "")
-                        }
                       />
 
-                      <ProductPicker
-                        error={
-                          form.formState.errors.items?.[index]
-                            ?.receivedProductId?.message
-                        }
-                        label="Received Product"
-                        value={form.watch(`items.${index}.receivedProductId`)}
-                        selectedProductIds={selectedReceivedProducts.filter(
-                          (_, i) => i !== index,
+                      <Controller
+                        control={form.control}
+                        name={`items.${index}.receivedProductId`}
+                        render={({ field, fieldState }) => (
+                          <ProductPicker
+                            error={fieldState.error?.message}
+                            label="Received Product"
+                            value={field.value}
+                            selectedProductIds={
+                              watchedReceivedProductIds.filter(
+                                (id, i) => i !== index && Boolean(id),
+                              ) as string[]
+                            }
+                            onChange={(product) => field.onChange(product.id)}
+                            onClear={() => field.onChange("")}
+                          />
                         )}
-                        onChange={(product) => {
-                          form.setValue(
-                            `items.${index}.receivedProductId`,
-                            product.id,
-                            {
-                              shouldValidate: true,
-                            },
-                          );
-                        }}
-                        onClear={() =>
-                          form.setValue(`items.${index}.receivedProductId`, "")
-                        }
                       />
 
                       <RHFInput<ProcessOrderCreatePayload>

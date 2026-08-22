@@ -63,6 +63,7 @@ export async function createSale(
         workOrderNumber: data.workOrderNumber?.trim() || null,
         challanNumber: data.challanNumber?.trim() || null,
         invoiceNumber: data.invoiceNumber?.trim() || null,
+        isWarranty: data.isWarranty ?? false,
         image: imageUrl,
         soldTo: data.soldTo?.trim() || null,
         createdBy: userId,

@@ -4,6 +4,7 @@ export const CREATE_SALE_FORM_DEFAULT: CreateSaleFormType = {
   saleDate: "",
   remarks: "",
   image: undefined,
+  isWarranty: false,
   items: [
     {
       productId: "",

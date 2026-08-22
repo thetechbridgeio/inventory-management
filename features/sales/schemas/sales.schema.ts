@@ -1,4 +1,5 @@
 import {
+  boolean,
   date,
   index,
   numeric,
@@ -28,6 +29,7 @@ export const sales = pgTable(
     workOrderNumber: text("work_order_number"),
     challanNumber: text("challan_number"),
     invoiceNumber: text("invoice_number"),
+    isWarranty: boolean("is_warranty").default(false).notNull(),
     grandTotal: numeric("grand_total", {
       precision: 12,
       scale: 2,

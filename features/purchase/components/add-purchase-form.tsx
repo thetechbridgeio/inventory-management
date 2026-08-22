@@ -1,6 +1,12 @@
 "use client";
 
-import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { useMemo } from "react";
+import {
+  Controller,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +33,21 @@ export function PurchaseForm() {
   });
 
   const items = form.watch("items");
+
+  const productIdPaths = useMemo(
+    () => fields.map((_, index) => `items.${index}.productId` as const),
+    [fields],
+  );
+
+  const watchedProductIds = useWatch({
+    control: form.control,
+    name: productIdPaths,
+  });
+
+  const selectedProductIds = useMemo(
+    () => watchedProductIds.filter(Boolean) as string[],
+    [watchedProductIds],
+  );
 
   const grandTotal =
     items?.reduce(
@@ -152,16 +173,9 @@ export function PurchaseForm() {
                       render={({ field }) => (
                         <ProductPicker
                           value={field.value}
-                          selectedProductIds={form
-                            .watch("items")
-                            .map((item) => item.productId)
-                            .filter(Boolean)}
-                          onChange={(product) => {
-                            field.onChange(product.id);
-                          }}
-                          onClear={() => {
-                            field.onChange("");
-                          }}
+                          selectedProductIds={selectedProductIds}
+                          onChange={(product) => field.onChange(product.id)}
+                          onClear={() => field.onChange("")}
                         />
                       )}
                     />

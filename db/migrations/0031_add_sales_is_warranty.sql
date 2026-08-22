@@ -1,0 +1,1 @@
+ALTER TABLE "sales" ADD COLUMN "is_warranty" boolean DEFAULT false NOT NULL;

@@ -44,6 +44,8 @@ export const CreateSaleFormSchema = z
       .max(100, "Invoice number is too long")
       .optional(),
 
+    isWarranty: z.boolean().optional(),
+
     soldTo: z
       .string()
       .trim()

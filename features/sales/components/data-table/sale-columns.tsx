@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Eye, MoreHorizontal, Trash2, Undo2 } from "lucide-react";
+import { Eye, MoreHorizontal, ShieldCheck, Trash2, Undo2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { DeleteSaleDialog } from "../delete-sale-dialog";
 import { ViewSaleDialog } from "../view-sale-dialog";
@@ -32,6 +37,7 @@ export type SaleRow = {
   createdAt: string;
   itemsCount: number;
   returnFlag: SaleReturnFlag | null;
+  isWarranty: boolean;
 };
 
 export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
@@ -50,6 +56,15 @@ export function getSaleColumns(role?: UserRole): ColumnDef<SaleRow>[] {
             <span className="font-mono font-medium">
               {row.original.saleNumber}
             </span>
+
+            {row.original.isWarranty && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                </TooltipTrigger>
+                <TooltipContent>Under warranty</TooltipContent>
+              </Tooltip>
+            )}
 
             {flagConfig && (
               <Badge variant="outline" className={flagConfig.className}>

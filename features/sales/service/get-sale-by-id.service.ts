@@ -22,6 +22,7 @@ export async function getSaleById(saleId: string, companyId: string) {
       workOrderNumber: true,
       challanNumber: true,
       invoiceNumber: true,
+      isWarranty: true,
       grandTotal: true,
       createdAt: true,
     },
@@ -83,6 +84,7 @@ export async function getSaleById(saleId: string, companyId: string) {
     workOrderNumber: sale.workOrderNumber,
     challanNumber: sale.challanNumber,
     invoiceNumber: sale.invoiceNumber,
+    isWarranty: sale.isWarranty,
     createdAt: sale.createdAt,
     items: sale.items.map((item) => {
       const pendingReturnQty = pendingQtyBySaleItemId.get(item.id) ?? 0;

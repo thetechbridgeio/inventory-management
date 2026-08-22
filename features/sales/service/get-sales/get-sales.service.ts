@@ -82,6 +82,7 @@ export async function getSales(
       saleDate: sales.saleDate,
       grandTotal: sales.grandTotal,
       soldTo: sales.soldTo,
+      isWarranty: sales.isWarranty,
       createdAt: sales.createdAt,
       itemsCount: sql<number>`COALESCE(${itemsAgg.itemsCount}, 0)`,
       totalQty: sql<number>`COALESCE(${itemsAgg.totalQty}, 0)`,

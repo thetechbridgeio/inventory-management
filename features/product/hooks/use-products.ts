@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 import {
@@ -19,7 +19,8 @@ export function useProducts({
   stockStatuses,
   stockMovements,
   sortOrder,
-}: GetProductsParams = {}) {
+  enabled = true,
+}: GetProductsParams & { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [
       "products",
@@ -66,10 +67,12 @@ export function useProducts({
       }
     },
 
+    enabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 1,
+    placeholderData: keepPreviousData,
   });
 }

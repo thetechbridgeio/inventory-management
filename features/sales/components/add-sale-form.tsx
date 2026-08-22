@@ -1,6 +1,12 @@
 "use client";
 
-import { Controller, useFieldArray, useFormContext } from "react-hook-form";
+import { useMemo } from "react";
+import {
+  Controller,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from "react-hook-form";
 import { CreateSaleFormType } from "../types/sales.type";
 import { RHFInput } from "@/components/react-hook-form-fields/rhf-input";
 import { RHFTextarea } from "@/components/react-hook-form-fields/rhf-textarea";
@@ -10,6 +16,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { ProductPicker } from "@/features/product/components/product-picker";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/react-hook-form-fields/image-upload";
 
 export function SaleForm() {
@@ -21,6 +28,24 @@ export function SaleForm() {
   });
 
   const items = form.watch("items");
+
+  const productIdPaths = useMemo(
+    () =>
+      fields.map(
+        (_, index) => `items.${index}.productId` as const,
+      ),
+    [fields],
+  );
+
+  const watchedProductIds = useWatch({
+    control: form.control,
+    name: productIdPaths,
+  });
+
+  const selectedProductIds = useMemo(
+    () => watchedProductIds.filter(Boolean) as string[],
+    [watchedProductIds],
+  );
 
   const grandTotal =
     items?.reduce(
@@ -71,6 +96,23 @@ export function SaleForm() {
           label="Remarks"
           placeholder="Additional notes..."
           helperText="Optional notes for this outgoing."
+        />
+
+        <Controller
+          control={form.control}
+          name="isWarranty"
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="isWarranty"
+                checked={!!field.value}
+                onCheckedChange={(checked) => field.onChange(!!checked)}
+              />
+              <Label htmlFor="isWarranty" className="font-normal">
+                Under warranty
+              </Label>
+            </div>
+          )}
         />
 
         <ImageUpload
@@ -132,16 +174,9 @@ export function SaleForm() {
                       render={({ field }) => (
                         <ProductPicker
                           value={field.value}
-                          selectedProductIds={form
-                            .watch("items")
-                            .map((item) => item.productId)
-                            .filter(Boolean)}
-                          onChange={(product) => {
-                            field.onChange(product.id);
-                          }}
-                          onClear={() => {
-                            field.onChange("");
-                          }}
+                          selectedProductIds={selectedProductIds}
+                          onChange={(product) => field.onChange(product.id)}
+                          onClear={() => field.onChange("")}
                         />
                       )}
                     />

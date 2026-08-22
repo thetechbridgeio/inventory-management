@@ -1,7 +1,14 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, Eye, Loader2, Package, Receipt } from "lucide-react";
+import {
+  AlertCircle,
+  Eye,
+  Loader2,
+  Package,
+  Receipt,
+  ShieldCheck,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -101,9 +108,21 @@ export function ViewSaleDialog({ saleId, children }: ViewSaleDialogProps) {
                         </h2>
                       </div>
 
-                      <Badge variant="secondary" className="px-3 py-1 text-xs">
-                        {data.items.length} Items
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        {data.isWarranty && (
+                          <Badge
+                            variant="outline"
+                            className="gap-1 border-emerald-200 bg-emerald-50 px-3 py-1 text-xs text-emerald-700"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Warranty
+                          </Badge>
+                        )}
+
+                        <Badge variant="secondary" className="px-3 py-1 text-xs">
+                          {data.items.length} Items
+                        </Badge>
+                      </div>
                     </div>
 
                     {/* Sale Info */}

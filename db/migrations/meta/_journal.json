@@ -218,6 +218,13 @@
       "when": 1785907200000,
       "tag": "0030_products_image_to_images_array",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1787396987371,
+      "tag": "0031_add_sales_is_warranty",
+      "breakpoints": true
     }
   ]
 }
