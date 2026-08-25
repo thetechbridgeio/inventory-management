@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
+import type { DateRange } from "react-day-picker";
 
 import { ProductTable } from "./product-table";
 import { ProductTableTools } from "./product-table-tools";
@@ -10,6 +11,7 @@ import { useProductFilters } from "../../hooks/use-product-filters";
 import { useProducts } from "../../hooks/use-products";
 import { STOCK_STATUSES, StockStatus } from "../../constants/product-stock-status";
 import { StockMovement } from "../../constants/product-stock-movement";
+import { toDateRangeParams } from "../../utils/to-date-range-params";
 
 export function ProductList() {
   const [page, setPage] = useState(1);
@@ -19,13 +21,14 @@ export function ProductList() {
   const [units, setUnits] = useState<string[]>([]);
   const [selectedStockStatuses, setSelectedStockStatuses] = useState<StockStatus[]>([]);
   const [selectedStockMovements, setSelectedStockMovements] = useState<StockMovement[]>([]);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [createdAtSortOrder, setCreatedAtSortOrder] = useState<"asc" | "desc">("desc");
 
   const [debouncedSearch] = useDebounce(search, 500);
 
-  console.log(categories)
-
   const { data: filters } = useProductFilters();
+
+  const { updatedFrom, updatedTo } = toDateRangeParams(dateRange);
 
   const { data, isLoading } = useProducts({
     page,
@@ -36,6 +39,8 @@ export function ProductList() {
     stockStatuses: selectedStockStatuses,
     stockMovements: selectedStockMovements,
     sortOrder: createdAtSortOrder,
+    updatedFrom,
+    updatedTo,
   });
 
   const toggleCreatedAtSort = useCallback(() => {
@@ -52,6 +57,8 @@ export function ProductList() {
     selectedStockStatuses,
     selectedStockMovements,
     createdAtSortOrder,
+    updatedFrom,
+    updatedTo,
   ]);
 
   return (
@@ -72,6 +79,8 @@ export function ProductList() {
         onStockStatusChange={setSelectedStockStatuses}
         selectedStockMovements={selectedStockMovements}
         onStockMovementChange={setSelectedStockMovements}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
       />
 
       <ProductTable

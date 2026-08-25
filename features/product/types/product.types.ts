@@ -49,4 +49,6 @@ export type GetProductsParams = {
   locations?: string[];
   units?: string[];
   sortOrder?: "asc" | "desc";
+  updatedFrom?: string;
+  updatedTo?: string;
 };

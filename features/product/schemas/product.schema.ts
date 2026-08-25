@@ -37,7 +37,10 @@ export const products = pgTable(
       .default(sql`'{}'::text[]`),
     stockMovement: text("stock_movement"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
   },
   (table) => ({
     companyIdx: index("products_company_idx").on(table.companyId),

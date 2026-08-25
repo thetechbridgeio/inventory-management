@@ -51,5 +51,8 @@ export function parseProductQueryParams(
         ?.split(",")
         .map((v) => v.trim() as StockMovement)
         .filter(Boolean) || undefined,
+
+    updatedFrom: searchParams.get("updatedFrom")?.trim() || undefined,
+    updatedTo: searchParams.get("updatedTo")?.trim() || undefined,
   };
 }

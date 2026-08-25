@@ -19,6 +19,8 @@ export function useProducts({
   stockStatuses,
   stockMovements,
   sortOrder,
+  updatedFrom,
+  updatedTo,
   enabled = true,
 }: GetProductsParams & { enabled?: boolean } = {}) {
   return useQuery({
@@ -33,6 +35,8 @@ export function useProducts({
         stockStatuses,
         stockMovements,
         sortOrder,
+        updatedFrom,
+        updatedTo,
       },
     ],
 
@@ -58,6 +62,8 @@ export function useProducts({
               ? stockMovements.join(",")
               : undefined,
             sortOrder: sortOrder ?? undefined,
+            updatedFrom: updatedFrom ?? undefined,
+            updatedTo: updatedTo ?? undefined,
           },
         });
 

@@ -1,10 +1,18 @@
 "use client";
 
-import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
+import { format } from "date-fns";
+import { CalendarDays, Loader2, Search, SlidersHorizontal, X } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import {
   DropdownMenu,
@@ -21,6 +29,7 @@ import {
   StockMovement,
 } from "../../constants/product-stock-movement";
 import { useExportProductsPdf } from "../../hooks/use-export-product";
+import { toDateRangeParams } from "../../utils/to-date-range-params";
 
 type ProductTableToolsProps = {
   search: string;
@@ -41,6 +50,9 @@ type ProductTableToolsProps = {
   onStockStatusChange: (values: StockStatus[]) => void;
   selectedStockMovements: string[];
   onStockMovementChange: (values: StockMovement[]) => void;
+
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
 };
 
 export function ProductTableTools({
@@ -59,6 +71,8 @@ export function ProductTableTools({
   onStockStatusChange,
   selectedStockMovements,
   onStockMovementChange,
+  dateRange,
+  onDateRangeChange,
 }: ProductTableToolsProps) {
   const { mutate: exportPdf, isPending } = useExportProductsPdf();
   const hasFilters =
@@ -66,18 +80,26 @@ export function ProductTableTools({
     selectedLocations.length > 0 ||
     selectedUnits.length > 0 ||
     selectedStockStatuses.length > 0 ||
-    selectedStockMovements.length > 0;
+    selectedStockMovements.length > 0 ||
+    dateRange?.from != null;
 
   return (
     <div className="flex items-center justify-between gap-4 bg-white p-4 shadow-sm rounded-xl">
-      <div className="relative w-full max-w-sm">
-        <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+      <div className="flex flex-1 items-center gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
 
-        <Input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search products..."
-          className="pl-9"
+          <Input
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search products..."
+            className="pl-9"
+          />
+        </div>
+
+        <DateRangePickerButton
+          dateRange={dateRange}
+          onDateRangeChange={onDateRangeChange}
         />
       </div>
       <div className="flex justify-end gap-4">
@@ -90,6 +112,7 @@ export function ProductTableTools({
               units: selectedUnits,
               stockStatuses: selectedStockStatuses as StockStatus[],
               stockMovements: selectedStockMovements as StockMovement[],
+              ...toDateRangeParams(dateRange),
             })
           }
           disabled={isPending}
@@ -161,6 +184,7 @@ export function ProductTableTools({
             onUnitChange([]);
             onStockStatusChange([]);
             onStockMovementChange([]);
+            onDateRangeChange(undefined);
           }}
         >
           <X />
@@ -206,6 +230,71 @@ function FilterSection({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+type DateRangePickerButtonProps = {
+  dateRange: DateRange | undefined;
+  onDateRangeChange: (range: DateRange | undefined) => void;
+};
+
+function DateRangePickerButton({
+  dateRange,
+  onDateRangeChange,
+}: DateRangePickerButtonProps) {
+  const label =
+    dateRange?.from && dateRange.to
+      ? `${format(dateRange.from, "dd MMM yyyy")} – ${format(dateRange.to, "dd MMM yyyy")}`
+      : dateRange?.from
+        ? `${format(dateRange.from, "dd MMM yyyy")} – ...`
+        : "Added / Updated";
+
+  return (
+    <div className="flex items-center gap-1">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" className="gap-2 font-normal">
+            <CalendarDays className="h-4 w-4" />
+            {label}
+          </Button>
+        </PopoverTrigger>
+
+        <PopoverContent align="start" className="w-auto p-0">
+          <Calendar
+            mode="range"
+            selected={dateRange}
+            onSelect={onDateRangeChange}
+            numberOfMonths={1}
+            defaultMonth={dateRange?.from}
+          />
+
+          {dateRange?.from && (
+            <div className="border-t p-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={() => onDateRangeChange(undefined)}
+              >
+                Clear date range
+              </Button>
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+
+      {dateRange?.from && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          aria-label="Clear date range"
+          onClick={() => onDateRangeChange(undefined)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 }
