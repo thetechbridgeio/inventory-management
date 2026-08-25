@@ -7,7 +7,6 @@ import { useAuth } from "@/features/auth/providers/use-auth.provider";
 import { BulkUploadDialog } from "@/features/product/components/bulk-upload/bulk-upload-dialog";
 import { ProductList } from "@/features/product/components/data-table/product-list";
 import { DownloadProductTemplateButton } from "@/features/product/components/download-template-button";
-import { MonthlyReportDropdown } from "@/features/product/components/monthly-report/monthly-report-dropdown";
 import { PurchaseRequestBanner } from "@/features/purchase-request-order/components/purchase-request/purchase-request-banner";
 
 const InventoryPage = () => {
@@ -31,8 +30,6 @@ const InventoryPage = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <MonthlyReportDropdown />
-
             <DownloadProductTemplateButton />
 
             <BulkUploadDialog />
