@@ -1,8 +1,13 @@
 import z from "zod";
-import { onboardingUserSchema } from "../validations/user.validation";
+import {
+  onboardingUserSchema,
+  updateProfileSchema,
+} from "../validations/user.validation";
 import { UserRole } from "../../auth/constants/user-role";
 
 export type OnboardUserType = z.input<typeof onboardingUserSchema>;
+
+export type UpdateProfileType = z.input<typeof updateProfileSchema>;
 
 export type UsersFormType = {
   users: OnboardUserType[];

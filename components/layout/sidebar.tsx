@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Building2, Truck } from "lucide-react";
+import { Building2, Pencil, Truck } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ACCESS } from "@/features/auth/constants/access";
 import {
   ROLE_LABELS,
@@ -13,6 +14,7 @@ import {
   UserRole,
 } from "@/features/auth/constants/user-role";
 import { useAuth } from "@/features/auth/providers/use-auth.provider";
+import { EditProfileDialog } from "@/features/users/components/edit-profile-dialog";
 import { cn } from "@/lib/utils";
 
 import { SIDEBAR_ITEMS } from "./sidebar-items";
@@ -112,8 +114,22 @@ export function Sidebar() {
         <div className="flex items-center gap-3 rounded-lg bg-muted/60 p-3">
           <Truck className="h-4 w-4 text-muted-foreground" />
 
-          <div className="min-w-0">
-            <p className="truncate text-xs font-medium">{user.name}</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <p className="truncate text-xs font-medium">{user.name}</p>
+
+              <EditProfileDialog name={user.name} phone={user.phone}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 shrink-0 text-muted-foreground hover:text-foreground"
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              </EditProfileDialog>
+            </div>
+
             <p className="truncate text-[11px] text-muted-foreground">
               {user.email}
             </p>
