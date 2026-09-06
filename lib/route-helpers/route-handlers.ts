@@ -9,7 +9,6 @@ export function routeHandler<T>(handler: (request: NextRequest) => Promise<T>) {
 
       return apiResponse(data);
     } catch (error) {
-      console.log("error", error)
       return handleApiError(error);
     }
   };
